@@ -4,19 +4,123 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-Project: mserrano.dev frontend refactor (Vue/Gridsome → Next.js/React)
+# Project
 
-Design direction: Match the live site at mserrano.dev closely enough that visitors wouldn't notice a difference. The Gridsome frontend repo is available as reference — check it out alongside this one (or reference it read-only) to work from the actual markup/styling, not guesswork. Where practical, preserve the original CSS for distinctive/unique effects (e.g. animations) rather than rewriting from scratch — not a hard requirement, but nice to keep for legacy reasons. Port this into Tailwind's config (custom keyframes/animation utilities) to stay consistent with the pure-Tailwind constraint, rather than dropping in raw CSS files.
+**Project:** mserrano.dev frontend refactor (Vue/Gridsome → Next.js/React)
 
-Page structure: Landing page, portfolio catalog, project page (individual project detail), contact page, resume page. URL structure must match the existing site exactly (same paths/slugs for every page, including portfolio project URLs) — this is an SEO requirement, not just a design preference. Anything that can't map 1:1 needs a redirect — since this is a static export (no Next.js server), redirects can't go through next.config.js; use vercel.json instead, since deploys go through Vercel directly.
+## Primary Goal
 
-Tech stack: TypeScript, pure Tailwind CSS (no CSS Modules/styled-components), Next.js with output: 'export'. Additional libraries added as needed (carousels needed for at least the project pages).
+Recreate the existing site so closely that returning visitors would not notice a difference. Preserve existing visual design, interactions, navigation, and information architecture unless explicitly instructed otherwise.
 
-Data layer:
+---
 
-content.json is structured as a representation of each project (not a raw dump of WordPress post types) — so the Next.js data layer should be written against that project-shaped structure directly, not against generic WP REST post objects
-manifest.json maps original media filenames to arrays of { width, path } responsive .webp variants
-Both files, plus processed media, are restored into the repo at build time via make restore-media (pulls from GitHub Releases in the mmserran/mserrano-dev-web-services repo) — no live WordPress or network dependency during the Next.js build itself
-Deploy via vercel deploy --prebuilt, not Vercel's Git integration (build must happen where the restored content lives)
+# Decision Hierarchy
 
-Working style: Small, scoped chunks with review checkpoints between each — navbar, footer, and each page individually, with the project description page broken further into one task per page-builder component. Not a one-shot scaffold; stick to what's asked rather than expanding into adjacent components or pages. This is also the person's first agentic-coding-workflow project, so pacing deliberately to build a feel for how it plans/executes before handing it larger unsupervised chunks.
+When making implementation decisions, follow this order:
+
+1. Explicit user instructions
+2. This AGENTS.md
+3. The live site (canonical behavior and UX)
+4. The Gridsome frontend (implementation reference)
+5. Framework and library best practices
+
+When these conflict, follow the highest-priority source. If requirements are ambiguous, ask rather than guess.
+
+**Tooling note:** live-site inspection tooling (browser access, screenshots) is not yet configured. Until it is, treat the Gridsome source (#4) as the practical primary reference, and flag anything where you can't confirm live-site behavior without it.
+
+**Reference repo:** The Gridsome frontend is available at `../mserrano.net-user-facing` (a separate repo outside this one). Treat it as read-only. Consult it directly rather than working from memory or description.
+
+---
+
+# Hard Requirements
+
+## Site Structure
+
+The site consists of:
+
+- Landing page
+- Portfolio catalog
+- Individual project pages
+- Resume page
+- Contact page
+
+Implement only the requested scope.
+
+## URLs
+
+This is an SEO-sensitive migration.
+
+- Preserve every existing URL and portfolio slug. Original slugs are confirmed present in `content.json`'s project entries — use them as-is, do not regenerate or reformat.
+- Any unavoidable URL changes require redirects in `vercel.json` (not `next.config.js`) because the site uses `output: "export"`.
+
+## Data
+
+- Build against `content.json`, which represents project data directly—not raw WordPress REST responses.
+- `manifest.json` maps original media filenames to responsive WebP variants.
+- Restored files land at: `public/media/` for processed images, `content/` for content.json + manifest.json.
+- Render images using the width variants listed in `manifest.json` (via `srcset`/responsive `<img>`/`<Image>` usage), not a single fixed-size source. This is the whole point of the manifest — don't collapse it to one file per image.
+
+Do not introduce live WordPress or other network dependencies into the build.
+
+## Contact Page
+
+- Use a `mailto:` link generated from the contact form fields, with subject/body prepopulated from the user's entered values.
+- No serverless form handling, no API route, no third-party form service — this must work under a fully static export with zero backend dependency.
+
+## Tech Stack
+
+- TypeScript
+- Next.js
+- Tailwind CSS
+- `output: "export"`
+
+Avoid CSS Modules, CSS-in-JS, or other styling approaches unless explicitly requested. Prefer expressing reused styles (including animations from the Gridsome implementation) through Tailwind configuration — custom keyframes and animation utilities — rather than standalone CSS files. When reproducing existing functionality or styling, consult the Gridsome implementation first rather than designing a new solution from scratch.
+
+Additional libraries are acceptable when they meaningfully simplify non-trivial functionality (for example, carousels).
+
+---
+
+# Build & Deployment
+
+Restore build content locally:
+
+```bash
+make restore-media
+```
+
+Restores `content.json`, `manifest.json`, and processed media assets.
+
+Deploy:
+
+```bash
+vercel deploy --prebuilt
+```
+
+Built outside Vercel's Git integration — restored assets exist only in the local build environment.
+
+---
+
+# Working Style
+
+Work in small, reviewable increments.
+
+Preferred task sizes include:
+
+- navbar
+- footer
+- one page at a time
+- one page-builder component at a time
+
+Avoid speculative abstractions, unsolicited refactors, or scaffolding adjacent features. Stop after completing the requested scope.
+
+---
+
+# Definition of Done
+
+A task is complete when:
+
+- The requested scope is implemented.
+- TypeScript and linting pass.
+- Static export succeeds.
+- No unrelated files were modified.
+- The changes are ready for review.
