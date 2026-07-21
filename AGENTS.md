@@ -51,7 +51,7 @@ Implement only the requested scope.
 This is an SEO-sensitive migration.
 
 - Preserve every existing URL and portfolio slug. Original slugs are confirmed present in `content.json`'s project entries — use them as-is, do not regenerate or reformat.
-- Any unavoidable URL changes require redirects in `vercel.json` (not `next.config.js`) because the site uses `output: "export"`.
+- Any unavoidable URL changes require redirects in `vercel.json` (not `next.config.ts`) because the site uses `output: "export"`.
 
 ## Data
 
