@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# content export (fetched via `make restore-media`)
+/content/
+/public/media/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
