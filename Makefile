@@ -23,5 +23,6 @@ restore-media:
 	mv "$$tmp/extracted/content.json" content/content.json; \
 	mv "$$tmp/extracted/manifest.json" content/manifest.json; \
 	echo "Installing media assets..."; \
+	mkdir -p public; \
 	mv "$$tmp/extracted/media" public/media; \
 	echo "Content export unpacked: content/{content,manifest}.json, public/media/"
