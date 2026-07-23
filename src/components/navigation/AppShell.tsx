@@ -8,7 +8,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
 import type { HeaderLink } from "@/lib/content";
 
-const DESKTOP_BREAKPOINT = "(min-width: 768px)";
+const DESKTOP_BREAKPOINT = "(min-width: 1264px)";
 
 function subscribeToDesktopBreakpoint(callback: () => void) {
   const mql = window.matchMedia(DESKTOP_BREAKPOINT);
@@ -100,10 +100,11 @@ export default function AppShell({
           {headerLinks.map((link) => {
             const Icon = HEADER_ICONS[link.title] ?? MdLink;
             const isExternal = !link.url.startsWith("/");
+            const href = isExternal || link.url.endsWith("/") ? link.url : `${link.url}/`;
             return (
               <li key={link.id}>
                 <a
-                  href={link.url}
+                  href={href}
                   {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   title={link.title}
                   aria-label={isExternal ? `${link.title} (opens in a new tab)` : link.title}
@@ -121,7 +122,7 @@ export default function AppShell({
         <div
           aria-hidden="true"
           onClick={() => setManualOpen(false)}
-          className="fixed top-16 right-0 bottom-0 left-0 z-30 bg-black/40 md:hidden"
+          className="fixed top-16 right-0 bottom-0 left-0 z-30 bg-black/40 min-[1264px]:hidden"
         />
       )}
 
@@ -160,7 +161,7 @@ export default function AppShell({
         </ul>
       </nav>
 
-      <div id="main-content" className={`flex-1 transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "md:pl-64" : ""}`}>
+      <div id="main-content" className={`flex-1 transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "min-[1264px]:pl-64" : ""}`}>
         {children}
       </div>
     </>
