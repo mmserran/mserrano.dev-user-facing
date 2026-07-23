@@ -36,13 +36,15 @@ stamp="$(date +%Y%m%d-%H%M%S)"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
+index=0
 for file in "$@"; do
   if [[ ! -f "$file" ]]; then
     echo "publish-screenshot: no such file: $file" >&2
     exit 1
   fi
+  index=$((index + 1))
   base="$(basename "$file")"
-  asset_name="${branch//\//-}-${stamp}-${base}"
+  asset_name="${branch//\//-}-${stamp}-${index}-${base}"
   ln -s "$(realpath "$file")" "$tmpdir/$asset_name"
   gh release upload "$RELEASE_TAG" "$tmpdir/$asset_name" >&2
   url="$(gh release view "$RELEASE_TAG" --json assets \
