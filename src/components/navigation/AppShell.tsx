@@ -146,7 +146,7 @@ export default function AppShell({
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center justify-between px-4 py-3 text-right ${
+                  className={`flex items-center justify-end gap-3 px-4 py-3 text-right ${
                     isActive
                       ? "text-brand-blue font-semibold"
                       : "text-black/80 hover:bg-black/5"
