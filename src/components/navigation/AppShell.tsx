@@ -58,6 +58,7 @@ export default function AppShell({
   const isOpen = manualOpen ?? isDesktop;
 
   const pathname = usePathname();
+  const activePath = pathname.replace(/\/+$/, "") || "/";
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
@@ -130,6 +131,8 @@ export default function AppShell({
         id="site-drawer"
         ref={drawerRef}
         aria-label="Primary"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
         className={`bg-nav-sidebar fixed top-16 bottom-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform duration-200 motion-reduce:transition-none ${
           isOpen ? "translate-x-0" : ""
         }`}
@@ -140,7 +143,7 @@ export default function AppShell({
         </Link>
         <ul className="py-2">
           {SITE_LINKS.map(({ href, label, Icon }) => {
-            const isActive = pathname === href;
+            const isActive = activePath === href.replace(/\/+$/, "");
             return (
               <li key={href}>
                 <Link
