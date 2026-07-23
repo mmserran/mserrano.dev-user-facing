@@ -91,7 +91,7 @@ export default function AppShell({
           aria-controls="site-drawer"
           aria-label={isOpen ? "Close navigation" : "Open navigation"}
           onClick={() => setManualOpen(!isOpen)}
-          className="rounded p-2 text-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+          className="rounded-full p-2 text-2xl transition-colors hover:cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
           <MdMenu aria-hidden="true" />
         </button>
