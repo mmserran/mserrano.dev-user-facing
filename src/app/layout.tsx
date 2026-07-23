@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AppShell from "@/components/navigation/AppShell";
+import { getHeaderLinks } from "@/lib/content";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +30,7 @@ export default function RootLayout({
       className={`h-full ${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="flex min-h-full flex-col overflow-x-hidden antialiased">
-        {children}
+        <AppShell headerLinks={getHeaderLinks()}>{children}</AppShell>
       </body>
     </html>
   );

@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@theme {
+  /* Brand colors carried over from the Gridsome frontend's _base-styles.scss */
+  --color-brand-blue: #006bb6;
+  --color-brand-yellow: #ffc420;
+  --color-nav-sidebar: #f2f2f2;
+  --shadow-app-bar: 0 2px 4px -1px rgb(0 0 0 / 20%), 0 4px 5px rgb(0 0 0 / 14%), 0 1px 10px rgb(0 0 0 / 12%);
+  --shadow-nav-drawer: 0 8px 10px -5px rgb(0 0 0 / 20%), 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%);
+}
