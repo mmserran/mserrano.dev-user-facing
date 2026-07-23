@@ -1,0 +1,168 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import type { IconType } from "react-icons";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
+import type { HeaderLink } from "@/lib/content";
+
+const DESKTOP_BREAKPOINT = "(min-width: 768px)";
+
+function subscribeToDesktopBreakpoint(callback: () => void) {
+  const mql = window.matchMedia(DESKTOP_BREAKPOINT);
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getIsDesktop() {
+  return window.matchMedia(DESKTOP_BREAKPOINT).matches;
+}
+
+function getIsDesktopServerSnapshot() {
+  return false;
+}
+
+const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
+  { href: "/contact/", label: "Contact", Icon: MdEmail },
+  { href: "/resume/", label: "Resume", Icon: MdDescription },
+  { href: "/projects/", label: "Portfolio", Icon: MdDashboard },
+];
+
+const HEADER_ICONS: Record<string, IconType> = {
+  Resume: MdDescription,
+  LinkedIn: FaLinkedin,
+  GitHub: FaGithub,
+};
+
+export default function AppShell({
+  headerLinks,
+  children,
+}: {
+  headerLinks: HeaderLink[];
+  children: ReactNode;
+}) {
+  // Tracks the viewport breakpoint via the browser's matchMedia change event -
+  // useSyncExternalStore keeps the SSR pass and first client render in sync
+  // (both see `false`) so there's no hydration mismatch.
+  const isDesktop = useSyncExternalStore(
+    subscribeToDesktopBreakpoint,
+    getIsDesktop,
+    getIsDesktopServerSnapshot,
+  );
+  // null means "no manual choice yet" - the drawer follows the breakpoint
+  // (open on desktop, closed on mobile) until the user explicitly toggles it,
+  // after which their choice sticks regardless of further resizing.
+  const [manualOpen, setManualOpen] = useState<boolean | null>(null);
+  const isOpen = manualOpen ?? isDesktop;
+
+  const pathname = usePathname();
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setManualOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-50 focus-visible:rounded focus-visible:bg-white focus-visible:px-4 focus-visible:py-2 focus-visible:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-blue"
+      >
+        Skip to content
+      </a>
+
+      <header className="border-b-8 border-brand-yellow bg-brand-blue sticky top-0 z-50 flex h-16 items-center justify-between px-4 text-white">
+        <button
+          ref={menuButtonRef}
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls="site-drawer"
+          aria-label={isOpen ? "Close navigation" : "Open navigation"}
+          onClick={() => setManualOpen(!isOpen)}
+          className="rounded p-2 text-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+        >
+          <MdMenu aria-hidden="true" />
+        </button>
+
+        <ul className="flex items-center gap-1">
+          {headerLinks.map((link) => {
+            const Icon = HEADER_ICONS[link.title] ?? MdLink;
+            const isExternal = !link.url.startsWith("/");
+            return (
+              <li key={link.id}>
+                <a
+                  href={link.url}
+                  {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  title={link.title}
+                  aria-label={isExternal ? `${link.title} (opens in a new tab)` : link.title}
+                  className="block rounded p-2 text-xl hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                >
+                  <Icon aria-hidden="true" />
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </header>
+
+      {isOpen && (
+        <div
+          aria-hidden="true"
+          onClick={() => setManualOpen(false)}
+          className="fixed top-16 right-0 bottom-0 left-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+
+      <nav
+        id="site-drawer"
+        ref={drawerRef}
+        aria-label="Primary"
+        className={`bg-nav-sidebar fixed top-16 bottom-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform duration-200 motion-reduce:transition-none ${
+          isOpen ? "translate-x-0" : ""
+        }`}
+      >
+        <Link href="/" className="block border-b border-black/10 px-4 py-4">
+          <span className="block font-bold text-black">Mark Anthony Serrano</span>
+          <span className="block text-sm text-black/60">Software Engineer</span>
+        </Link>
+        <ul className="py-2">
+          {SITE_LINKS.map(({ href, label, Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center justify-between px-4 py-3 text-right ${
+                    isActive
+                      ? "text-brand-blue font-semibold"
+                      : "text-black/80 hover:bg-black/5"
+                  }`}
+                >
+                  <span>{label}</span>
+                  <Icon aria-hidden="true" className="text-black/70" />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <div id="main-content" className={`flex-1 transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "md:pl-64" : ""}`}>
+        {children}
+      </div>
+    </>
+  );
+}
