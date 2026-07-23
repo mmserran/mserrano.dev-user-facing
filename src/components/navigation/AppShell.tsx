@@ -84,7 +84,7 @@ export default function AppShell({
         Skip to content
       </a>
 
-      <header className="border-b-8 border-brand-yellow bg-brand-blue sticky top-0 z-50 flex h-16 items-center justify-between px-4 text-white">
+      <header className="shadow-app-bar border-b-8 border-brand-yellow bg-brand-blue sticky top-0 z-50 flex h-16 items-center justify-between px-1 text-white">
         <button
           ref={menuButtonRef}
           type="button"
@@ -92,12 +92,12 @@ export default function AppShell({
           aria-controls="site-drawer"
           aria-label={isOpen ? "Close navigation" : "Open navigation"}
           onClick={() => setManualOpen(!isOpen)}
-          className="rounded-full p-2 text-2xl transition-colors hover:cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+          className="flex size-12 items-center justify-center rounded-full text-2xl transition-colors hover:cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
           <MdMenu aria-hidden="true" />
         </button>
 
-        <ul className="flex items-center gap-1">
+        <ul className="flex items-center">
           {headerLinks.map((link) => {
             const Icon = HEADER_ICONS[link.title] ?? MdLink;
             const isExternal = !link.url.startsWith("/");
@@ -109,7 +109,7 @@ export default function AppShell({
                   {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   title={link.title}
                   aria-label={isExternal ? `${link.title} (opens in a new tab)` : link.title}
-                  className="block rounded p-2 text-xl hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                  className="flex h-9 min-w-16 items-center justify-center rounded text-2xl hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                 >
                   <Icon aria-hidden="true" />
                 </a>
@@ -133,13 +133,13 @@ export default function AppShell({
         aria-label="Primary"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`bg-nav-sidebar fixed top-16 bottom-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform duration-200 motion-reduce:transition-none ${
+        className={`shadow-nav-drawer bg-nav-sidebar fixed top-16 bottom-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform duration-200 motion-reduce:transition-none min-[1264px]:shadow-none ${
           isOpen ? "translate-x-0" : ""
         }`}
       >
-        <Link href="/" className="block border-b border-black/10 px-4 py-4">
-          <span className="block font-bold text-black">Mark Anthony Serrano</span>
-          <span className="block text-sm text-black/60">Software Engineer</span>
+        <Link href="/" className="flex h-[97px] flex-col justify-center border-b border-black/10 px-4">
+          <span className="block text-xl leading-6 font-medium text-black">Mark Anthony Serrano</span>
+          <span className="block text-sm leading-[1.2] text-black/60">Software Engineer</span>
         </Link>
         <ul className="py-2">
           {SITE_LINKS.map(({ href, label, Icon }) => {
@@ -149,7 +149,7 @@ export default function AppShell({
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center justify-end gap-3 px-4 py-3 text-right ${
+                  className={`mx-2 flex h-14 items-center justify-end gap-3 px-2 text-right leading-[1.2] ${
                     isActive
                       ? "text-brand-blue font-semibold"
                       : "text-black/80 hover:bg-black/5"
