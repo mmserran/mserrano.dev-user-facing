@@ -144,19 +144,11 @@ Use the repository browser wrapper for all browser automation:
 
 A screenshot saved under `artifacts/browser/` is only visible locally — a
 local file path pasted into a PR description or comment does not render for
-reviewers. When a screenshot needs to be visible in a PR (evidence sections,
-before/after comparisons, defect reports), publish it and embed the result
-instead of referencing the local path:
-
-```bash
-./scripts/publish-screenshot <file> [<file> ...]
-```
-
-This uploads each file to the rolling `pr-screenshots` GitHub Release
-(creating it on first use) and prints a markdown image line per file with
-the release asset URL. Release assets live outside the git object database,
-so this never adds binary files to git history or bloats clone size. Paste
-the printed `![...](...)` lines directly into the PR body or comment.
+reviewers. Publishing screenshots so they render in PRs, and doing so in a
+way that `no-mistakes`-generated PR descriptions pick up correctly, is a
+shared Shipyard convention, not a project-local one. See Shipyard's
+`AGENTS.md` (`~/.config/shipyard/AGENTS.md`) for the publish workflow and
+tooling.
 
 ---
 
