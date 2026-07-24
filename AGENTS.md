@@ -140,15 +140,7 @@ Use the repository browser wrapper for all browser automation:
 * Only `screenshot` gets automatic artifact path handling. Other save-as commands (`pdf`, `video-start`, `state-save`, `tracing-start`/`tracing-stop`) fall back to Playwright CLI's own defaults under the gitignored `.playwright-cli/`, not `artifacts/browser/` — pass an explicit filename under `artifacts/browser/<type>/` if the artifact needs to be kept.
 * Browser sessions are backed by a persistent background process and are not cleaned up automatically. A session left open by a prior task (or one that ended abruptly without step 8) keeps running and can be picked up unintentionally by a later task. If a session appears to have unexpected state, run `./scripts/browser list` to check what's open and `./scripts/browser kill-all` to clear stale/zombie sessions.
 
-## Screenshot Evidence in PRs
-
-A screenshot saved under `artifacts/browser/` is only visible locally — a
-local file path pasted into a PR description or comment does not render for
-reviewers. Publishing screenshots so they render in PRs, and doing so in a
-way that `no-mistakes`-generated PR descriptions pick up correctly, is a
-shared Shipyard convention, not a project-local one. See Shipyard's
-`AGENTS.md` (`~/.config/shipyard/AGENTS.md`) for the publish workflow and
-tooling.
+@~/.config/shipyard/AGENTS.md
 
 ---
 
@@ -192,4 +184,3 @@ A task is complete when:
 * Validation passes.
 * No unrelated files were modified.
 * The changes are ready for review.
-
