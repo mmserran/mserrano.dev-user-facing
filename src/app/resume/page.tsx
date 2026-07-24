@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { MdDescription, MdLink, MdOpenInNew } from "react-icons/md";
-import type { IconType } from "react-icons";
-import { getHeaderLinks, getResumeUrl } from "@/lib/content";
+import { HEADER_LINK_ICONS, getHeaderLinks, getResumeUrl } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Résumé | Mark Serrano",
   description: "View or download Mark Serrano's résumé.",
-};
-
-const LINK_ICONS: Record<string, IconType> = {
-  Resume: MdDescription,
-  LinkedIn: FaLinkedin,
-  GitHub: FaGithub,
 };
 
 function getFooterHref(title: string, url: string, resumeUrl: string) {
@@ -59,7 +51,7 @@ export default function ResumePage() {
           <ul className="mx-auto grid w-fit justify-center gap-4 sm:grid-cols-3 sm:gap-8">
             {headerLinks.map((link) => {
               const href = getFooterHref(link.title, link.url, resumeUrl);
-              const Icon = LINK_ICONS[link.title] ?? MdLink;
+              const Icon = HEADER_LINK_ICONS[link.title] ?? MdLink;
               const opensNewTab =
                 link.title.toLowerCase() === "resume" || !href.startsWith("/");
 
@@ -75,7 +67,7 @@ export default function ResumePage() {
                         ? `${link.title} (opens in a new tab)`
                         : link.title
                     }
-                    className="mx-auto flex size-48 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-400 shadow-xl transition-[color,transform,box-shadow] hover:-translate-y-1 hover:text-slate-600 hover:shadow-2xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:size-36 lg:size-40"
+                    className="mx-auto flex size-48 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-400 shadow-xl transition-[color,transform,box-shadow] hover:-translate-y-1 hover:text-slate-600 hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:size-36 lg:size-40"
                   >
                     <Icon aria-hidden="true" className="text-7xl sm:text-6xl" />
                     <span className="sr-only">{link.title}</span>
@@ -89,7 +81,7 @@ export default function ResumePage() {
         <div className="flex justify-center pt-16 sm:pt-20">
           <a
             href="/projects/"
-            className="inline-flex min-h-12 min-w-56 items-center justify-center rounded-sm border border-slate-300 bg-white px-7 py-3 text-lg font-light text-slate-700 shadow-lg transition-[color,transform,box-shadow] hover:-translate-y-0.5 hover:text-brand-blue hover:shadow-xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
+            className="inline-flex min-h-12 min-w-56 items-center justify-center rounded-sm border border-slate-300 bg-white px-7 py-3 text-lg font-light text-slate-700 shadow-lg transition-[color,transform,box-shadow] hover:-translate-y-0.5 hover:text-brand-blue hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
           >
             View My Portfolio
           </a>
@@ -115,7 +107,7 @@ function ResumeFallback({ resumeUrl }: { resumeUrl: string }) {
         href={resumeUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-brand-blue px-5 py-3 font-semibold text-white hover:bg-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand-blue"
+        className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-brand-blue px-5 py-3 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
       >
         Open résumé PDF
         <MdOpenInNew aria-hidden="true" />

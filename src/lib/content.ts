@@ -1,3 +1,6 @@
+import type { IconType } from "react-icons";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { MdDescription } from "react-icons/md";
 import rawContent from "../../content/content.json";
 
 export interface HeaderLink {
@@ -7,6 +10,12 @@ export interface HeaderLink {
   url: string;
   parent: string;
 }
+
+export const HEADER_LINK_ICONS: Record<string, IconType> = {
+  Resume: MdDescription,
+  LinkedIn: FaLinkedin,
+  GitHub: FaGithub,
+};
 
 interface Content {
   "nav-header": HeaderLink[];
