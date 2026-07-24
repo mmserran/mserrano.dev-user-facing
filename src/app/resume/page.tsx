@@ -25,33 +25,15 @@ export default function ResumePage() {
 
   return (
     <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 text-slate-950">
-      <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="flex flex-col gap-6 border-b border-slate-300 pb-8 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
-            <p className="mb-2 text-sm font-semibold tracking-[0.18em] text-brand-blue uppercase">
-              Software Engineer
-            </p>
-            <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-              Mark Anthony Serrano
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
-              View my résumé below or open the original PDF in your browser.
-            </p>
-          </div>
+      <section className="mx-auto w-full max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24 lg:px-8">
+        <h1 className="text-center text-4xl font-light tracking-[0.28em] text-slate-700 uppercase sm:text-5xl sm:tracking-[0.4em] lg:text-6xl">
+          Resume
+        </h1>
 
-          <a
-            href={resumeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md bg-brand-blue px-5 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand-blue"
-          >
-            Open résumé PDF
-            <MdOpenInNew aria-hidden="true" className="text-lg" />
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
-        </div>
-
-        <section aria-labelledby="resume-document-title" className="py-8">
+        <section
+          aria-labelledby="resume-document-title"
+          className="pt-12 sm:pt-16"
+        >
           <h2 id="resume-document-title" className="sr-only">
             Résumé document
           </h2>
@@ -72,9 +54,9 @@ export default function ResumePage() {
           </div>
         </section>
 
-        <nav aria-label="Résumé links" className="border-t border-slate-300 pt-8">
-          <h2 className="text-center text-xl font-bold">Find me online</h2>
-          <ul className="mt-5 flex flex-wrap justify-center gap-3">
+        <nav aria-label="Résumé links" className="pt-14 sm:pt-20">
+          <h2 className="sr-only">Résumé links</h2>
+          <ul className="mx-auto grid w-fit justify-center gap-4 sm:grid-cols-3 sm:gap-8">
             {headerLinks.map((link) => {
               const href = getFooterHref(link.title, link.url, resumeUrl);
               const Icon = LINK_ICONS[link.title] ?? MdLink;
@@ -88,19 +70,30 @@ export default function ResumePage() {
                     {...(opensNewTab
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-slate-400 bg-white px-5 py-3 font-semibold text-slate-900 transition-colors hover:border-brand-blue hover:text-brand-blue focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand-blue"
+                    aria-label={
+                      opensNewTab
+                        ? `${link.title} (opens in a new tab)`
+                        : link.title
+                    }
+                    className="mx-auto flex size-48 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-400 shadow-xl transition-[color,transform,box-shadow] hover:-translate-y-1 hover:text-slate-600 hover:shadow-2xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:size-36 lg:size-40"
                   >
-                    <Icon aria-hidden="true" className="text-xl" />
-                    {link.title}
-                    {opensNewTab && (
-                      <span className="sr-only">(opens in a new tab)</span>
-                    )}
+                    <Icon aria-hidden="true" className="text-7xl sm:text-6xl" />
+                    <span className="sr-only">{link.title}</span>
                   </a>
                 </li>
               );
             })}
           </ul>
         </nav>
+
+        <div className="flex justify-center pt-16 sm:pt-20">
+          <a
+            href="/projects/"
+            className="inline-flex min-h-12 min-w-56 items-center justify-center rounded-sm border border-slate-300 bg-white px-7 py-3 text-lg font-light text-slate-700 shadow-lg transition-[color,transform,box-shadow] hover:-translate-y-0.5 hover:text-brand-blue hover:shadow-xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
+          >
+            View My Portfolio
+          </a>
+        </div>
       </section>
     </main>
   );
