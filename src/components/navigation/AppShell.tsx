@@ -4,9 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { IconType } from "react-icons";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
-import type { HeaderLink } from "@/lib/content";
+import { HEADER_LINK_ICONS, type HeaderLink } from "@/lib/content";
 
 const DESKTOP_BREAKPOINT = "(min-width: 1264px)";
 
@@ -29,12 +28,6 @@ const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
   { href: "/resume/", label: "Resume", Icon: MdDescription },
   { href: "/projects/", label: "Portfolio", Icon: MdDashboard },
 ];
-
-const HEADER_ICONS: Record<string, IconType> = {
-  Resume: MdDescription,
-  LinkedIn: FaLinkedin,
-  GitHub: FaGithub,
-};
 
 export default function AppShell({
   headerLinks,
@@ -99,7 +92,7 @@ export default function AppShell({
 
         <ul className="flex items-center">
           {headerLinks.map((link) => {
-            const Icon = HEADER_ICONS[link.title] ?? MdLink;
+            const Icon = HEADER_LINK_ICONS[link.title] ?? MdLink;
             const isExternal = !link.url.startsWith("/");
             const href = isExternal || link.url.endsWith("/") ? link.url : `${link.url}/`;
             return (
