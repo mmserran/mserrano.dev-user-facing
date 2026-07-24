@@ -41,13 +41,13 @@ function generateStarShadow(count: number, seed: number) {
 
 export default function StarField() {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       {STAR_LAYERS.map((layer) => {
         const shadow = generateStarShadow(layer.count, layer.seed);
         return (
           <div
             key={layer.pixelSize}
-            className={`absolute bg-transparent opacity-60 after:absolute after:top-[300vh] after:h-[inherit] after:w-[inherit] after:bg-transparent after:[box-shadow:var(--star-shadow)] after:content-[''] ${layer.animationClassName}`}
+            className={`absolute bg-transparent opacity-60 motion-reduce:animate-none after:absolute after:top-[300vh] after:h-[inherit] after:w-[inherit] after:bg-transparent after:[box-shadow:var(--star-shadow)] after:content-[''] ${layer.animationClassName}`}
             style={{
               width: layer.pixelSize,
               height: layer.pixelSize,

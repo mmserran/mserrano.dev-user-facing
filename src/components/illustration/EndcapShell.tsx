@@ -64,7 +64,7 @@ export default function EndcapShell() {
           style={scaledHeight(225)}
         >
           <div
-            className="absolute bottom-[48%] left-[35%] z-[3] animate-sway-1"
+            className="absolute bottom-[48%] left-[35%] z-[3] animate-sway-1 motion-reduce:animate-none"
             style={scaledWidth(175)}
           >
             <Image
@@ -78,7 +78,7 @@ export default function EndcapShell() {
             />
           </div>
           <div
-            className="absolute right-[35%] bottom-[65%] z-[3] animate-sway-2-delayed"
+            className="absolute right-[35%] bottom-[65%] z-[3] animate-sway-2-delayed motion-reduce:animate-none"
             style={scaledWidth(209)}
           >
             <Image
@@ -92,7 +92,7 @@ export default function EndcapShell() {
             />
           </div>
           <div
-            className="absolute right-[46%] bottom-[25%] z-[3] animate-sway-3-delayed"
+            className="absolute right-[46%] bottom-[25%] z-[3] animate-sway-3-delayed motion-reduce:animate-none"
             style={scaledWidth(129)}
           >
             <Image
@@ -106,7 +106,7 @@ export default function EndcapShell() {
             />
           </div>
           <div
-            className="absolute top-[-0.58vw] left-[62%] z-[3] animate-turtle-swim"
+            className="absolute top-[-0.58vw] left-[62%] z-[3] animate-turtle-swim motion-reduce:animate-none"
             style={scaledWidth(66)}
           >
             <Image
