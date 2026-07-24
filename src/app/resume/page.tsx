@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { MdDescription, MdLink, MdOpenInNew } from "react-icons/md";
-import { HEADER_LINK_ICONS, getHeaderLinks, getResumeUrl } from "@/lib/content";
+import Image from "next/image";
+import { MdDescription, MdOpenInNew } from "react-icons/md";
+import { getHeaderLinks, getResumeUrl } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Résumé | Mark Serrano",
   description: "View or download Mark Serrano's résumé.",
+};
+
+const LINK_ARTWORK: Record<string, string> = {
+  Resume: "/assets/icon-pdf.svg",
+  LinkedIn: "/assets/icon-linkedin.svg",
+  GitHub: "/assets/icon-github.svg",
 };
 
 function getFooterHref(title: string, url: string, resumeUrl: string) {
@@ -51,7 +58,7 @@ export default function ResumePage() {
           <ul className="mx-auto grid w-fit justify-center gap-4 sm:grid-cols-3 sm:gap-8">
             {headerLinks.map((link) => {
               const href = getFooterHref(link.title, link.url, resumeUrl);
-              const Icon = HEADER_LINK_ICONS[link.title] ?? MdLink;
+              const artwork = LINK_ARTWORK[link.title];
               const opensNewTab =
                 link.title.toLowerCase() === "resume" || !href.startsWith("/");
 
@@ -67,9 +74,18 @@ export default function ResumePage() {
                         ? `${link.title} (opens in a new tab)`
                         : link.title
                     }
-                    className="mx-auto flex size-48 items-center justify-center rounded-sm border border-slate-200 bg-white text-slate-400 shadow-xl transition-[color,transform,box-shadow] hover:-translate-y-1 hover:text-slate-600 hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:size-36 lg:size-40"
+                    className="group mx-auto flex size-48 items-center justify-center rounded-sm border border-slate-200 bg-white shadow-xl transition-[transform,box-shadow] hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:size-36 lg:size-40"
                   >
-                    <Icon aria-hidden="true" className="text-7xl sm:text-6xl" />
+                    {artwork && (
+                      <Image
+                        src={artwork}
+                        alt=""
+                        width={512}
+                        height={512}
+                        unoptimized
+                        className="size-32 opacity-50 grayscale transition-[filter,opacity] duration-250 group-hover:opacity-100 group-hover:grayscale-0 sm:size-20 lg:size-24"
+                      />
+                    )}
                     <span className="sr-only">{link.title}</span>
                   </a>
                 </li>
