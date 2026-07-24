@@ -4,8 +4,8 @@ import { MdDescription, MdOpenInNew } from "react-icons/md";
 import { getHeaderLinks, getResumeUrl } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Résumé | Mark Serrano",
-  description: "View or download Mark Serrano's résumé.",
+  title: "Resume | Mark Serrano",
+  description: "View or download Mark Serrano's resume.",
 };
 
 const LINK_ARTWORK: Record<string, string> = {
@@ -34,14 +34,14 @@ export default function ResumePage() {
           className="pt-12 sm:pt-16"
         >
           <h2 id="resume-document-title" className="sr-only">
-            Résumé document
+            Resume document
           </h2>
 
           <div className="overflow-hidden rounded-lg border border-slate-300 bg-white shadow-lg">
             <object
               data={resumeUrl}
               type="application/pdf"
-              aria-label="Mark Anthony Serrano résumé"
+              aria-label="Mark Anthony Serrano resume"
               className="hidden h-[calc(100dvh-10rem)] min-h-[44rem] w-full sm:block"
             >
               <ResumeFallback resumeUrl={resumeUrl} />
@@ -53,8 +53,8 @@ export default function ResumePage() {
           </div>
         </section>
 
-        <nav aria-label="Résumé links" className="pt-14 sm:pt-20">
-          <h2 className="sr-only">Résumé links</h2>
+        <nav aria-label="Resume links" className="pt-14 sm:pt-20">
+          <h2 className="sr-only">Resume links</h2>
           <ul className="mx-auto grid w-fit justify-center gap-4 sm:grid-cols-3 sm:gap-8">
             {headerLinks.map((link) => {
               const href = getFooterHref(link.title, link.url, resumeUrl);
@@ -114,7 +114,7 @@ function ResumeFallback({ resumeUrl }: { resumeUrl: string }) {
         aria-hidden="true"
         className="text-6xl text-brand-blue"
       />
-      <h3 className="mt-5 text-2xl font-bold">Résumé PDF</h3>
+      <h3 className="mt-5 text-2xl font-bold">Resume PDF</h3>
       <p className="mt-3 max-w-md leading-7 text-slate-600">
         Your browser does not display PDF documents here. Open the original
         file to view it with your preferred PDF reader.
@@ -125,7 +125,7 @@ function ResumeFallback({ resumeUrl }: { resumeUrl: string }) {
         rel="noopener noreferrer"
         className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-brand-blue px-5 py-3 font-semibold text-white hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
       >
-        Open résumé PDF
+        Open resume PDF
         <MdOpenInNew aria-hidden="true" />
         <span className="sr-only">(opens in a new tab)</span>
       </a>
