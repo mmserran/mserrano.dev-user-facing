@@ -17,7 +17,8 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The landing page composition lives in `src/app/page.tsx`, with its backdrop illustration in
+`src/components/illustration/EndcapShell.tsx`. The page auto-updates as you edit either file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
