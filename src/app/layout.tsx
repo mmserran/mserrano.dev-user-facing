@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AppShell from "@/components/navigation/AppShell";
+import Footer from "@/components/navigation/Footer";
 import { getHeaderLinks } from "@/lib/content";
 import "./globals.css";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col overflow-x-hidden antialiased">
         <AppShell headerLinks={getHeaderLinks()}>{children}</AppShell>
+        <Footer />
       </body>
     </html>
   );
