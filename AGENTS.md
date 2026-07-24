@@ -140,23 +140,7 @@ Use the repository browser wrapper for all browser automation:
 * Only `screenshot` gets automatic artifact path handling. Other save-as commands (`pdf`, `video-start`, `state-save`, `tracing-start`/`tracing-stop`) fall back to Playwright CLI's own defaults under the gitignored `.playwright-cli/`, not `artifacts/browser/` — pass an explicit filename under `artifacts/browser/<type>/` if the artifact needs to be kept.
 * Browser sessions are backed by a persistent background process and are not cleaned up automatically. A session left open by a prior task (or one that ended abruptly without step 8) keeps running and can be picked up unintentionally by a later task. If a session appears to have unexpected state, run `./scripts/browser list` to check what's open and `./scripts/browser kill-all` to clear stale/zombie sessions.
 
-## Screenshot Evidence in PRs
-
-A screenshot saved under `artifacts/browser/` is only visible locally — a
-local file path pasted into a PR description or comment does not render for
-reviewers. When a screenshot needs to be visible in a PR (evidence sections,
-before/after comparisons, defect reports), publish it and embed the result
-instead of referencing the local path:
-
-```bash
-./scripts/publish-screenshot <file> [<file> ...]
-```
-
-This uploads each file to the rolling `pr-screenshots` GitHub Release
-(creating it on first use) and prints a markdown image line per file with
-the release asset URL. Release assets live outside the git object database,
-so this never adds binary files to git history or bloats clone size. Paste
-the printed `![...](...)` lines directly into the PR body or comment.
+@~/.config/shipyard/AGENTS.md
 
 ---
 
@@ -200,4 +184,3 @@ A task is complete when:
 * Validation passes.
 * No unrelated files were modified.
 * The changes are ready for review.
-
