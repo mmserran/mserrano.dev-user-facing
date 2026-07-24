@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Footer() {
@@ -9,7 +10,9 @@ export default function Footer() {
 
   return (
     <footer className="sticky bottom-0 z-50 flex h-9 items-center justify-between bg-brand-blue px-4 text-sm text-white">
-      <span>mserrano.dev</span>
+      <Link href="/" className="rounded-sm hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+        mserrano.dev
+      </Link>
       <span suppressHydrationWarning>&copy; {year}</span>
     </footer>
   );
