@@ -12,10 +12,10 @@ const CTA_LINK_CLASSES =
 
 export default function Home() {
   return (
-    <main className="relative flex-1">
+    <main className="relative flex flex-1">
       <EndcapShell fill />
 
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-[5vmin] py-[10vmin]">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-[5vmin] py-[10vmin]">
         <div className="flex w-full max-w-[800px] flex-col items-center gap-[2vw] text-center">
           <h1 className="shine-text animate-shine motion-reduce:animate-none font-bold text-white uppercase tracking-[0.325em] [font-size:calc(0.5rem+4vmin)] lg:[font-size:calc(0.5rem+4.75vmin)]">
             Mark Anthony Serrano
