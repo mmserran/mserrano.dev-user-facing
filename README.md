@@ -68,7 +68,7 @@ The landing page composition lives in `src/app/page.tsx`. Its endcap illustratio
 backdrop from `src/components/illustration/StarField.tsx`. The page auto-updates as you edit these
 files.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Montserrat site-wide.
 
 ## Learn More
 
