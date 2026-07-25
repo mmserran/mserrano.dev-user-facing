@@ -37,6 +37,12 @@
   --animate-multicolor-cuttlefish: multicolor-shift 30s linear alternate-reverse infinite;
   --animate-multicolor-comb-jelly: multicolor-shift 2s ease infinite;
   --animate-multicolor-squid: multicolor-shift 15s ease-in-out infinite;
+
+  /* Endcap smoke effect */
+  --animate-smoke-rise-br: smoke-rise-br 10s linear infinite;
+  --animate-smoke-rise-bl: smoke-rise-bl 10s linear infinite 0.5s;
+  --animate-smoke-rise-tr: smoke-rise-tr 10s linear infinite 1s;
+  --animate-smoke-rise-tl: smoke-rise-tl 10s linear infinite 1.5s;
 }
 
 @keyframes star-drift {
@@ -301,5 +307,61 @@
   }
   100% {
     background-position: 0% 62%;
+  }
+}
+
+@keyframes smoke-rise-br {
+  0% {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0;
+  }
+  80%,
+  100% {
+    transform: translateY(-50px);
+  }
+}
+
+@keyframes smoke-rise-bl {
+  0% {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0;
+  }
+  80%,
+  100% {
+    transform: translateY(-75px);
+  }
+}
+
+@keyframes smoke-rise-tr {
+  0% {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0;
+  }
+  80%,
+  100% {
+    transform: translateY(-85px);
+  }
+}
+
+@keyframes smoke-rise-tl {
+  0% {
+    opacity: 0.75;
+    transform: translateY(0);
+  }
+  70% {
+    opacity: 0;
+  }
+  80%,
+  100% {
+    transform: translateY(-110px);
   }
 }
