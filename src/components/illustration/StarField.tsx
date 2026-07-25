@@ -41,7 +41,7 @@ function generateStarShadow(count: number, seed: number) {
 
 export default function StarField() {
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
       {STAR_LAYERS.map((layer) => {
         const shadow = generateStarShadow(layer.count, layer.seed);
         return (
