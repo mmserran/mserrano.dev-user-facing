@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import type { IconType } from "react-icons";
 import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
 import { HEADER_LINK_ICONS, type HeaderLink } from "@/lib/content";
+import StarField from "@/components/illustration/StarField";
 
 const DESKTOP_BREAKPOINT = "(min-width: 1264px)";
 
@@ -157,7 +158,11 @@ export default function AppShell({
         </ul>
       </nav>
 
-      <div id="main-content" className={`flex-1 transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "min-[1264px]:pl-64" : ""}`}>
+      <div
+        id="main-content"
+        className={`relative isolate flex flex-1 flex-col bg-[radial-gradient(ellipse_at_bottom,#1b2735_0%,#090a0f_100%)] transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "min-[1264px]:pl-64" : ""}`}
+      >
+        <StarField />
         {children}
       </div>
     </>

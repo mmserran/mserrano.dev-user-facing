@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { MdDescription, MdOpenInNew } from "react-icons/md";
 import { getHeaderLinks, getResumeUrl } from "@/lib/content";
+import EndcapShell from "@/components/illustration/EndcapShell";
 
 export const metadata: Metadata = {
   title: "Resume | Mark Serrano",
@@ -23,9 +24,9 @@ export default function ResumePage() {
   const headerLinks = getHeaderLinks();
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] bg-slate-50 text-slate-950">
+    <main className="min-h-[calc(100dvh-4rem)] text-white">
       <section className="mx-auto w-full max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24 lg:px-8">
-        <h1 className="text-center text-4xl font-light tracking-[0.28em] text-slate-700 uppercase sm:text-5xl sm:tracking-[0.4em] lg:text-6xl">
+        <h1 className="text-center text-4xl font-light tracking-[0.28em] text-white uppercase sm:text-5xl sm:tracking-[0.4em] lg:text-6xl">
           Resume
         </h1>
 
@@ -103,6 +104,8 @@ export default function ResumePage() {
           </a>
         </div>
       </section>
+
+      <EndcapShell />
     </main>
   );
 }

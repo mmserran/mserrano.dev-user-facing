@@ -7,4 +7,51 @@
   --color-nav-sidebar: #f2f2f2;
   --shadow-app-bar: 0 2px 4px -1px rgb(0 0 0 / 20%), 0 4px 5px rgb(0 0 0 / 14%), 0 1px 10px rgb(0 0 0 / 12%);
   --shadow-nav-drawer: 0 8px 10px -5px rgb(0 0 0 / 20%), 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%);
+
+  /* Night sky star field drift, carried over from decorPixelStars.vue */
+  --animate-star-drift-slow: star-drift 600s linear infinite;
+  --animate-star-drift-medium: star-drift 300s linear infinite;
+  --animate-star-drift-fast: star-drift 150s linear infinite;
+
+  /* Endcap illustration, carried over from snippetEndcapMarkAnthonySerrano2020.vue */
+  --animate-sway-1: sway 5s alternate infinite;
+  --animate-sway-2-delayed: sway 7s alternate infinite 2s;
+  --animate-sway-3-delayed: sway 4s alternate infinite 4s;
+  --animate-turtle-swim: turtle-swim 40s ease-in-out infinite;
+}
+
+@keyframes star-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-300vh);
+  }
+}
+
+@keyframes sway {
+  0% {
+    transform: translateX(0vw);
+  }
+  100% {
+    transform: translateX(1vw);
+  }
+}
+
+@keyframes turtle-swim {
+  0% {
+    left: 62%;
+    transform: scaleX(1);
+  }
+  50% {
+    left: 42%;
+    transform: scaleX(1);
+  }
+  51% {
+    transform: scaleX(-1);
+  }
+  100% {
+    left: 62%;
+    transform: scaleX(-1);
+  }
 }
