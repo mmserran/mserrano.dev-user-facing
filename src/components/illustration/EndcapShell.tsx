@@ -17,10 +17,11 @@ import { scaledHeight, scaledWidth } from "./scaling";
 export default function EndcapShell({ fill = false }: { fill?: boolean }) {
   return (
     <div
+      aria-hidden="true"
       className={
         fill
-          ? "absolute inset-0 isolate w-full overflow-hidden"
-          : "relative isolate h-[calc(33vw+33vh)] w-full overflow-hidden"
+          ? "pointer-events-none absolute inset-0 isolate w-full overflow-hidden"
+          : "pointer-events-none relative isolate h-[calc(33vw+33vh)] w-full overflow-hidden"
       }
     >
       <div className="absolute bottom-0 left-0 z-[2]" style={scaledWidth(1051)}>
