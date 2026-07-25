@@ -18,6 +18,11 @@
   --animate-sway-2-delayed: sway 7s alternate infinite 2s;
   --animate-sway-3-delayed: sway 4s alternate infinite 4s;
   --animate-turtle-swim: turtle-swim 40s ease-in-out infinite;
+
+  /* Endcap aquarium tank 1 (penguins) */
+  --animate-penguin-slow-descent: penguin-slow-descent 20s infinite linear;
+  --animate-penguin-fun: penguin-fun 20s infinite linear;
+  --animate-penguin-slow-poke: penguin-slow-poke 20s infinite linear;
 }
 
 @keyframes star-drift {
@@ -53,5 +58,58 @@
   100% {
     left: 62%;
     transform: scaleX(-1);
+  }
+}
+
+@keyframes penguin-slow-descent {
+  0% {
+    top: -1.1vw;
+    left: 3vw;
+  }
+  40% {
+    top: 3vw;
+    left: 0vw;
+  }
+  100% {
+    top: 3vw;
+    left: 0vw;
+  }
+}
+
+@keyframes penguin-fun {
+  0% {
+    top: -1vw;
+    left: 4vw;
+  }
+  4% {
+    top: 0.75vw;
+    left: 3.5vw;
+  }
+  5% {
+    top: 0.7vw;
+    left: 3.4vw;
+  }
+  30% {
+    top: 3vw;
+    left: 2vw;
+  }
+  40% {
+    top: -1vw;
+    left: -2vw;
+  }
+  100% {
+    top: -1vw;
+    left: -2vw;
+  }
+}
+
+@keyframes penguin-slow-poke {
+  0% {
+    top: 0.5vw;
+    left: 6vw;
+  }
+  100% {
+    top: 1.5vw;
+    left: -1vw;
   }
 }
