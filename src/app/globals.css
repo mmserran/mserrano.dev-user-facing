@@ -23,6 +23,9 @@
   --animate-penguin-slow-descent: penguin-slow-descent 20s infinite linear;
   --animate-penguin-fun: penguin-fun 20s infinite linear;
   --animate-penguin-slow-poke: penguin-slow-poke 20s infinite linear;
+
+  /* Endcap aquarium tank 2 (pelagic conveyor) */
+  --animate-tank2-speed-ramp: tank2-speed-ramp 30s infinite linear;
 }
 
 @keyframes star-drift {
@@ -111,5 +114,26 @@
   100% {
     top: 1.5vw;
     left: -1vw;
+  }
+}
+
+@keyframes tank2-speed-ramp {
+  0% {
+    left: -37vw;
+  }
+  60% {
+    left: -31.5vw;
+  }
+  80% {
+    left: -20.5vw;
+  }
+  89% {
+    left: -1.5vw;
+  }
+  90% {
+    left: -1vw;
+  }
+  100% {
+    left: 5vw;
   }
 }

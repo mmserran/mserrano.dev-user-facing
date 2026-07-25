@@ -1,5 +1,6 @@
 import Image from "next/image";
 import AquariumTank1Penguins from "./AquariumTank1Penguins";
+import AquariumTank2PelagicConveyor from "./AquariumTank2PelagicConveyor";
 import { scaledHeight, scaledWidth } from "./scaling";
 
 // Backdrop/shell portion of snippetEndcapMarkAnthonySerrano2020.vue: county
@@ -46,6 +47,7 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           style={{ height: "auto" }}
         />
         <AquariumTank1Penguins />
+        <AquariumTank2PelagicConveyor />
       </div>
 
       <div className="absolute right-0 bottom-0 z-[2]" style={scaledWidth(984)}>
