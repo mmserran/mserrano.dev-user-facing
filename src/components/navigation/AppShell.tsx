@@ -132,7 +132,7 @@ export default function AppShell({
         }`}
       >
         <Link href="/" className="flex h-[97px] flex-col justify-center border-b border-black/10 px-4">
-          <span className="block text-xl leading-6 font-medium text-black">Mark Anthony Serrano</span>
+          <span className="block truncate text-xl leading-6 font-medium text-black">Mark Anthony Serrano</span>
           <span className="block text-sm leading-[1.2] text-black/60">Software Engineer</span>
         </Link>
         <ul className="py-2">
