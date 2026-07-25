@@ -7,11 +7,15 @@
   --color-nav-sidebar: #f2f2f2;
   --shadow-app-bar: 0 2px 4px -1px rgb(0 0 0 / 20%), 0 4px 5px rgb(0 0 0 / 14%), 0 1px 10px rgb(0 0 0 / 12%);
   --shadow-nav-drawer: 0 8px 10px -5px rgb(0 0 0 / 20%), 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%);
+  --shadow-cta: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px rgb(0 0 0 / 14%), 0 1px 5px rgb(0 0 0 / 12%);
 
   /* Night sky star field drift, carried over from decorPixelStars.vue */
   --animate-star-drift-slow: star-drift 600s linear infinite;
   --animate-star-drift-medium: star-drift 300s linear infinite;
   --animate-star-drift-fast: star-drift 150s linear infinite;
+
+  /* Landing page name/tagline shine sweep, carried over from the "shine" mixin in _base-styles.scss */
+  --animate-shine: shine 5s infinite;
 
   /* Endcap illustration, carried over from snippetEndcapMarkAnthonySerrano2020.vue */
   --animate-sway-1: sway 5s alternate infinite;
@@ -376,4 +380,22 @@
     opacity: 0;
     transform: translateY(-110px);
   }
+}
+
+@keyframes shine {
+  from {
+    mask-position: 150%;
+    -webkit-mask-position: 150%;
+  }
+  to {
+    mask-position: -50%;
+    -webkit-mask-position: -50%;
+  }
+}
+
+.shine-text {
+  mask-image: linear-gradient(-62deg, rgb(0 0 0 / 85%) 25%, #000 62%, rgb(0 0 0 / 85%) 75%);
+  -webkit-mask-image: linear-gradient(-62deg, rgb(0 0 0 / 85%) 25%, #000 62%, rgb(0 0 0 / 85%) 75%);
+  mask-size: 200%;
+  -webkit-mask-size: 200%;
 }
