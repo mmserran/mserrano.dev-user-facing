@@ -17,6 +17,9 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Run the co-located Vitest suite once with `npm test`, or start it in watch mode with
+`npm run test:watch`.
+
 The landing page composition lives in `src/app/page.tsx`. Its endcap illustration is in
 `src/components/illustration/EndcapShell.tsx`, while the shared app shell renders the star-field
 backdrop from `src/components/illustration/StarField.tsx`. The page auto-updates as you edit these
