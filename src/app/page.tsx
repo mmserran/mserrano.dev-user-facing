@@ -17,10 +17,10 @@ export default function Home() {
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-[5vmin] py-[10vmin]">
         <div className="flex w-full max-w-[800px] flex-col items-center gap-[2vw] text-center">
-          <h1 className="shine-text animate-shine motion-reduce:animate-none font-bold text-white uppercase tracking-[0.325em] [font-size:calc(0.5rem+4vmin)] lg:[font-size:calc(0.5rem+4.75vmin)]">
+          <h1 className="shine-text animate-shine motion-reduce:animate-none font-medium text-white uppercase tracking-[0.325em] [font-size:calc(0.5rem+4vmin)] lg:[font-size:calc(0.5rem+4.75vmin)]">
             Mark Anthony Serrano
           </h1>
-          <h2 className="shine-text animate-shine motion-reduce:animate-none pb-[2vmin] font-bold text-white uppercase tracking-[0.325em] [font-size:calc(0.25rem+1vmin)] md:[font-size:calc(0.5rem+1vmin)]">
+          <h2 className="shine-text animate-shine motion-reduce:animate-none pb-[2vmin] font-medium text-white uppercase tracking-[0.325em] [font-size:calc(0.25rem+1vmin)] md:[font-size:calc(0.5rem+1vmin)]">
             Developer | WordPress | Shopify
           </h2>
 
