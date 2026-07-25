@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import AppShell from "@/components/navigation/AppShell";
 import Footer from "@/components/navigation/Footer";
 import { getHeaderLinks } from "@/lib/content";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Matches the Gridsome frontend's site-wide font (`$font-reading` in
+// _base-styles.scss), loaded there via @font-face.
+const montserrat = Montserrat({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,11 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`h-full ${geistSans.variable} ${geistMono.variable}`}
-    >
-      <body className="flex min-h-full flex-col overflow-x-hidden antialiased">
+    <html lang="en" className="h-full">
+      <body
+        className={`flex min-h-full flex-col overflow-x-hidden antialiased ${montserrat.className}`}
+      >
         <AppShell headerLinks={getHeaderLinks()}>{children}</AppShell>
         <Footer />
       </body>
