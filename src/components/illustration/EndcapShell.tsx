@@ -1,10 +1,13 @@
 import Image from "next/image";
+import AquariumTank1Penguins from "./AquariumTank1Penguins";
+import AquariumTank2PelagicConveyor from "./AquariumTank2PelagicConveyor";
+import AquariumTank3RotatingExhibit from "./AquariumTank3RotatingExhibit";
 import { scaledHeight, scaledWidth } from "./scaling";
 
 // Backdrop/shell portion of snippetEndcapMarkAnthonySerrano2020.vue: county
-// silhouettes, sky/water gradients, clouds, wake and turtle animations.
-// Aquarium tank creatures, the Lottie helicopter, and smoke effects are
-// later increments - this only reproduces the static/ambient scene.
+// silhouettes, sky/water gradients, clouds, wake and turtle animations, plus
+// the aquarium tank creatures. The Lottie helicopter and smoke effects are
+// later increments - this doesn't reproduce those yet.
 //
 // `fill` mirrors the Gridsome landing page's `.endcap { min-height: 100%;
 // height: initial }` override: most consumers get the illustration's own
@@ -35,6 +38,14 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute bottom-0 left-0 h-auto w-full"
           style={{ height: "auto" }}
         />
+        <AquariumTank1Penguins />
+        <AquariumTank2PelagicConveyor />
+        <AquariumTank3RotatingExhibit />
+        {/* Renders after the tanks (not alongside county-monterey.svg above):
+            its window-glass/frame details are meant to sit on top of the
+            creatures, visually masking anything that spills past a tank's
+            illustrated window into the wall - confirmed against the live
+            site, which stacks it the same way. */}
         <Image
           src="/assets/county-monterey-overlay.svg"
           alt=""
