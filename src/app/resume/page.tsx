@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { MdDescription, MdOpenInNew } from "react-icons/md";
 import { getHeaderLinks, getResumeUrl } from "@/lib/content";
+import EndcapShell from "@/components/illustration/EndcapShell";
 
 export const metadata: Metadata = {
   title: "Resume | Mark Serrano",
@@ -103,6 +104,8 @@ export default function ResumePage() {
           </a>
         </div>
       </section>
+
+      <EndcapShell />
     </main>
   );
 }
