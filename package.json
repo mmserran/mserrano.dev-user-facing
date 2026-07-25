@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "test:watch": "vitest --watch",
     "browser": "playwright-cli",
     "browser:show": "playwright-cli show",
     "browser:close": "playwright-cli close-all"
