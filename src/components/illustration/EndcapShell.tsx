@@ -38,6 +38,14 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute bottom-0 left-0 h-auto w-full"
           style={{ height: "auto" }}
         />
+        <AquariumTank1Penguins />
+        <AquariumTank2PelagicConveyor />
+        <AquariumTank3RotatingExhibit />
+        {/* Renders after the tanks (not alongside county-monterey.svg above):
+            its window-glass/frame details are meant to sit on top of the
+            creatures, visually masking anything that spills past a tank's
+            illustrated window into the wall - confirmed against the live
+            site, which stacks it the same way. */}
         <Image
           src="/assets/county-monterey-overlay.svg"
           alt=""
@@ -47,9 +55,6 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute bottom-0 left-0 h-auto w-full"
           style={{ height: "auto" }}
         />
-        <AquariumTank1Penguins />
-        <AquariumTank2PelagicConveyor />
-        <AquariumTank3RotatingExhibit />
       </div>
 
       <div className="absolute right-0 bottom-0 z-[2]" style={scaledWidth(984)}>
