@@ -17,6 +17,9 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+Run the co-located Vitest suite once with `npm test`, or start it in watch mode with
+`npm run test:watch`.
+
 ## End-to-end tests
 
 The Playwright suite runs against the production static export in `out/`. Playwright
