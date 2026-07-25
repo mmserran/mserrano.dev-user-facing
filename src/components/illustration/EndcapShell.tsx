@@ -5,9 +5,24 @@ import { scaledHeight, scaledWidth } from "./scaling";
 // silhouettes, sky/water gradients, clouds, wake and turtle animations.
 // Aquarium tank creatures, the Lottie helicopter, and smoke effects are
 // later increments - this only reproduces the static/ambient scene.
-export default function EndcapShell() {
+//
+// `fill` mirrors the Gridsome landing page's `.endcap { min-height: 100%;
+// height: initial }` override: most consumers get the illustration's own
+// intrinsic height, but the landing page instead fills its container
+// exactly, since it has no content of its own to size the page around.
+// `fill` positions against the nearest positioned ancestor (absolute
+// inset-0) rather than `h-full`, since a plain percentage height can't
+// resolve through a `flex-1` ancestor whose own height comes from the flex
+// algorithm rather than a specified CSS height.
+export default function EndcapShell({ fill = false }: { fill?: boolean }) {
   return (
-    <div className="relative isolate h-[calc(33vw+33vh)] w-full overflow-hidden">
+    <div
+      className={
+        fill
+          ? "absolute inset-0 isolate w-full overflow-hidden"
+          : "relative isolate h-[calc(33vw+33vh)] w-full overflow-hidden"
+      }
+    >
       <div className="absolute bottom-0 left-0 z-[2]" style={scaledWidth(1051)}>
         <Image
           src="/assets/county-monterey.svg"

@@ -160,7 +160,7 @@ export default function AppShell({
 
       <div
         id="main-content"
-        className={`relative isolate flex-1 bg-[radial-gradient(ellipse_at_bottom,#1b2735_0%,#090a0f_100%)] transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "min-[1264px]:pl-64" : ""}`}
+        className={`relative isolate flex flex-1 flex-col bg-[radial-gradient(ellipse_at_bottom,#1b2735_0%,#090a0f_100%)] transition-[padding] duration-200 motion-reduce:transition-none ${isOpen ? "min-[1264px]:pl-64" : ""}`}
       >
         <StarField />
         {children}
