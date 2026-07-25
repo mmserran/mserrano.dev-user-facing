@@ -65,44 +65,35 @@ export default function EndcapShell() {
         >
           <div
             className="absolute bottom-[48%] left-[35%] z-[3] animate-sway-1 motion-reduce:animate-none"
-            style={scaledWidth(175)}
+            style={{ ...scaledWidth(175), aspectRatio: "87 / 4" }}
           >
             <Image
               src="/assets/wake1.svg"
               alt=""
-              width={87}
-              height={4}
+              fill
               unoptimized
-              className="h-auto w-full"
-              style={{ height: "auto" }}
             />
           </div>
           <div
             className="absolute right-[35%] bottom-[65%] z-[3] animate-sway-2-delayed motion-reduce:animate-none"
-            style={scaledWidth(209)}
+            style={{ ...scaledWidth(209), aspectRatio: "104 / 4" }}
           >
             <Image
               src="/assets/wake2.svg"
               alt=""
-              width={104}
-              height={4}
+              fill
               unoptimized
-              className="h-auto w-full"
-              style={{ height: "auto" }}
             />
           </div>
           <div
             className="absolute right-[46%] bottom-[25%] z-[3] animate-sway-3-delayed motion-reduce:animate-none"
-            style={scaledWidth(129)}
+            style={{ ...scaledWidth(129), aspectRatio: "64 / 2" }}
           >
             <Image
               src="/assets/wake3.svg"
               alt=""
-              width={64}
-              height={2}
+              fill
               unoptimized
-              className="h-auto w-full"
-              style={{ height: "auto" }}
             />
           </div>
           <div
