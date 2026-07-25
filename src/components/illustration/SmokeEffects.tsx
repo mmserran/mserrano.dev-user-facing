@@ -18,7 +18,12 @@ const SWITCH_PIPE_PAUSE_MS = 420;
 
 function SmokeCluster({ playKey }: { playKey: number }) {
   return (
-    <svg key={playKey} viewBox="0 0 76.94 212.41" aria-hidden="true" className="h-auto w-full">
+    <svg
+      key={playKey}
+      viewBox="0 0 76.94 212.41"
+      aria-hidden="true"
+      className="h-auto w-full"
+    >
       <circle
         cx="31.11"
         cy="202.98"
@@ -68,7 +73,10 @@ export default function SmokeEffects() {
   useEffect(() => {
     if (visible) return;
     const next = (step + 1) % SEQUENCE.length;
-    const pauseMs = SEQUENCE[next] === SEQUENCE[step] ? SAME_PIPE_PAUSE_MS : SWITCH_PIPE_PAUSE_MS;
+    const pauseMs =
+      SEQUENCE[next] === SEQUENCE[step]
+        ? SAME_PIPE_PAUSE_MS
+        : SWITCH_PIPE_PAUSE_MS;
     const timer = setTimeout(() => {
       setStep(next);
       setPlayKey((k) => k + 1);
@@ -82,7 +90,9 @@ export default function SmokeEffects() {
   return (
     <>
       <div className="absolute top-[-14vw] left-0" style={scaledWidth(154)}>
-        {visible && activePipe === "far-left" && <SmokeCluster playKey={playKey} />}
+        {visible && activePipe === "far-left" && (
+          <SmokeCluster playKey={playKey} />
+        )}
       </div>
       <div className="absolute top-[-9vw] left-[2vw]" style={scaledWidth(154)}>
         {visible && activePipe === "left" && <SmokeCluster playKey={playKey} />}
