@@ -1,10 +1,14 @@
 import Image from "next/image";
+import AquariumTank1Penguins from "./AquariumTank1Penguins";
+import AquariumTank2PelagicConveyor from "./AquariumTank2PelagicConveyor";
+import AquariumTank3RotatingExhibit from "./AquariumTank3RotatingExhibit";
+import Helicopter from "./Helicopter";
+import SmokeEffects from "./SmokeEffects";
 import { scaledHeight, scaledWidth } from "./scaling";
 
 // Backdrop/shell portion of snippetEndcapMarkAnthonySerrano2020.vue: county
-// silhouettes, sky/water gradients, clouds, wake and turtle animations.
-// Aquarium tank creatures, the Lottie helicopter, and smoke effects are
-// later increments - this only reproduces the static/ambient scene.
+// silhouettes, sky/water gradients, clouds, wake and turtle animations, the
+// aquarium tank creatures, the Lottie helicopter, and the smoke effect.
 //
 // `fill` mirrors the Gridsome landing page's `.endcap { min-height: 100%;
 // height: initial }` override: most consumers get the illustration's own
@@ -24,7 +28,10 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           : "pointer-events-none relative isolate h-[calc(33vw+33vh)] w-full overflow-hidden"
       }
     >
-      <div className="absolute bottom-0 left-0 z-[2]" style={scaledWidth(1051)}>
+      <div
+        className="absolute bottom-0 left-0 z-[2]"
+        style={{ ...scaledWidth(1051), aspectRatio: "525 / 440" }}
+      >
         <Image
           src="/assets/county-monterey.svg"
           alt=""
@@ -35,6 +42,14 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute bottom-0 left-0 h-auto w-full"
           style={{ height: "auto" }}
         />
+        <AquariumTank1Penguins />
+        <AquariumTank2PelagicConveyor />
+        <AquariumTank3RotatingExhibit />
+        {/* Renders after the tanks (not alongside county-monterey.svg above):
+            its window-glass/frame details are meant to sit on top of the
+            creatures, visually masking anything that spills past a tank's
+            illustrated window into the wall - confirmed against the live
+            site, which stacks it the same way. */}
         <Image
           src="/assets/county-monterey-overlay.svg"
           alt=""
@@ -44,6 +59,7 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute bottom-0 left-0 h-auto w-full"
           style={{ height: "auto" }}
         />
+        <SmokeEffects />
       </div>
 
       <div className="absolute right-0 bottom-0 z-[2]" style={scaledWidth(984)}>
@@ -150,6 +166,8 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
             style={{ height: "auto" }}
           />
         </div>
+
+        <Helicopter />
       </div>
     </div>
   );
