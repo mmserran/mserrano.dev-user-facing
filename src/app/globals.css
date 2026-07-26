@@ -47,6 +47,17 @@
   --animate-smoke-rise-bl: smoke-rise-bl 10s linear 0.5s;
   --animate-smoke-rise-tr: smoke-rise-tr 10s linear 1s;
   --animate-smoke-rise-tl: smoke-rise-tl 10s linear 1.5s;
+
+  /* Santa Cruz lighthouse beacon: fixes svgIllustration.vue's animation-name
+     typo (animateRotor, which never matched its animateLight keyframes, so
+     the rotor never animated on the live site). Six equal 1.8s slots make
+     up the 10.8s rotation - SW, NW, a pause, NE, SE, a pause - the two
+     pauses landing where the beam would cross from the west-side bars to
+     the east-side ones and back, rather than jumping straight across. */
+  --animate-light-sw: animateLight 10.8s linear infinite;
+  --animate-light-nw: animateLight 10.8s linear infinite 1.8s;
+  --animate-light-ne: animateLight 10.8s linear infinite 5.4s;
+  --animate-light-se: animateLight 10.8s linear infinite 7.2s;
 }
 
 @keyframes star-drift {
@@ -379,6 +390,19 @@
   100% {
     opacity: 0;
     transform: translateY(-110px);
+  }
+}
+
+@keyframes animateLight {
+  0%,
+  16%,
+  100% {
+    opacity: 0.01;
+  }
+
+  2%,
+  14% {
+    opacity: 1;
   }
 }
 
