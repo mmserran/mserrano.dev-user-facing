@@ -3,6 +3,7 @@ import AquariumTank1Penguins from "./AquariumTank1Penguins";
 import AquariumTank2PelagicConveyor from "./AquariumTank2PelagicConveyor";
 import AquariumTank3RotatingExhibit from "./AquariumTank3RotatingExhibit";
 import Helicopter from "./Helicopter";
+import LighthouseBeams from "./LighthouseBeams";
 import SmokeEffects from "./SmokeEffects";
 import { scaledHeight, scaledWidth } from "./scaling";
 
@@ -72,6 +73,7 @@ export default function EndcapShell({ fill = false }: { fill?: boolean }) {
           className="absolute right-0 bottom-0 h-auto w-full"
           style={{ height: "auto" }}
         />
+        <LighthouseBeams />
       </div>
 
       <div className="absolute inset-0 z-0">
