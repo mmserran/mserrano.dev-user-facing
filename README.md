@@ -61,7 +61,9 @@ report is written to `playwright-report/`. Both directories are generated and
 gitignored.
 
 Use `./scripts/browser` for exploratory inspection and visual verification. Use the
-Playwright Test suite for repeatable assertions during feature development.
+Playwright Test suite for repeatable assertions that should run locally and in CI.
+
+The suite runs in CI via `.github/workflows/e2e.yml` on every pull request.
 
 The landing page composition lives in `src/app/page.tsx`. Its endcap illustration is in
 `src/components/illustration/EndcapShell.tsx`, while the shared app shell renders the star-field
