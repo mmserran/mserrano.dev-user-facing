@@ -116,7 +116,9 @@ Stop after completing the requested scope.
 
 # Git Commit Trailers
 
-Every generated or executed commit message MUST conclude with a single, standalone `Co-authored-by: [ToolName] [Model]<[identifier]>` trailer placed at the absolute bottom of the text after exactly one blank line, substituting your specific tool identity and email into the placeholder.
+Add authorship with `git commit --trailer "Co-Authored-By: [ToolName] [Model] <[identifier]>"`.
+
+Substitute `<[identifier]>` with your AI tool's official service email address (e.g., `noreply@openai.com` for Codex or `gemini-code-assist@google.com` for Gemini models).
 
 ---
 
