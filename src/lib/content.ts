@@ -31,15 +31,19 @@ export function getHeaderLinks(): HeaderLink[] {
   return [...content["nav-header"]].sort((a, b) => a.sort - b.sort);
 }
 
-export function getResumeUrl(): string {
-  const filename = content.resume.filename.trim();
+export function getMediaUrl(filename: string): string {
+  const trimmedFilename = filename.trim();
 
-  if (!filename) {
+  if (!trimmedFilename) {
     throw new Error("content.json resume.filename must not be empty.");
   }
 
-  return `/media/${filename
+  return `/media/${trimmedFilename
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/")}`;
+}
+
+export function getResumeUrl(): string {
+  return getMediaUrl(content.resume.filename);
 }
