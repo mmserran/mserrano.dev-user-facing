@@ -47,6 +47,5 @@ yarn-error.log*
 next-env.d.ts
 
 # Agent-generated browser artifacts
-artifacts/browser/current/
-artifacts/browser/failures/
+artifacts/
 .playwright-cli/
