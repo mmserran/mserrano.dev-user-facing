@@ -91,6 +91,10 @@ Do not introduce live WordPress or other network dependencies into the build.
 * Use a `mailto:` link generated from the contact form fields, with subject and body prepopulated from the user's entered values.
 * No serverless form handling, API routes, or third-party form services. The site must function under a fully static export with zero backend dependency.
 
+## Cross-Browser, Responsive & Accessibility
+
+All UI changes must render correctly in current Chrome, Firefox, Safari, and Edge; adapt responsively across mobile, tablet, and desktop viewports; and meet WCAG 2.1 AA accessibility standards (semantic HTML, keyboard operability, sufficient contrast, labeled form fields).
+
 ---
 
 # Working Style
@@ -107,6 +111,12 @@ Preferred task sizes include:
 Avoid speculative abstractions, unsolicited refactors, or scaffolding adjacent features.
 
 Stop after completing the requested scope.
+
+---
+
+# Git Commit Trailers
+
+Every generated or executed commit message MUST conclude with a single, standalone `Co-authored-by: [ToolName] [Model]<[identifier]>` trailer placed at the absolute bottom of the text after exactly one blank line, substituting your specific tool identity and email into the placeholder.
 
 ---
 
