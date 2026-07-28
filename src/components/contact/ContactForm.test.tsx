@@ -40,9 +40,17 @@ describe("ContactForm", () => {
     expect(
       screen.getByRole("button", { name: "How to let webmail open email links" }),
     ).toHaveAttribute("aria-describedby", "webmail-handler-help");
-    expect(document.getElementById("webmail-handler-help")).toHaveTextContent(
+    const tooltip = document.getElementById("webmail-handler-help");
+    expect(tooltip).toHaveTextContent(
       /allow your preferred webmail service to open email links/i,
     );
+    expect(tooltip).toHaveClass(
+      "fixed",
+      "max-h-[calc(100vh-2rem)]",
+      "w-[calc(100vw-2rem)]",
+      "max-w-80",
+    );
+    expect(tooltip).not.toHaveClass("sm:absolute");
   }, 10_000);
 
   it("clears all entered values with the reset control", async () => {
