@@ -112,14 +112,11 @@ export default function ResumePage() {
 function ResumeFallback({ resumeUrl }: { resumeUrl: string }) {
   return (
     <div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
-      <MdDescription
-        aria-hidden="true"
-        className="text-6xl text-brand-blue"
-      />
+      <MdDescription aria-hidden="true" className="text-6xl text-brand-blue" />
       <h3 className="mt-5 text-2xl font-bold">Resume PDF</h3>
       <p className="mt-3 max-w-md leading-7 text-slate-600">
-        Your browser does not display PDF documents here. Open the original
-        file to view it with your preferred PDF reader.
+        Your browser does not display PDF documents here. Open the original file
+        to view it with your preferred PDF reader.
       </p>
       <a
         href={resumeUrl}
