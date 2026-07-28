@@ -17,9 +17,50 @@ export const HEADER_LINK_ICONS: Record<string, IconType> = {
   GitHub: FaGithub,
 };
 
+export interface ProjectGeneral {
+  date: string;
+  role: string;
+  title: string;
+  content: string;
+  url: string;
+  url_wayback: string;
+  repo: string;
+  workplace: string[];
+  supported_browsers: string[];
+}
+
+export interface ProjectThumbnail {
+  static: string;
+  on_hover: string;
+}
+
+export interface ProjectTechnology {
+  language: string[];
+  framework: string[];
+  deployment: string[];
+  software: string[];
+}
+
+export interface ProjectScreenshot {
+  desktop: string[];
+  desktop_cutoff?: string | null;
+  mobile: string[];
+}
+
+export interface Project {
+  sort: number;
+  slug: string;
+  value: string;
+  general: ProjectGeneral;
+  thumbnail: ProjectThumbnail;
+  technology: ProjectTechnology;
+  screenshot: ProjectScreenshot;
+  pagebuilder: string;
+}
+
 interface Content {
   "nav-header": HeaderLink[];
-  projects: unknown[];
+  projects: Project[];
   resume: {
     filename: string;
     contact_email: string;
@@ -30,6 +71,19 @@ const content = rawContent as Content;
 
 export function getHeaderLinks(): HeaderLink[] {
   return [...content["nav-header"]].sort((a, b) => a.sort - b.sort);
+}
+
+export function getProjects(): Project[] {
+  return [...content.projects].sort((a, b) => {
+    if (a.general.date && b.general.date) {
+      return b.general.date.localeCompare(a.general.date);
+    }
+    return b.sort - a.sort;
+  });
+}
+
+export function getProjectBySlug(slug: string): Project | undefined {
+  return content.projects.find((p) => p.slug === slug);
 }
 
 export function getMediaUrl(filename: string): string {
@@ -58,3 +112,4 @@ export function getContactEmail(): string {
 
   return email;
 }
+

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import EndcapShell from "@/components/illustration/EndcapShell";
 
 export const metadata: Metadata = {
@@ -25,12 +26,12 @@ export default function Home() {
           </h2>
 
           <div className="mt-5 flex w-full flex-col items-center gap-5 md:flex-row md:justify-center">
-            <a href="/contact/" className={CTA_LINK_CLASSES}>
+            <Link href="/contact/" className={CTA_LINK_CLASSES}>
               Contact Me
-            </a>
-            <a href="/projects/" className={CTA_LINK_CLASSES}>
+            </Link>
+            <Link href="/projects/" className={CTA_LINK_CLASSES}>
               View Portfolio
-            </a>
+            </Link>
           </div>
         </div>
       </div>

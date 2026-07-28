@@ -1,18 +1,46 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppShell from "./AppShell";
-import type { HeaderLink } from "@/lib/content";
+import type { HeaderLink, Project } from "@/lib/content";
 
-// Mock next/navigation
+let mockPathname = "/projects";
+
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/projects",
+  usePathname: () => mockPathname,
 }));
 
 describe("AppShell", () => {
+  beforeEach(() => {
+    mockPathname = "/projects";
+  });
+
   const mockHeaderLinks: HeaderLink[] = [
     { id: 1, sort: 1, title: "Resume", url: "/resume/", parent: "" },
     { id: 2, sort: 2, title: "LinkedIn", url: "https://linkedin.com", parent: "" },
     { id: 3, sort: 3, title: "GitHub", url: "https://github.com", parent: "" },
+  ];
+
+  const mockProjects: Project[] = [
+    {
+      sort: 0,
+      slug: "cygnus-management-llc",
+      value: "post:project:14",
+      general: {
+        date: "2014-07",
+        role: "Developer",
+        title: "Cygnus Management, LLC",
+        content: "Content",
+        url: "",
+        url_wayback: "",
+        repo: "",
+        workplace: [],
+        supported_browsers: [],
+      },
+      thumbnail: { static: "", on_hover: "" },
+      technology: { language: [], framework: [], deployment: [], software: [] },
+      screenshot: { desktop: [], mobile: [] },
+      pagebuilder: "[]",
+    },
   ];
 
   it("renders skip link, header links, and children", () => {
@@ -106,5 +134,25 @@ describe("AppShell", () => {
 
     const resumeSidebarLink = within(navDrawer).getByRole("link", { name: "Resume" });
     expect(resumeSidebarLink).not.toHaveAttribute("aria-current");
+  });
+
+  it("renders active project links in navigation drawer when on a project page", () => {
+    mockPathname = "/projects/cygnus-management-llc";
+    const { container } = render(
+      <AppShell headerLinks={mockHeaderLinks} projects={mockProjects}>
+        <div>Content</div>
+      </AppShell>
+    );
+
+    const toggleButton = screen.getByRole("button", { name: /navigation/i });
+    fireEvent.click(toggleButton);
+
+    const navDrawer = container.querySelector("#site-drawer") as HTMLElement;
+    const portfolioLink = within(navDrawer).getByRole("link", { name: "Portfolio" });
+    expect(portfolioLink).toHaveAttribute("aria-current", "page");
+
+    const projectLink = within(navDrawer).getByRole("link", { name: "Cygnus Management, LLC" });
+    expect(projectLink).toHaveAttribute("href", "/projects/cygnus-management-llc");
+    expect(projectLink).toHaveAttribute("aria-current", "page");
   });
 });

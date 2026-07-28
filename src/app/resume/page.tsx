@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { MdDescription, MdOpenInNew } from "react-icons/md";
 import { getHeaderLinks, getResumeUrl } from "@/lib/content";
 import EndcapShell from "@/components/illustration/EndcapShell";
@@ -95,12 +96,12 @@ export default function ResumePage() {
         </nav>
 
         <div className="flex justify-center pt-16 sm:pt-20">
-          <a
+          <Link
             href="/projects/"
             className="inline-flex min-h-12 min-w-56 items-center justify-center rounded-sm border border-slate-300 bg-white px-7 py-3 text-lg font-light text-slate-700 shadow-lg transition-[color,transform,box-shadow] hover:-translate-y-0.5 hover:text-brand-blue hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
           >
             View My Portfolio
-          </a>
+          </Link>
         </div>
       </section>
 

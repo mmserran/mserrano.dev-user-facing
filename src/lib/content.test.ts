@@ -24,6 +24,16 @@ describe("content lib", () => {
     );
   });
 
+  it("getProjects returns projects sorted by date descending (most recent first)", () => {
+    const projects = getProjects();
+    expect(Array.isArray(projects)).toBe(true);
+    expect(projects.length).toBeGreaterThan(0);
+
+    for (let i = 0; i < projects.length - 1; i++) {
+      expect(projects[i].general.date.localeCompare(projects[i + 1].general.date)).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   it("getResumeUrl returns the configured media URL", () => {
     expect(getResumeUrl()).toMatch(/^\/media\/[^ ]+$/);
   });
