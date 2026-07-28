@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ContactForm from "./ContactForm";
@@ -50,7 +50,7 @@ describe("ContactForm", () => {
     expect(subject).toHaveValue("");
   });
 
-  it("builds the draft from current form controls after DOM-only autofill", () => {
+  it("builds the draft from current form controls after DOM-only autofill", async () => {
     render(<ContactForm contactEmail="mark@example.com" />);
 
     const name = screen.getByRole("textbox", { name: /your name/i });
@@ -58,29 +58,31 @@ describe("ContactForm", () => {
     const subject = screen.getByRole("textbox", { name: /subject/i });
     const message = screen.getByRole("textbox", { name: /your message/i });
 
-    Object.defineProperty(name, "value", { configurable: true, value: "Jane Doe" });
-    Object.defineProperty(email, "value", {
-      configurable: true,
-      value: "jane@example.com",
-    });
-    Object.defineProperty(subject, "value", {
-      configurable: true,
-      value: "Autofilled subject",
-    });
-    Object.defineProperty(message, "value", {
-      configurable: true,
-      value: "Autofilled message",
-    });
+    const inputValueSetter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    const textareaValueSetter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value",
+    )?.set;
+
+    inputValueSetter?.call(name, "Jane Doe");
+    inputValueSetter?.call(email, "jane@example.com");
+    inputValueSetter?.call(subject, "Autofilled subject");
+    textareaValueSetter?.call(message, "Autofilled message");
 
     name.closest("form")?.dispatchEvent(
       new Event("submit", { bubbles: true, cancelable: true }),
     );
 
-    expect(buildContactMailto).toHaveBeenCalledWith("mark@example.com", {
-      name: "Jane Doe",
-      email: "jane@example.com",
-      subject: "Autofilled subject",
-      message: "Autofilled message",
+    await waitFor(() => {
+      expect(buildContactMailto).toHaveBeenCalledWith("mark@example.com", {
+        name: "Jane Doe",
+        email: "jane@example.com",
+        subject: "Autofilled subject",
+        message: "Autofilled message",
+      });
     });
   });
 });
