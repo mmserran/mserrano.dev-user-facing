@@ -3,6 +3,7 @@ import Image from "next/image";
 import { MdDescription, MdOpenInNew } from "react-icons/md";
 import { getHeaderLinks, getResumeUrl } from "@/lib/content";
 import EndcapShell from "@/components/illustration/EndcapShell";
+import PageTitle from "@/components/typography/PageTitle";
 
 export const metadata: Metadata = {
   title: "Resume | Mark Serrano",
@@ -25,11 +26,9 @@ export default function ResumePage() {
 
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
-      <section className="mx-auto w-full max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24 lg:px-8">
-        <h1 className="text-center text-4xl font-light tracking-[0.28em] text-white uppercase sm:text-5xl sm:tracking-[0.4em] lg:text-6xl">
-          Resume
-        </h1>
+      <PageTitle>Resume</PageTitle>
 
+      <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
         <section
           aria-labelledby="resume-document-title"
           className="pt-12 sm:pt-16"
@@ -113,14 +112,11 @@ export default function ResumePage() {
 function ResumeFallback({ resumeUrl }: { resumeUrl: string }) {
   return (
     <div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
-      <MdDescription
-        aria-hidden="true"
-        className="text-6xl text-brand-blue"
-      />
+      <MdDescription aria-hidden="true" className="text-6xl text-brand-blue" />
       <h3 className="mt-5 text-2xl font-bold">Resume PDF</h3>
       <p className="mt-3 max-w-md leading-7 text-slate-600">
-        Your browser does not display PDF documents here. Open the original
-        file to view it with your preferred PDF reader.
+        Your browser does not display PDF documents here. Open the original file
+        to view it with your preferred PDF reader.
       </p>
       <a
         href={resumeUrl}
