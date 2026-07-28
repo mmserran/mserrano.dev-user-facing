@@ -16,6 +16,7 @@ vi.mock("./mailto", async (importOriginal) => {
 describe("ContactForm", () => {
   beforeEach(() => {
     vi.mocked(buildContactMailto).mockClear();
+    vi.spyOn(window, "open").mockImplementation(() => null);
   });
 
   it("provides accessible fields, autocomplete hints, and a direct-email fallback", () => {
@@ -30,11 +31,19 @@ describe("ContactForm", () => {
       "email",
     );
     expect(screen.getByRole("textbox", { name: /your message/i })).toBeRequired();
-    expect(screen.getByRole("link", { name: "mark@example.com" })).toHaveAttribute(
-      "href",
-      "mailto:mark@example.com",
+    const directEmailLink = screen.getByRole("link", {
+      name: /mark@example\.com.*opens in a new window/i,
+    });
+    expect(directEmailLink).toHaveAttribute("href", "mailto:mark@example.com");
+    expect(directEmailLink).toHaveAttribute("target", "_blank");
+    expect(directEmailLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(
+      screen.getByRole("button", { name: "How to let webmail open email links" }),
+    ).toHaveAttribute("aria-describedby", "webmail-handler-help");
+    expect(document.getElementById("webmail-handler-help")).toHaveTextContent(
+      /allow your preferred webmail service to open email links/i,
     );
-  });
+  }, 10_000);
 
   it("clears all entered values with the reset control", async () => {
     const user = userEvent.setup();
@@ -83,6 +92,11 @@ describe("ContactForm", () => {
         subject: "Autofilled subject",
         message: "Autofilled message",
       });
+      expect(window.open).toHaveBeenCalledWith(
+        "mailto:mark@example.com",
+        "_blank",
+        "noopener,noreferrer",
+      );
     });
   });
 });

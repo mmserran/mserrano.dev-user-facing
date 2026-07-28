@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState, type FormEvent } from "react";
+import { MdHelpOutline } from "react-icons/md";
 import { buildContactMailto, type ContactFields } from "./mailto";
 
 const EMPTY_FIELDS: ContactFields = {
@@ -37,7 +39,11 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
       message: String(formData.get("message") ?? ""),
     };
 
-    window.location.assign(buildContactMailto(contactEmail, submittedFields));
+    window.open(
+      buildContactMailto(contactEmail, submittedFields),
+      "_blank",
+      "noopener,noreferrer",
+    );
   }
 
   function handleReset() {
@@ -94,25 +100,55 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
       <div className="mt-6 flex w-full flex-col gap-4 sm:flex-row sm:justify-end">
         <button
           type="submit"
-          className="shadow-cta inline-flex min-h-12 w-full items-center justify-center rounded bg-brand-blue px-8 py-3 text-lg font-medium text-white transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none sm:w-auto sm:min-w-48"
+          className="shadow-cta inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded bg-brand-blue px-8 py-3 text-lg font-medium text-white transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none sm:w-auto sm:min-w-48"
         >
           Open email draft
         </button>
         <button
           type="reset"
-          className="shadow-cta inline-flex min-h-12 w-full items-center justify-center rounded bg-brand-yellow px-8 py-3 text-lg font-medium text-slate-900 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none sm:w-auto"
+          className="shadow-cta inline-flex min-h-12 w-full cursor-pointer items-center justify-center rounded bg-brand-yellow px-8 py-3 text-lg font-medium text-slate-900 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none sm:w-auto"
         >
           Clear
         </button>
       </div>
 
       <p className="mt-6 text-sm leading-6 text-slate-600">
-        If no email app opens, email{" "}
+        If no email app opens{" "}
+        <span className="group relative inline-flex align-middle">
+          <button
+            type="button"
+            aria-label="How to let webmail open email links"
+            aria-describedby="webmail-handler-help"
+            className="inline-flex size-6 cursor-help items-center justify-center rounded-full text-lg text-brand-blue hover:bg-brand-blue/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+          >
+            <MdHelpOutline aria-hidden="true" />
+          </button>
+          <span
+            id="webmail-handler-help"
+            role="tooltip"
+            className="invisible fixed right-4 bottom-12 left-4 z-[60] rounded-lg border border-slate-300 bg-white p-2 opacity-0 shadow-2xl transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 sm:absolute sm:top-full sm:right-auto sm:bottom-auto sm:left-0 sm:w-80"
+          >
+            <span className="sr-only">
+              In your browser, allow your preferred webmail service to open email links.
+            </span>
+            <Image
+              src="/assets/setup-webmail-as-default-handler-for-mailto.png"
+              alt="Chrome prompt asking whether mail.google.com may open all email links, with Allow selected"
+              width={361}
+              height={277}
+              unoptimized
+              className="h-auto w-full rounded"
+            />
+          </span>
+        </span>, email{" "}
         <a
           href={`mailto:${contactEmail}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="font-medium text-brand-blue underline underline-offset-2 focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
         >
           {contactEmail}
+          <span className="sr-only"> (opens in a new window)</span>
         </a>
         .
       </p>
