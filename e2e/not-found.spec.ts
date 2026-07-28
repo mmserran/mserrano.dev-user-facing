@@ -4,6 +4,7 @@ test.describe("404 Not Found Page", () => {
   test("renders 404 page for non-existent route", async ({ page }) => {
     const response = await page.goto("/non-existent-page/");
 
+    expect(response?.status()).toBe(404);
     await expect(page).toHaveTitle("404 | Mark Serrano");
 
     const heading = page.getByRole("heading", { level: 1, name: "404" });
