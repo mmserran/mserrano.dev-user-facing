@@ -24,6 +24,7 @@ const montserrat = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mserrano.dev"),
   title: "Mark Serrano",
   description: "Portfolio of Mark Serrano.",
 };
