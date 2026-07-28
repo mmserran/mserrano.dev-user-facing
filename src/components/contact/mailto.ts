@@ -9,9 +9,8 @@ export function buildContactMailto(contactEmail: string, fields: ContactFields):
   const name = fields.name.trim();
   const email = fields.email.trim();
   const subject = fields.subject.trim() || `Message from ${name}`;
-  const message = fields.message.trim();
+  const message = fields.message.trim().replace(/\r\n|\r|\n/g, "\r\n");
   const body = `${message}\r\n\r\n—\r\nFrom: ${name} <${email}>`;
-  const params = new URLSearchParams({ subject, body });
 
-  return `mailto:${contactEmail}?${params.toString()}`;
+  return `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

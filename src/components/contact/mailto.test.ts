@@ -11,11 +11,27 @@ describe("buildContactMailto", () => {
     });
     const url = new URL(href);
 
+    expect(href).toContain("subject=Hello%20%26%20welcome%3F");
+    expect(href).toContain("First%20line%0D%0ASecond%20%2B%20line");
+    expect(href).not.toContain("+");
     expect(url.protocol).toBe("mailto:");
     expect(url.pathname).toBe("mark@example.com");
     expect(url.searchParams.get("subject")).toBe("Hello & welcome?");
     expect(url.searchParams.get("body")).toBe(
-      "First line\nSecond + line\r\n\r\n—\r\nFrom: Zoë & Co. <zoe+web@example.com>",
+      "First line\r\nSecond + line\r\n\r\n—\r\nFrom: Zoë & Co. <zoe+web@example.com>",
+    );
+  });
+
+  it("normalizes CR, LF, and CRLF message lines without doubling carriage returns", () => {
+    const href = buildContactMailto("mark@example.com", {
+      name: "Jane",
+      email: "jane@example.com",
+      subject: "Line endings",
+      message: "First\rSecond\nThird\r\nFourth",
+    });
+
+    expect(new URL(href).searchParams.get("body")).toBe(
+      "First\r\nSecond\r\nThird\r\nFourth\r\n\r\n—\r\nFrom: Jane <jane@example.com>",
     );
   });
 
