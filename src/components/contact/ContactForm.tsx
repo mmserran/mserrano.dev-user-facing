@@ -29,7 +29,15 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
       return;
     }
 
-    window.location.assign(buildContactMailto(contactEmail, fields));
+    const formData = new FormData(event.currentTarget);
+    const submittedFields: ContactFields = {
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      subject: String(formData.get("subject") ?? ""),
+      message: String(formData.get("message") ?? ""),
+    };
+
+    window.location.assign(buildContactMailto(contactEmail, submittedFields));
   }
 
   function handleReset() {
