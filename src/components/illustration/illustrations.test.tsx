@@ -45,15 +45,19 @@ describe("Illustration Components", () => {
     expect(layers).toHaveLength(3);
     expect(layers.map((layer) => layer.style.width)).toEqual(["2px", "4px", "7px"]);
     expect(layers[0]).toHaveClass("animate-star-drift-slow", "motion-reduce:animate-none");
-    expect(layers[0].style.boxShadow.split(", ")).toHaveLength(300);
-    expect(layers[1].style.boxShadow.split(", ")).toHaveLength(60);
-    expect(layers[2].style.boxShadow.split(", ")).toHaveLength(15);
+    const starShadows = layers.map((layer) =>
+      layer.style.getPropertyValue("--star-shadow"),
+    );
+    expect(starShadows[0].split(", ")).toHaveLength(300);
+    expect(starShadows[1].split(", ")).toHaveLength(60);
+    expect(starShadows[2].split(", ")).toHaveLength(15);
 
     const { container: secondRender } = render(<StarField />);
     expect(
-      (secondRender.firstElementChild!.firstElementChild as HTMLElement).style
-        .boxShadow,
-    ).toBe(layers[0].style.boxShadow);
+      (
+        secondRender.firstElementChild!.firstElementChild as HTMLElement
+      ).style.getPropertyValue("--star-shadow"),
+    ).toBe(starShadows[0]);
   });
 
   it("cycles smoke twice on the far-left pipe before switching pipes", () => {
