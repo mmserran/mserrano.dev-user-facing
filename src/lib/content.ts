@@ -22,6 +22,7 @@ interface Content {
   projects: unknown[];
   resume: {
     filename: string;
+    contact_email: string;
   };
 }
 
@@ -46,4 +47,14 @@ export function getMediaUrl(filename: string): string {
 
 export function getResumeUrl(): string {
   return getMediaUrl(content.resume.filename);
+}
+
+export function getContactEmail(): string {
+  const email = content.resume.contact_email.trim();
+
+  if (!email) {
+    throw new Error("content.json resume.contact_email must not be empty.");
+  }
+
+  return email;
 }
