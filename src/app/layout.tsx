@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import AppShell from "@/components/navigation/AppShell";
 import Footer from "@/components/navigation/Footer";
-import { getHeaderLinks } from "@/lib/content";
+import { getHeaderLinks, getProjects } from "@/lib/content";
 import "./globals.css";
 
 // Matches the Gridsome frontend's site-wide font (`$font-reading` in
@@ -39,9 +39,12 @@ export default function RootLayout({
       <body
         className={`flex min-h-full flex-col overflow-x-hidden antialiased ${montserrat.className}`}
       >
-        <AppShell headerLinks={getHeaderLinks()}>{children}</AppShell>
+        <AppShell headerLinks={getHeaderLinks()} projects={getProjects()}>
+          {children}
+        </AppShell>
         <Footer />
       </body>
     </html>
   );
 }
+

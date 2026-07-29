@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getHeaderLinks, getMediaUrl, getResumeUrl } from "./content";
+import { getHeaderLinks, getMediaUrl, getProjects, getResumeUrl } from "./content";
 
 describe("content lib", () => {
   it("getHeaderLinks returns header links sorted by sort order", () => {
@@ -22,6 +22,16 @@ describe("content lib", () => {
     expect(() => getMediaUrl(" \n ")).toThrow(
       "content.json resume.filename must not be empty.",
     );
+  });
+
+  it("getProjects returns projects sorted by date descending (most recent first)", () => {
+    const projects = getProjects();
+    expect(Array.isArray(projects)).toBe(true);
+    expect(projects.length).toBeGreaterThan(0);
+
+    for (let i = 0; i < projects.length - 1; i++) {
+      expect(projects[i].general.date.localeCompare(projects[i + 1].general.date)).toBeGreaterThanOrEqual(0);
+    }
   });
 
   it("getResumeUrl returns the configured media URL", () => {

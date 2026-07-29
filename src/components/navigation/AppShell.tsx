@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { IconType } from "react-icons";
 import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
-import { HEADER_LINK_ICONS, type HeaderLink } from "@/lib/content";
+import { HEADER_LINK_ICONS, type HeaderLink, type Project } from "@/lib/content";
 import StarField from "@/components/illustration/StarField";
 
 const DESKTOP_BREAKPOINT = "(min-width: 1264px)";
@@ -32,9 +32,11 @@ const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
 
 export default function AppShell({
   headerLinks,
+  projects = [],
   children,
 }: {
   headerLinks: HeaderLink[];
+  projects?: Project[];
   children: ReactNode;
 }) {
   // Tracks the viewport breakpoint via the browser's matchMedia change event -
@@ -53,6 +55,7 @@ export default function AppShell({
 
   const pathname = usePathname();
   const activePath = pathname.replace(/\/+$/, "") || "/";
+  const isProjectDetailRoute = activePath.startsWith("/projects/") && activePath !== "/projects";
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
@@ -137,21 +140,46 @@ export default function AppShell({
         </Link>
         <ul className="py-2">
           {SITE_LINKS.map(({ href, label, Icon }) => {
-            const isActive = activePath === href.replace(/\/+$/, "");
+            const isActive =
+              href === "/projects/"
+                ? activePath === "/projects" || activePath.startsWith("/projects/")
+                : activePath === href.replace(/\/+$/, "");
             return (
               <li key={href}>
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
-                  className={`mx-2 flex h-14 items-center justify-end gap-3 px-2 text-right leading-[1.2] ${
+                  className={`relative mx-2 flex h-14 items-center justify-end gap-3 px-2 text-right leading-[1.2] transition-colors ${
                     isActive
-                      ? "text-brand-blue font-semibold"
+                      ? "text-brand-blue font-semibold pr-8 after:absolute after:right-2.5 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
                       : "text-black/80 hover:bg-black/5"
                   }`}
                 >
                   <span>{label}</span>
                   <Icon aria-hidden="true" className="text-black/70" />
                 </Link>
+                {href === "/projects/" && isProjectDetailRoute && projects.length > 0 && (
+                  <ul className="py-1 text-right" aria-label="Projects">
+                    {projects.map((project) => {
+                      const isProjectActive = activePath === `/projects/${project.slug}`;
+                      return (
+                        <li key={project.slug}>
+                          <Link
+                            href={`/projects/${project.slug}/`}
+                            aria-current={isProjectActive ? "page" : undefined}
+                            className={`relative block py-1.5 pr-6 pl-2 text-xs leading-tight transition-colors ${
+                              isProjectActive
+                                ? "text-brand-blue font-semibold pr-8 after:absolute after:right-0 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
+                                : "text-black/80 hover:bg-black/5 hover:text-black"
+                            }`}
+                          >
+                            {project.general.title}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </li>
             );
           })}
