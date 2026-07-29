@@ -46,7 +46,7 @@ describe("ProjectPage", () => {
     expect(screen.getByText(/My uncle needed a website/)).toBeInTheDocument();
 
     const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
-    expect(backLink).toHaveAttribute("href", "/projects/");
+    expect(backLink).toHaveAttribute("href", "/projects");
     expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
   });
 

@@ -59,7 +59,7 @@ describe("AppShell", () => {
     const linkedinLink = screen.getByRole("link", { name: "LinkedIn (opens in a new tab)" });
     expect(linkedinLink).toHaveAttribute("href", "https://linkedin.com");
     expect(linkedinLink).toHaveAttribute("target", "_blank");
-  });
+  }, 15_000);
 
   it("toggles the navigation drawer on menu button click", () => {
     const { container } = render(

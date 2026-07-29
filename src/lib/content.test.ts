@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getHeaderLinks, getMediaUrl, getResumeUrl } from "./content";
+import { getHeaderLinks, getMediaUrl, getProjects, getResumeUrl } from "./content";
 
 describe("content lib", () => {
   it("getHeaderLinks returns header links sorted by sort order", () => {
