@@ -4,13 +4,6 @@ import { useId, useMemo, useRef, useState } from "react";
 import { MdClose } from "react-icons/md";
 import { getMediaVariants, type ProjectFilter } from "@/lib/content";
 
-// Legacy chip-avatar whitelist (projectSearchChip.vue's `useImage`): only
-// these tech slugs, plus anything tagged with a "workplace" value, show a
-// real icon. Every other filter falls back to a letter avatar - confirmed
-// live: the Bootstrap chip doesn't use its icon even though content.json has
-// one for it.
-const AVATAR_IMAGE_SLUGS = new Set(["wordpress", "shopify", "vue", "adobe-illustrator"]);
-
 function stubFilter(slug: string): ProjectFilter {
   return {
     slug,
@@ -19,6 +12,7 @@ function stubFilter(slug: string): ProjectFilter {
     url: "",
     affinity: "",
     is_square: false,
+    is_full_color: false,
     primary: "#64748b",
     secondary: "#ffffff",
     image: "",
@@ -36,14 +30,29 @@ function matchesQuery(filter: ProjectFilter, query: string): boolean {
   return filter.alias.some((alias) => alias.toLowerCase().includes(needle));
 }
 
+// Diverges from the Gridsome frontend on purpose: that source only shows a
+// real icon for a hardcoded slug whitelist (wordpress/shopify/vue/adobe-
+// illustrator) plus anything tagged "workplace", even for filters that do
+// have an image asset. Here, any filter whose image resolves to an actual
+// manifest variant gets its icon; only a genuinely missing/unprocessed asset
+// falls back to a letter avatar on the filter's brand color.
+//
+// The circular `primary`-color backdrop behind the logo (for contrast
+// against white/mono marks like WordPress/Shopify) is skipped for logos
+// content.json flags as already full-color, e.g. Vue/jQuery/AngularJS.
 function FilterAvatar({ filter }: { filter: ProjectFilter }) {
-  const wantsImage = AVATAR_IMAGE_SLUGS.has(filter.slug) || filter.value.includes("workplace");
-  const [variant] = wantsImage ? getMediaVariants(filter.image) : [];
+  const [variant] = getMediaVariants(filter.image);
 
   if (variant) {
+    const backgroundColor = filter.is_full_color ? "transparent" : filter.primary;
     return (
       // eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size icon, not worth Next Image's loader machinery
-      <img src={variant.url} alt="" className="size-5 shrink-0 rounded-full object-contain" />
+      <img
+        src={variant.url}
+        alt=""
+        className="box-border size-5 shrink-0 rounded-full object-contain p-0.5"
+        style={{ backgroundColor }}
+      />
     );
   }
 
@@ -67,7 +76,7 @@ function FilterChip({ filter, onRemove }: { filter: ProjectFilter; onRemove: () 
         type="button"
         onClick={onRemove}
         aria-label={`Remove ${filter.title} filter`}
-        className="flex size-5 items-center justify-center rounded-full text-black/60 hover:bg-black/10 hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-blue"
+        className="flex size-5 items-center justify-center rounded-full text-black/60 hover:cursor-pointer hover:bg-black/10 hover:text-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-blue"
       >
         <MdClose aria-hidden="true" />
       </button>
@@ -101,13 +110,14 @@ export default function FilterBar({
     onChange(selectedSlugs.includes(slug) ? selectedSlugs.filter((s) => s !== slug) : [...selectedSlugs, slug]);
     setQuery("");
     setActiveIndex(-1);
-    setIsOpen(false);
     inputRef.current?.focus();
   }
 
   function removeSlug(slug: string) {
     onChange(selectedSlugs.filter((s) => s !== slug));
-    inputRef.current?.focus();
+    inputRef.current?.blur();
+    setIsOpen(false);
+    setActiveIndex(-1);
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {

@@ -148,7 +148,7 @@ export default function ProjectTileImage({
   };
 
   if (!showStatic && !showHover) {
-    return <div className="h-[200px] bg-black/10" aria-hidden="true" {...wrapperProps} />;
+    return <div className="h-[200px] border-b border-black/20 bg-black/10" aria-hidden="true" {...wrapperProps} />;
   }
 
   // Legacy case 8 ("blank static + image hover"): only reachable when there's
@@ -166,7 +166,7 @@ export default function ProjectTileImage({
   }`;
 
   return (
-    <div className="relative h-[200px] overflow-hidden" {...wrapperProps}>
+    <div className="relative h-[200px] overflow-hidden border-b border-black/20" {...wrapperProps}>
       {showHover &&
         (hoverFormat === "video" ? (
           <VideoLayer filename={hoverFilename} playWhenActive={active} className="absolute inset-0" />

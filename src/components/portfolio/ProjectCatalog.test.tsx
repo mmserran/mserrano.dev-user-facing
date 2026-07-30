@@ -45,6 +45,7 @@ function makeFilter(overrides: Partial<ProjectFilter>): ProjectFilter {
     url: "",
     affinity: "",
     is_square: false,
+    is_full_color: false,
     primary: "#000000",
     secondary: "#ffffff",
     image: "",

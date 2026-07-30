@@ -12,6 +12,7 @@ function makeFilter(overrides: Partial<ProjectFilter>): ProjectFilter {
     url: "",
     affinity: "",
     is_square: false,
+    is_full_color: false,
     primary: "#000000",
     secondary: "#ffffff",
     image: "",
@@ -26,6 +27,7 @@ function makeFilter(overrides: Partial<ProjectFilter>): ProjectFilter {
 const filters: ProjectFilter[] = [
   makeFilter({ slug: "wordpress", title: "WordPress", image: "WordPress.png" }),
   makeFilter({ slug: "bootstrap", title: "Bootstrap", image: "Bootstrap.png" }),
+  makeFilter({ slug: "vue", title: "Vue", image: "Vue.png", is_full_color: true }),
   makeFilter({ slug: "python", title: "Python", alias: ["py"] }),
   makeFilter({ slug: "hidden", title: "Hidden Filter", priority: -1 }),
 ];
@@ -45,6 +47,18 @@ describe("FilterBar", () => {
     expect(screen.getByText("WordPress")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Remove WordPress filter" }));
     expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  it("closes the listbox when a chip is removed via its x button", async () => {
+    const user = userEvent.setup();
+    render(<FilterBar filters={filters} selectedSlugs={["wordpress"]} onChange={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox"));
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove WordPress filter" }));
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox")).not.toHaveFocus();
   });
 
   it("excludes filters with priority -1 from suggestions", async () => {
@@ -75,6 +89,16 @@ describe("FilterBar", () => {
     await user.click(screen.getByRole("option", { name: /WordPress/ }));
 
     expect(onChange).toHaveBeenCalledWith(["wordpress"]);
+  });
+
+  it("keeps the listbox open after selecting a filter, so more can be picked without reopening it", async () => {
+    const user = userEvent.setup();
+    render(<FilterBar filters={filters} selectedSlugs={[]} onChange={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("option", { name: /WordPress/ }));
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
   });
 
   it("supports arrow-key navigation and Enter to select", async () => {
@@ -110,15 +134,37 @@ describe("FilterBar", () => {
     expect(onChange).toHaveBeenCalledWith(["wordpress"]);
   });
 
-  it("only gives whitelisted slugs an image avatar, even when others have an image asset", async () => {
+  it("shows a logo image for any filter with a resolvable media asset, falling back to a letter avatar otherwise", async () => {
     const user = userEvent.setup();
     render(<FilterBar filters={filters} selectedSlugs={[]} onChange={vi.fn()} />);
 
     await user.click(screen.getByRole("combobox"));
     const wordpressOption = screen.getByRole("option", { name: /WordPress/ });
     const bootstrapOption = screen.getByRole("option", { name: /Bootstrap/ });
+    const pythonOption = screen.getByRole("option", { name: /Python/ });
 
     expect(wordpressOption.querySelector("img")).not.toBeNull();
-    expect(bootstrapOption.querySelector("img")).toBeNull();
+    expect(bootstrapOption.querySelector("img")).not.toBeNull();
+    expect(pythonOption.querySelector("img")).toBeNull();
+  });
+
+  it("gives logo images a circular backdrop in the filter's brand color by default", async () => {
+    const user = userEvent.setup();
+    render(<FilterBar filters={filters} selectedSlugs={[]} onChange={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox"));
+    const wordpressImg = screen.getByRole("option", { name: /WordPress/ }).querySelector("img");
+
+    expect(wordpressImg).toHaveStyle({ backgroundColor: "#000000" });
+  });
+
+  it("leaves the backdrop transparent when content.json flags the logo as already full-color", async () => {
+    const user = userEvent.setup();
+    render(<FilterBar filters={filters} selectedSlugs={[]} onChange={vi.fn()} />);
+
+    await user.click(screen.getByRole("combobox"));
+    const vueImg = screen.getByRole("option", { name: /Vue/ }).querySelector("img");
+
+    expect(vueImg?.style.backgroundColor).toBe("transparent");
   });
 });

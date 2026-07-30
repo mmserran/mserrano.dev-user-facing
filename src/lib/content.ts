@@ -71,6 +71,7 @@ export interface ProjectFilter {
   url: string;
   affinity: string;
   is_square: boolean;
+  is_full_color: boolean;
   primary: string;
   secondary: string;
   image: string;
