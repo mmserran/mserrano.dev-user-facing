@@ -2,6 +2,7 @@ import type { IconType } from "react-icons";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { MdDescription } from "react-icons/md";
 import rawContent from "../../content/content.json";
+import rawManifest from "../../content/manifest.json";
 
 export interface HeaderLink {
   id: number;
@@ -58,9 +59,31 @@ export interface Project {
   pagebuilder: string;
 }
 
+export interface ProjectFilterStats {
+  usage: number;
+  first_year_used: number;
+}
+
+export interface ProjectFilter {
+  slug: string;
+  value: string;
+  title: string;
+  url: string;
+  affinity: string;
+  is_square: boolean;
+  primary: string;
+  secondary: string;
+  image: string;
+  alias: string[];
+  priority: number;
+  list_trait: string[];
+  stats: ProjectFilterStats;
+}
+
 interface Content {
   "nav-header": HeaderLink[];
   projects: Project[];
+  "project-filters": ProjectFilter[];
   resume: {
     filename: string;
     contact_email: string;
@@ -68,6 +91,39 @@ interface Content {
 }
 
 const content = rawContent as Content;
+
+interface ManifestVariant {
+  width: number | null;
+  path: string;
+}
+
+const manifest = rawManifest as Record<string, ManifestVariant[]>;
+
+export interface MediaVariant {
+  width: number | null;
+  url: string;
+}
+
+// Looks up the restored build's manifest.json, which maps an original media
+// filename (as referenced by content.json) to its processed responsive WebP
+// variants. Filters and projects can both reference filenames the migration
+// backend never received a source asset for - the manifest still carries the
+// key with an empty variant list rather than omitting it, so callers must
+// treat "no variants" as a normal, expected case and fall back gracefully
+// (e.g. a filter chip falling back to its letter avatar) rather than throw.
+export function getMediaVariants(filename: string): MediaVariant[] {
+  const trimmedFilename = filename.trim();
+
+  if (!trimmedFilename) {
+    return [];
+  }
+
+  const variants = manifest[trimmedFilename] ?? [];
+  return variants.map((variant) => ({
+    width: variant.width,
+    url: `/${variant.path}`,
+  }));
+}
 
 export function getHeaderLinks(): HeaderLink[] {
   return [...content["nav-header"]].sort((a, b) => a.sort - b.sort);
@@ -84,6 +140,64 @@ export function getProjects(): Project[] {
 
 export function getProjectBySlug(slug: string): Project | undefined {
   return content.projects.find((p) => p.slug === slug);
+}
+
+export function getProjectFilters(): ProjectFilter[] {
+  return [...content["project-filters"]].sort((a, b) => a.priority - b.priority);
+}
+
+// Mirrors the Gridsome frontend's momentFormat('round') filter: a project's
+// exact month is deliberately blurred into a season so the portfolio reads
+// as "Mid 2020" rather than a specific date.
+export function formatRoundedDate(date: string): string {
+  const [yearPart, monthPart] = date.split("-");
+  const year = Number(yearPart);
+  const month = Number(monthPart);
+
+  if (month < 5) {
+    return `Early ${year}`;
+  }
+  if (month > 8) {
+    return `Late ${year}`;
+  }
+  return `Mid ${year}`;
+}
+
+export function truncate(value: string, limit: number): string {
+  if (value.length > limit) {
+    return `${value.slice(0, limit - 3)}...`;
+  }
+  return value;
+}
+
+// Mirrors the Gridsome frontend's useProject.update_list_visible: a project
+// is visible if no filters are selected, or if ANY selected filter slug
+// matches ANY of its title/technology/workplace/year fields - selected
+// filters combine with OR/union semantics, not AND. Confirmed live: adding
+// a second filter tag grows the visible set rather than narrowing it.
+export function filterProjects(projects: Project[], selectedSlugs: string[]): Project[] {
+  if (selectedSlugs.length === 0) {
+    return projects;
+  }
+
+  return projects.filter((project) => projectMatchesAnyFilter(project, selectedSlugs));
+}
+
+function projectMatchesAnyFilter(project: Project, selectedSlugs: string[]): boolean {
+  const lowerTitle = project.general.title.toLowerCase();
+
+  return selectedSlugs.some((slug) => {
+    const lowerSlug = slug.toLowerCase();
+    return (
+      lowerTitle.includes(lowerSlug) ||
+      project.technology.language.includes(slug) ||
+      project.technology.framework.includes(slug) ||
+      project.technology.deployment.includes(slug) ||
+      project.technology.software.includes(slug) ||
+      project.general.workplace.includes(slug) ||
+      project.general.date.includes(slug)
+    );
+  });
 }
 
 export function getMediaUrl(filename: string): string {
