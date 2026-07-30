@@ -5,6 +5,24 @@ import { getMediaVariants } from "@/lib/content";
 
 const SIZES = "(min-width: 1440px) 33vw, (min-width: 794px) 50vw, 100vw";
 
+// Absolute-fill positioning shared by every thumbnail media layer. The
+// video/image is deliberately 2px wider than its wrapper and shifted 1px
+// left - overscanning past both edges, clipped back by the wrapper's
+// overflow-hidden - rather than sized to exactly 100%. CSS Grid's 1fr
+// tracks routinely give tiles fractional-pixel widths (e.g. 349.34375px),
+// and object-fit: cover's GPU compositing rounds against that fractional
+// box independently of layout, leaving a ~1px sliver of the card's white
+// background visible along one edge otherwise. `max-w-none` overrides
+// Tailwind Preflight's `video, img { max-width: 100% }`, which would
+// otherwise silently clamp the overscan width back down to 100% - without
+// it this whole fix is a no-op. (An earlier attempt at this used
+// `-inset-px` on an element that also had explicit `h-full w-full` classes,
+// which over-constrains the box: browsers keep the specified width and
+// reposition via `left` instead of growing it, which just shifts the
+// element and makes the gap worse. Setting an explicit wider `width`
+// alongside the inset avoids that.)
+const MEDIA_LAYER_BASE_CLASS = "absolute -inset-x-px inset-y-0 block h-full w-[calc(100%+2px)] max-w-none object-cover";
+
 function getFormat(filename: string): "video" | "image" | "" {
   if (!filename) return "";
   return filename.toLowerCase().includes(".mp4") ? "video" : "image";
@@ -67,7 +85,7 @@ function VideoLayer({
   return (
     <video
       ref={ref}
-      className={`h-full w-full object-cover [object-position:top_left] ${className}`}
+      className={`${MEDIA_LAYER_BASE_CLASS} object-left-top ${className}`}
       src={src.url}
       muted
       loop
@@ -113,10 +131,8 @@ function ImageLayer({
       alt=""
       loading="lazy"
       decoding="async"
-      className={`h-full w-full object-cover transition-[object-position] motion-reduce:transition-none ${
-        pan && active
-          ? "duration-[3000ms] ease-linear [object-position:bottom_left]"
-          : "duration-[750ms] ease-in-out [object-position:top_left]"
+      className={`${MEDIA_LAYER_BASE_CLASS} transition-[object-position] motion-reduce:transition-none ${
+        pan && active ? "duration-[3000ms] ease-linear object-left-bottom" : "duration-[750ms] ease-in-out object-left-top"
       } ${className}`}
     />
   );
@@ -148,7 +164,13 @@ export default function ProjectTileImage({
   };
 
   if (!showStatic && !showHover) {
-    return <div className="h-[200px] border-b border-black/20 bg-black/10" aria-hidden="true" {...wrapperProps} />;
+    return (
+      <div
+        className="h-[200px] w-full shrink-0 border-b border-black/20 bg-black/10"
+        aria-hidden="true"
+        {...wrapperProps}
+      />
+    );
   }
 
   // Legacy case 8 ("blank static + image hover"): only reachable when there's
@@ -161,22 +183,17 @@ export default function ProjectTileImage({
   // video included: a static video keeps autoplaying invisibly once faded
   // out, exactly like the Gridsome frontend's `:play-on-condition="true"`
   // on that slot being independent of its opacity toggle.
-  const staticClassName = `absolute inset-0 transition-opacity duration-500 ease-in motion-reduce:transition-none ${
+  const staticClassName = `transition-opacity duration-500 ease-in motion-reduce:transition-none ${
     active && showHover ? "opacity-0" : "opacity-100"
   }`;
 
   return (
-    <div className="relative h-[200px] overflow-hidden border-b border-black/20" {...wrapperProps}>
+    <div className="relative h-[200px] w-full shrink-0 overflow-hidden isolate border-b border-black/20" {...wrapperProps}>
       {showHover &&
         (hoverFormat === "video" ? (
-          <VideoLayer filename={hoverFilename} playWhenActive={active} className="absolute inset-0" />
+          <VideoLayer filename={hoverFilename} playWhenActive={active} />
         ) : (
-          <ImageLayer
-            filename={hoverFilename}
-            pan={doScrollAnimation}
-            active={active}
-            className="absolute inset-0"
-          />
+          <ImageLayer filename={hoverFilename} pan={doScrollAnimation} active={active} />
         ))}
       {showStatic &&
         (staticFormat === "video" ? (
