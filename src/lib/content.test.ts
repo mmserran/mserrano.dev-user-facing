@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { getHeaderLinks, getMediaUrl, getProjects, getResumeUrl } from "./content";
+import {
+  filterProjects,
+  formatRoundedDate,
+  getHeaderLinks,
+  getMediaUrl,
+  getMediaVariants,
+  getProjectFilters,
+  getProjects,
+  getResumeUrl,
+  truncate,
+} from "./content";
 
 describe("content lib", () => {
   it("getHeaderLinks returns header links sorted by sort order", () => {
@@ -36,5 +46,66 @@ describe("content lib", () => {
 
   it("getResumeUrl returns the configured media URL", () => {
     expect(getResumeUrl()).toMatch(/^\/media\/[^ ]+$/);
+  });
+
+  it("getProjectFilters returns filters sorted by priority ascending", () => {
+    const filters = getProjectFilters();
+    expect(Array.isArray(filters)).toBe(true);
+    expect(filters.length).toBeGreaterThan(0);
+
+    for (let i = 0; i < filters.length - 1; i++) {
+      expect(filters[i].priority).toBeLessThanOrEqual(filters[i + 1].priority);
+    }
+  });
+
+  it("getMediaVariants resolves a known filename to its width variants", () => {
+    const variants = getMediaVariants("WordPress.png");
+    expect(variants.length).toBeGreaterThan(0);
+    for (const variant of variants) {
+      expect(variant.url.startsWith("/media/")).toBe(true);
+    }
+  });
+
+  it("getMediaVariants returns an empty array for a blank or unknown filename", () => {
+    expect(getMediaVariants("")).toEqual([]);
+    expect(getMediaVariants("   ")).toEqual([]);
+    expect(getMediaVariants("does-not-exist.png")).toEqual([]);
+  });
+
+  it("formatRoundedDate buckets months into Early/Mid/Late", () => {
+    expect(formatRoundedDate("2020-01")).toBe("Early 2020");
+    expect(formatRoundedDate("2020-04")).toBe("Early 2020");
+    expect(formatRoundedDate("2020-05")).toBe("Mid 2020");
+    expect(formatRoundedDate("2020-08")).toBe("Mid 2020");
+    expect(formatRoundedDate("2020-09")).toBe("Late 2020");
+    expect(formatRoundedDate("2020-12")).toBe("Late 2020");
+  });
+
+  it("truncate leaves short strings untouched and ellipsizes long ones", () => {
+    expect(truncate("short", 120)).toBe("short");
+    expect(truncate("a".repeat(10), 5)).toBe("aa...");
+  });
+
+  describe("filterProjects", () => {
+    const projects = getProjects();
+
+    it("returns every project when no filters are selected", () => {
+      expect(filterProjects(projects, [])).toEqual(projects);
+    });
+
+    it("matches the live site's confirmed counts for a single technology filter", () => {
+      expect(filterProjects(projects, ["shopify"])).toHaveLength(5);
+    });
+
+    it("combines multiple selected filters with OR/union, not AND", () => {
+      const shopifyOnly = filterProjects(projects, ["shopify"]);
+      const union = filterProjects(projects, ["shopify", "wordpress"]);
+      expect(union.length).toBeGreaterThan(shopifyOnly.length);
+      expect(union).toHaveLength(9);
+    });
+
+    it("matches projects by year embedded in the date", () => {
+      expect(filterProjects(projects, ["2020"])).toHaveLength(2);
+    });
   });
 });
