@@ -80,6 +80,18 @@ describe("FilterBar", () => {
     expect(screen.queryByRole("option", { name: /WordPress/ })).not.toBeInTheDocument();
   });
 
+  it("reports the combobox as collapsed when a query has no suggestions", async () => {
+    const user = userEvent.setup();
+    render(<FilterBar filters={filters} selectedSlugs={[]} onChange={vi.fn()} />);
+
+    const input = screen.getByRole("combobox");
+    await user.type(input, "no matches");
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).not.toHaveAttribute("aria-controls");
+  });
+
   it("selects a filter on click and clears the query", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

@@ -105,6 +105,7 @@ export default function FilterBar({
   // Mirrors the Gridsome frontend's list_visible_filter computed: only
   // filters with a non-negative priority are offered as suggestions.
   const suggestions = filters.filter((f) => f.priority > -1 && matchesQuery(f, query));
+  const isListboxVisible = isOpen && suggestions.length > 0;
 
   function toggleSlug(slug: string) {
     onChange(selectedSlugs.includes(slug) ? selectedSlugs.filter((s) => s !== slug) : [...selectedSlugs, slug]);
@@ -146,7 +147,7 @@ export default function FilterBar({
   }
 
   const activeOptionId =
-    isOpen && activeIndex >= 0 && suggestions[activeIndex] ? `${listboxId}-opt-${activeIndex}` : undefined;
+    isListboxVisible && activeIndex >= 0 && suggestions[activeIndex] ? `${listboxId}-opt-${activeIndex}` : undefined;
 
   return (
     <div className="relative mx-auto w-full max-w-2xl">
@@ -158,8 +159,8 @@ export default function FilterBar({
           ref={inputRef}
           role="combobox"
           type="text"
-          aria-expanded={isOpen}
-          aria-controls={listboxId}
+          aria-expanded={isListboxVisible}
+          aria-controls={isListboxVisible ? listboxId : undefined}
           aria-activedescendant={activeOptionId}
           aria-autocomplete="list"
           aria-label="Filter by technology/query. Add terms to expand search."
@@ -182,7 +183,7 @@ export default function FilterBar({
         />
       </div>
 
-      {isOpen && suggestions.length > 0 && (
+      {isListboxVisible && (
         <ul
           id={listboxId}
           role="listbox"

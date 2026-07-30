@@ -72,7 +72,11 @@ function VideoLayer({
 
   useEffect(() => {
     const video = ref.current;
-    if (!video || reducedMotion) return;
+    if (!video) return;
+    if (reducedMotion) {
+      video.pause();
+      return;
+    }
     if (playWhenActive) {
       video.play()?.catch(() => {});
     } else {

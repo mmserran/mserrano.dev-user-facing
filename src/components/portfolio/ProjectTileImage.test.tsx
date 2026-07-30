@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectTileImage from "./ProjectTileImage";
 
@@ -34,6 +34,36 @@ describe("ProjectTileImage", () => {
     const wrapper = container.firstElementChild as HTMLElement;
     fireEvent.mouseEnter(wrapper);
     expect(video?.className).toContain("opacity-0");
+  });
+
+  it("pauses a playing video when reduced motion becomes enabled", () => {
+    let reducedMotion = false;
+    let notifyChange = () => {};
+    vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
+      matches: reducedMotion,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn((_type, listener) => {
+        notifyChange = () => {
+          if (typeof listener === "function") listener(new Event("change"));
+        };
+      }),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    const pauseSpy = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+
+    render(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="" />);
+    expect(pauseSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      reducedMotion = true;
+      notifyChange();
+    });
+
+    expect(pauseSpy).toHaveBeenCalled();
   });
 
   it("swaps between two videos on hover when both the static and hover slots are video (e.g. Swisher Sweets)", () => {
