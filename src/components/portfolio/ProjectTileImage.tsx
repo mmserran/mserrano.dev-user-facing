@@ -45,7 +45,7 @@ function getPrefersReducedMotionServerSnapshot() {
 // Matches AppShell's breakpoint-tracking pattern: subscribe to the media
 // query's change event via useSyncExternalStore so SSR and the first client
 // render agree (both see `false`) with no hydration mismatch.
-function usePrefersReducedMotion(): boolean {
+export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(
     subscribeToReducedMotion,
     getPrefersReducedMotion,

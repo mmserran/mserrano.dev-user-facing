@@ -58,6 +58,13 @@
   --animate-light-nw: animateLight 10.8s linear infinite 1.8s;
   --animate-light-ne: animateLight 10.8s linear infinite 5.4s;
   --animate-light-se: animateLight 10.8s linear infinite 7.2s;
+
+  /* Project page header screenshot carousel: slow top-to-bottom pan inside
+     the browser-frame SVG, carried over from decorDeviceFrame.vue's
+     "animated" offset. Holds briefly at the top and bottom of the pan
+     (matching the source's 15%/90% keyframe stops) so the pause before the
+     carousel advances to the next slide reads as deliberate, not abrupt. */
+  --animate-project-screenshot-pan: project-screenshot-pan 6s cubic-bezier(0.7, 0.5, 1, 1) forwards;
 }
 
 @keyframes star-drift {
@@ -414,6 +421,21 @@
   to {
     mask-position: -50%;
     -webkit-mask-position: -50%;
+  }
+}
+
+@keyframes project-screenshot-pan {
+  0% {
+    object-position: 0% 0%;
+  }
+  15% {
+    object-position: 0% 0%;
+  }
+  90% {
+    object-position: 0% 100%;
+  }
+  100% {
+    object-position: 0% 100%;
   }
 }
 
