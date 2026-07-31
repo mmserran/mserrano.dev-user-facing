@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
 import ProjectHeader from "@/components/portfolio/ProjectHeader";
+import RelatedProjects from "@/components/portfolio/RelatedProjects";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -59,6 +60,8 @@ export default async function ProjectPage({
           Back to Portfolio
         </Link>
       </div>
+
+      <RelatedProjects project={project} />
 
       <EndcapShell />
     </main>
