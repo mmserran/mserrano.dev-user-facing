@@ -39,7 +39,12 @@ export default function ProjectScreenshotCarousel({
 
   return (
     <div className="w-full">
-      <BrowserDeviceFrame filename={screenshots[activeIndex]} browser={browser} animate={!reducedMotion} />
+      <BrowserDeviceFrame
+        key={activeIndex}
+        filename={screenshots[activeIndex]}
+        browser={browser}
+        animate={!reducedMotion}
+      />
     </div>
   );
 }
