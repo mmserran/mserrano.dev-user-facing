@@ -5,10 +5,13 @@ import {
   getHeaderLinks,
   getMediaUrl,
   getMediaVariants,
+  getProjectBySlug,
   getProjectFilters,
   getProjects,
+  getRelatedProjects,
   getResumeUrl,
   truncate,
+  type Project,
 } from "./content";
 
 describe("content lib", () => {
@@ -106,6 +109,63 @@ describe("content lib", () => {
 
     it("matches projects by year embedded in the date", () => {
       expect(filterProjects(projects, ["2020"])).toHaveLength(2);
+    });
+  });
+
+  describe("getRelatedProjects", () => {
+    it("orders must-include picks first, then shared-workplace projects, then the rest by recency", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const related = getRelatedProjects(project);
+
+      expect(related.title).toBe("Related");
+      expect(related.projects.slice(0, 5).map((p) => p.slug)).toEqual([
+        "pulsemobile",
+        "pulsebooker-consumer-version",
+        "pulselink",
+        "pulsebooker-cro-version",
+        "internal-console-2",
+      ]);
+    });
+
+    it("never includes the project itself", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const related = getRelatedProjects(project);
+
+      expect(related.projects.some((p) => p.value === project.value)).toBe(false);
+    });
+
+    it("includes every other project when there is no editorial override", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const related = getRelatedProjects(project);
+
+      expect(related.projects).toHaveLength(getProjects().length - 1);
+    });
+
+    it("skips a must-include reference that has no matching project instead of crashing", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const withBadOverride: Project = {
+        ...project,
+        pagebuilder: JSON.stringify([
+          { type: "pbCarouselRelatedPosts", title: "Related", list_must_include: [{ value: "post:project:9999" }] },
+        ]),
+      };
+
+      const related = getRelatedProjects(withBadOverride);
+      expect(related.projects.every((p) => p !== undefined)).toBe(true);
+    });
+
+    it("returns an empty result when the project has no related-posts block", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const withoutBlock: Project = { ...project, pagebuilder: "[]" };
+
+      expect(getRelatedProjects(withoutBlock)).toEqual({ title: "", projects: [] });
+    });
+
+    it("returns an empty result when pagebuilder fails to parse", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const malformed: Project = { ...project, pagebuilder: "not json" };
+
+      expect(getRelatedProjects(malformed)).toEqual({ title: "", projects: [] });
     });
   });
 });

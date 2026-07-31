@@ -1,0 +1,161 @@
+"use client";
+
+import { Children, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
+
+function subscribeToReducedMotion(callback: () => void) {
+  const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", callback);
+}
+
+function getPrefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getPrefersReducedMotionServerSnapshot() {
+  return false;
+}
+
+const BOUNDARY_TOLERANCE_PX = 8;
+
+// Matches ProjectTileImage's/AppShell's media-query-tracking pattern:
+// subscribe via useSyncExternalStore so SSR and the first client render agree
+// (both see `false`) with no hydration mismatch.
+function usePrefersReducedMotion(): boolean {
+  return useSyncExternalStore(
+    subscribeToReducedMotion,
+    getPrefersReducedMotion,
+    getPrefersReducedMotionServerSnapshot,
+  );
+}
+
+// Generic, content-agnostic horizontal carousel: a native CSS scroll-snap
+// track plus Previous/Next buttons. Deliberately has no infinite wraparound
+// (buttons disable at each end) and ships no JS dragging - native scrolling
+// already gives keyboard users (Tab moves focus into an off-screen item,
+// which the browser scrolls into view for free), touch users, and trackpad
+// users a working carousel without reimplementing any of that.
+//
+// Takes pre-rendered, individually-keyed children rather than an
+// items/renderItem pair - a render-prop function can't cross the
+// Server/Client Component boundary (only serializable JSX can), and callers
+// that are Server Components (like RelatedProjects) need to render their
+// items themselves.
+export default function Carousel({
+  children,
+  ariaLabel,
+}: {
+  children: ReactNode;
+  ariaLabel: string;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(true);
+  // A "page" is one screen's worth of cards - however many currently fit in
+  // the track's width, matching what Previous/Next already scroll by. This
+  // shrinks the dot count as more cards fit per row instead of one dot per
+  // item, which would be unusably long for a project with a dozen-plus picks.
+  const [pageCount, setPageCount] = useState(1);
+  const [activePage, setActivePage] = useState(0);
+  const reducedMotion = usePrefersReducedMotion();
+  const itemCount = Children.count(children);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    function updateBoundaries() {
+      const track = trackRef.current;
+      if (!track || track.clientWidth === 0) return;
+      // Scroll-snap settles the first/last card a few pixels short of the
+      // true 0/max scroll extent (the track's own end padding is itself a
+      // valid snap position), so boundary detection needs slack wider than a
+      // rounding error - otherwise Previous/Next never disable at rest.
+      const maxScrollLeft = track.scrollWidth - track.clientWidth;
+      const isAtEnd = track.scrollLeft >= maxScrollLeft - BOUNDARY_TOLERANCE_PX;
+      const pages = Math.max(1, Math.ceil(track.scrollWidth / track.clientWidth));
+      setAtStart(track.scrollLeft <= BOUNDARY_TOLERANCE_PX);
+      setAtEnd(isAtEnd);
+      setPageCount(pages);
+      // The last page is usually partial (fewer cards than a full page), so
+      // scrollLeft/clientWidth alone would round down and never reach the
+      // final page index - reuse the same "at end" check the Next button's
+      // disabled state relies on instead.
+      setActivePage(isAtEnd ? pages - 1 : Math.round(track.scrollLeft / track.clientWidth));
+    }
+
+    updateBoundaries();
+    track.addEventListener("scroll", updateBoundaries, { passive: true });
+    const resizeObserver = new ResizeObserver(updateBoundaries);
+    resizeObserver.observe(track);
+
+    return () => {
+      track.removeEventListener("scroll", updateBoundaries);
+      resizeObserver.disconnect();
+    };
+  }, [itemCount]);
+
+  function scrollByPage(direction: 1 | -1) {
+    trackRef.current?.scrollBy({
+      left: direction * trackRef.current.clientWidth,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }
+
+  function scrollToPage(page: number) {
+    trackRef.current?.scrollTo({
+      left: page * trackRef.current.clientWidth,
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
+  }
+
+  return (
+    <div className="relative">
+      <div
+        ref={trackRef}
+        role="region"
+        aria-label={ariaLabel}
+        className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-1 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {children}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => scrollByPage(-1)}
+        disabled={atStart}
+        aria-label="Previous"
+        className="absolute top-1/2 left-0 flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-lg transition-opacity hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:pointer-events-none disabled:opacity-0"
+      >
+        <MdChevronLeft aria-hidden="true" size={24} />
+      </button>
+      <button
+        type="button"
+        onClick={() => scrollByPage(1)}
+        disabled={atEnd}
+        aria-label="Next"
+        className="absolute top-1/2 right-0 flex size-10 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-black shadow-lg transition-opacity hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:pointer-events-none disabled:opacity-0"
+      >
+        <MdChevronRight aria-hidden="true" size={24} />
+      </button>
+
+      {pageCount > 1 && (
+        <div className="mt-4 hidden items-center justify-center gap-2 sm:flex">
+          {Array.from({ length: pageCount }, (_, page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => scrollToPage(page)}
+              aria-label={`Go to page ${page + 1} of ${pageCount}`}
+              aria-current={page === activePage}
+              className={`size-2 rounded-full transition-colors hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${
+                page === activePage ? "bg-white" : "bg-white/40 hover:bg-white/60"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
