@@ -63,8 +63,21 @@
      the browser-frame SVG, carried over from decorDeviceFrame.vue's
      "animated" offset. Holds briefly at the top and bottom of the pan
      (matching the source's 15%/90% keyframe stops) so the pause before the
-     carousel advances to the next slide reads as deliberate, not abrupt. */
-  --animate-project-screenshot-pan: project-screenshot-pan 6s cubic-bezier(0.7, 0.5, 1, 1) forwards;
+     carousel advances to the next slide reads as deliberate, not abrupt.
+     4s here is only the pre-measurement fallback (matches
+     BrowserDeviceFrame's MIN_PAN_SECONDS floor) - once the screenshot loads,
+     an inline animation-duration overrides this, scaled to the screenshot's
+     height so tall and short screenshots pan at roughly the same speed. */
+  --animate-project-screenshot-pan: project-screenshot-pan 4s cubic-bezier(0.7, 0.5, 1, 1) forwards;
+
+  /* Project page header screenshot carousel: crossfade between the outgoing
+     and incoming slide (frame + screenshot together) when the carousel
+     advances, carried over from snippetCarouselBrowser.vue's Vuetify
+     fade-transition on each v-carousel-item. Duration and easing copied
+     from Vuetify's actual .fade-transition-enter-active rule on the live
+     site (0.3s cubic-bezier(0.25, 0.8, 0.5, 1)), not guessed. */
+  --animate-carousel-fade-in: carousel-fade-in 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
+  --animate-carousel-fade-out: carousel-fade-out 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
 }
 
 @keyframes star-drift {
@@ -436,6 +449,24 @@
   }
   100% {
     object-position: 0% 100%;
+  }
+}
+
+@keyframes carousel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes carousel-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
