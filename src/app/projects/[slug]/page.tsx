@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
+import ProjectHeader from "@/components/portfolio/ProjectHeader";
 import RelatedProjects from "@/components/portfolio/RelatedProjects";
-import PageTitle from "@/components/typography/PageTitle";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -50,24 +50,7 @@ export default async function ProjectPage({
 
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
-      <PageTitle>{project.general.title}</PageTitle>
-
-      <section
-        aria-label="Project overview"
-        className="mx-auto w-full max-w-4xl px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8"
-      >
-        <div className="rounded-sm bg-white p-6 text-black shadow-2xl sm:p-10">
-          <h2 className="text-2xl font-bold sm:text-3xl">
-            {project.general.title}
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            {project.general.role} &bull; {project.general.date}
-          </p>
-          <div className="mt-6 text-base leading-relaxed text-slate-800">
-            <p>{project.general.content}</p>
-          </div>
-        </div>
-      </section>
+      <ProjectHeader project={project} />
 
       <div className="flex justify-center px-4 pb-16">
         <Link
