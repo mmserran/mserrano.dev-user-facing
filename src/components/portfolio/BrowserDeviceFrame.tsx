@@ -132,7 +132,7 @@ export default function BrowserDeviceFrame({
           className={`h-full w-full object-cover ${
             shouldPan
               ? "object-left-top animate-project-screenshot-pan motion-reduce:animate-none motion-reduce:object-left-top"
-              : restPosition === "bottom"
+              : restPosition === "bottom" && scrollEligible
                 ? "object-left-bottom"
                 : "object-left-top"
           }`}
