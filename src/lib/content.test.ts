@@ -134,6 +134,22 @@ describe("content lib", () => {
       expect(related.projects.some((p) => p.value === project.value)).toBe(false);
     });
 
+    it("matches a shared workplace tag in any candidate position", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const candidate = getProjects().find(
+        (p) => p.value !== project.value && !p.general.workplace.some((tag) => project.general.workplace.includes(tag)),
+      ) as Project;
+      const originalWorkplaces = candidate.general.workplace;
+
+      try {
+        candidate.general.workplace = [originalWorkplaces[0], project.general.workplace[0]];
+
+        expect(getRelatedProjects(project).projects[0]).toBe(candidate);
+      } finally {
+        candidate.general.workplace = originalWorkplaces;
+      }
+    });
+
     it("includes every other project when there is no editorial override", () => {
       const project = getProjectBySlug("cygnus-management-llc") as Project;
       const related = getRelatedProjects(project);

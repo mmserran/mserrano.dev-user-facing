@@ -227,7 +227,8 @@ function findRelatedPostsBlock(pagebuilder: string): RelatedPostsBlock | undefin
 // Ports the Gridsome frontend's pbCarouselRelatedPosts recommendation_alg: the
 // project's own pagebuilder block curates a must-include list (editorial
 // picks, e.g. hospitalityPulse -> pulseMobile/pulseBooker/Internal Console 2),
-// then remaining picks are ordered by shared workplace, then by recency.
+// then remaining picks sharing any workplace tag are ordered before the rest
+// by recency.
 // Diverges from the Vue source in one place: a must_include value with no
 // matching project (impossible today, but not guaranteed by the data) is
 // skipped rather than pushed into the result as null, which would otherwise
@@ -252,7 +253,9 @@ export function getRelatedProjects(project: Project): RelatedProjects {
     .map((override) => take((p) => p.value === override.value)[0])
     .filter((p): p is Project => p !== undefined);
 
-  const withinWorkplace = take((p) => project.general.workplace.includes(p.general.workplace[0]));
+  const withinWorkplace = take((p) =>
+    p.general.workplace.some((workplace) => project.general.workplace.includes(workplace)),
+  );
 
   return {
     title: block.title,
@@ -286,4 +289,3 @@ export function getContactEmail(): string {
 
   return email;
 }
-
