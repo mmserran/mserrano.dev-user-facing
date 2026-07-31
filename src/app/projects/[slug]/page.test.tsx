@@ -11,6 +11,18 @@ vi.mock("@/components/illustration/EndcapShell", () => ({
   default: () => <div data-testid="endcap-shell" />,
 }));
 
+// RelatedProjects renders every other project's real media-heavy ProjectTile;
+// its own rendering/composition logic is covered by RelatedProjects.test.tsx,
+// so it's stubbed here the same way EndcapShell is - this file only cares
+// that ProjectPage wires the current project into it.
+const relatedProjectsSpy = vi.fn();
+vi.mock("@/components/portfolio/RelatedProjects", () => ({
+  default: (props: { project: { slug: string } }) => {
+    relatedProjectsSpy(props);
+    return <div data-testid="related-projects" />;
+  },
+}));
+
 describe("ProjectPage", () => {
   it("generates static params for all project slugs", async () => {
     const params = await generateStaticParams();
@@ -48,6 +60,10 @@ describe("ProjectPage", () => {
     const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
     expect(backLink).toHaveAttribute("href", "/projects");
     expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
+    expect(screen.getByTestId("related-projects")).toBeInTheDocument();
+    expect(relatedProjectsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+    );
   });
 
   it("calls notFound for invalid slug", async () => {
