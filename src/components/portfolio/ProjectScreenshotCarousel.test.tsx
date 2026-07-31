@@ -89,6 +89,24 @@ describe("ProjectScreenshotCarousel", () => {
     ).not.toBeNull();
   });
 
+  it("keeps a low-overflow screenshot at the top crop while it fades out", () => {
+    const { container } = render(
+      <ProjectScreenshotCarousel screenshots={SCREENSHOTS} supportedBrowsers={BROWSERS} />,
+    );
+
+    act(() => {
+      loadActiveScreenshot(container, 1600, 1000);
+      vi.advanceTimersByTime(4000);
+    });
+
+    const outgoing = container.querySelector(
+      'img[src*="screencapture-cygnusmgmt-desktop-1600"]',
+    ) as HTMLImageElement;
+    expect(outgoing.closest(".animate-carousel-fade-out")).not.toBeNull();
+    expect(outgoing.className).toContain("object-left-top");
+    expect(outgoing.className).not.toContain("object-left-bottom");
+  });
+
   it("sequences a slide change as fade-out, a blank pause, then fade-in - never overlapping the two slides", () => {
     const { container } = render(
       <ProjectScreenshotCarousel screenshots={SCREENSHOTS} supportedBrowsers={BROWSERS} />,
