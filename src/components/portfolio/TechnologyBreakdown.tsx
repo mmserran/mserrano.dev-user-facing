@@ -45,7 +45,7 @@ function childWedges(
   start: number,
   end: number,
   layer: "underlay" | "overlay",
-  onHover: (label: string | null) => void,
+  onHover: (technology: ProjectFilter | null) => void,
 ) {
   const paths: ReactNode[] = [];
   let position = start;
@@ -60,7 +60,7 @@ function childWedges(
           fill={child.technology.primary}
           fillOpacity={layer === "overlay" ? 0.25 : undefined}
           pointerEvents={layer === "overlay" ? "none" : undefined}
-          onMouseEnter={layer === "underlay" ? () => onHover(child.technology?.title ?? null) : undefined}
+          onMouseEnter={layer === "underlay" ? () => onHover(child.technology ?? null) : undefined}
           onMouseLeave={layer === "underlay" ? () => onHover(null) : undefined}
         />,
       );
@@ -71,7 +71,17 @@ function childWedges(
   return paths;
 }
 
-function TechnologyLink({ technology, subdued = false }: { technology: ProjectFilter; subdued?: boolean }) {
+function TechnologyLink({
+  technology,
+  subdued = false,
+  active = false,
+  onActiveChange,
+}: {
+  technology: ProjectFilter;
+  subdued?: boolean;
+  active?: boolean;
+  onActiveChange: (slug: string | null) => void;
+}) {
   const content = (
     <>
       <span
@@ -83,19 +93,34 @@ function TechnologyLink({ technology, subdued = false }: { technology: ProjectFi
         {technology.title}
         <span
           aria-hidden="true"
-          className="absolute top-1/2 -right-5 h-[7px] w-[7px] -translate-y-1/2 rotate-45 bg-white opacity-0 group-hover:animate-[technology-star-twirl_3s_infinite] group-hover:opacity-100 group-focus-visible:animate-[technology-star-twirl_3s_infinite] group-focus-visible:opacity-100 motion-reduce:animate-none"
+          data-technology-diamond
+          className={`absolute top-1/2 -right-5 h-[7px] w-[7px] -translate-y-1/2 rotate-45 bg-white motion-reduce:animate-none ${active ? "animate-[technology-star-twirl_3s_infinite] opacity-100" : "opacity-0 group-hover:animate-[technology-star-twirl_3s_infinite] group-hover:opacity-100 group-focus-visible:animate-[technology-star-twirl_3s_infinite] group-focus-visible:opacity-100"}`}
         />
       </span>
     </>
   );
   const className = `group flex min-h-10 w-fit items-center gap-2.5 text-sm leading-5 text-white transition-opacity focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:min-h-6 ${subdued ? "opacity-50 hover:opacity-100 focus-visible:opacity-100" : ""}`;
+  const interactionProps = {
+    onMouseEnter: () => onActiveChange(technology.slug),
+    onMouseLeave: () => onActiveChange(null),
+    onFocus: () => onActiveChange(technology.slug),
+    onBlur: () => onActiveChange(null),
+  };
 
   return technology.url ? (
-    <a href={technology.url} target="_blank" rel="noopener noreferrer" className={className}>
+    <a
+      href={technology.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      {...interactionProps}
+    >
       {content}
     </a>
   ) : (
-    <span className={className}>{content}</span>
+    <span className={className} {...interactionProps}>
+      {content}
+    </span>
   );
 }
 
@@ -105,6 +130,7 @@ function headingId(title: string) {
 
 export default function TechnologyBreakdown({ project }: { project: Project }) {
   const [tooltip, setTooltip] = useState({ label: "", x: 0, y: 0 });
+  const [activeTechnology, setActiveTechnology] = useState<string | null>(null);
   const breakdown = getTechnologyBreakdown(project);
   if (!breakdown || breakdown.graph.length === 0) {
     return null;
@@ -124,8 +150,9 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
     }));
   };
 
-  const setHoveredTechnology = (label: string | null) => {
-    setTooltip((current) => ({ ...current, label: label ?? "" }));
+  const setHoveredTechnology = (technology: ProjectFilter | null) => {
+    setTooltip((current) => ({ ...current, label: technology?.title ?? "" }));
+    setActiveTechnology(technology?.slug ?? null);
   };
 
   return (
@@ -136,21 +163,20 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
       <h2 id="technology-breakdown-heading" className="sr-only">
         Technology breakdown
       </h2>
-      <div aria-hidden="true" className="mb-8 h-px w-full bg-white/62" />
+      <div aria-hidden="true" className="h-px w-full bg-white/62" />
 
       <div
-        className="relative mx-auto w-full max-w-[800px]"
+        className="relative mx-auto mt-10 mb-4 w-full max-w-[800px] sm:mt-12 sm:mb-5"
         onMouseMove={moveTooltip}
         onMouseLeave={() => setHoveredTechnology(null)}
       >
         <svg
           viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
           role="img"
-          aria-labelledby="technology-graph-title"
+          aria-label={`Technology usage breakdown for ${project.general.title}`}
           aria-describedby="technology-graph-description"
           className="block h-auto w-full"
         >
-          <title id="technology-graph-title">{`Technology usage breakdown for ${project.general.title}`}</title>
           <desc id="technology-graph-description">
             A weighted semicircle showing the project&apos;s primary technologies and their nested frameworks.
             The linked legend following the chart lists every technology by category.
@@ -162,13 +188,53 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
                 <path
                   d={wedgePath(sliceRadius(slice.weight), start, end)}
                   fill={slice.technology.primary}
-                  onMouseEnter={() => setHoveredTechnology(slice.technology.title)}
+                  onMouseEnter={() => setHoveredTechnology(slice.technology)}
                   onMouseLeave={() => setHoveredTechnology(null)}
                 />
                 {childWedges(slice.breakdown, start, end, "overlay", setHoveredTechnology)}
               </g>
             );
           })}
+          <g aria-hidden="true" pointerEvents="none">
+            {graphSlices.flatMap(({ slice, start, end }) => {
+              const outlines: ReactNode[] = [];
+              if (slice.technology.slug === activeTechnology) {
+                outlines.push(
+                  <path
+                    key={`outline-${slice.technology.slug}`}
+                    data-technology-outline={slice.technology.slug}
+                    d={wedgePath(sliceRadius(slice.weight), start, end)}
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                    vectorEffect="non-scaling-stroke"
+                  />,
+                );
+              }
+
+              let position = start;
+              slice.breakdown.forEach((child, index) => {
+                const childEnd = position + child.weight * (end - start);
+                if (child.technology?.slug === activeTechnology && childEnd > position) {
+                  outlines.push(
+                    <path
+                      key={`outline-${child.technology.slug}-${index}`}
+                      data-technology-outline={child.technology.slug}
+                      d={wedgePath(sliceRadius(child.weight, true), position, childEnd)}
+                      fill="none"
+                      stroke="#fff"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />,
+                  );
+                }
+                position = childEnd;
+              });
+              return outlines;
+            })}
+          </g>
           <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#000" fillOpacity="0.2" />
           <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.8125} fill="#fff" fillOpacity="0.9" />
           <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.5875} fill="#fff" fillOpacity="0.65" />
@@ -195,10 +261,21 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
             </h3>
             {section.entries.map((entry) => (
               <div key={`${entry.general ? "general" : "parent"}-${entry.technology?.slug ?? section.title}`}>
-                {entry.technology && <TechnologyLink technology={entry.technology} />}
+                {entry.technology && (
+                  <TechnologyLink
+                    technology={entry.technology}
+                    active={entry.technology.slug === activeTechnology}
+                    onActiveChange={setActiveTechnology}
+                  />
+                )}
                 {entry.children.map((technology) => (
                   <div key={technology.slug} className="ml-5">
-                    <TechnologyLink technology={technology} subdued={entry.general} />
+                    <TechnologyLink
+                      technology={technology}
+                      subdued={entry.general}
+                      active={technology.slug === activeTechnology}
+                      onActiveChange={setActiveTechnology}
+                    />
                   </div>
                 ))}
               </div>

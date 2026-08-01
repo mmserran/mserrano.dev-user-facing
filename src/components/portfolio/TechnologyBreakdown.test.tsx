@@ -11,6 +11,7 @@ describe("TechnologyBreakdown", () => {
     expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
     const graph = screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` });
     expect(graph).toBeInTheDocument();
+    expect(graph.querySelector("title")).not.toBeInTheDocument();
     expect(graph.querySelector('path[fill="#41B883"]:not([fill-opacity])')).toBeInTheDocument();
     const nestedVueOverlay = graph.querySelector('path[fill="#41B883"][fill-opacity="0.25"]');
     expect(nestedVueOverlay).toHaveAttribute("pointer-events", "none");
@@ -28,7 +29,14 @@ describe("TechnologyBreakdown", () => {
       "href",
       "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
     );
-  });
+    const vueLink = within(scripts as HTMLElement).getByRole("link", { name: "Vue" });
+    expect(vueLink.querySelector("[data-technology-diamond]")).toHaveClass("opacity-100");
+    fireEvent.mouseLeave(outerVueWedge as SVGPathElement);
+    fireEvent.mouseEnter(vueLink);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).toHaveAttribute("stroke", "#fff");
+    fireEvent.mouseLeave(vueLink);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).not.toBeInTheDocument();
+  }, 15_000);
 
   it("does not render when the graph block is unavailable", () => {
     const project = getProjectBySlug("mserrano-dev") as Project;
