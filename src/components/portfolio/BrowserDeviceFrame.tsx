@@ -31,16 +31,21 @@ const CUTOUT_ASPECT_RATIO = (FRAME_ASPECT_RATIO * CUTOUT_HEIGHT_FRACTION) / CUTO
 // a floor so short screenshots don't scroll by too quickly either.
 //
 // decorDeviceFrame.vue's original formula (floor 4s, 0.5s per 1000 raw px)
-// was calibrated against un-resized, full-resolution captures. This
-// manifest's own screenshots cap at 1600px wide with proportionally
-// smaller heights (max ~7300px across the whole portfolio), so that slope
-// left every real screenshot floored at the same flat 4s - recalibrated
-// here (1.5s per 1000 effective px) against this manifest's actual range:
-// the tallest real screenshot lands around 11s, typical ones still floor
-// near 4s, and only genuinely long pages stretch out.
+// was calibrated against un-resized, full-resolution captures - roughly
+// 6.47x wider than this manifest's 1600px-capped variants (measured across
+// several screenshots on the live site: raw capture width consistently
+// lands around 10.35-10.4k px against a 1600px manifest cap). Naively
+// applying 0.5s/1000px to the manifest's proportionally smaller heights
+// left every real screenshot floored at the same flat 4s, so an earlier
+// pass here just picked 1.5s per 1000 effective px - a guess that turned
+// out visibly faster than the live site. Measuring live pan durations
+// (each frame's data-duration attribute) against the same screenshots'
+// manifest heights gives the actual live-matching rate: 0.5 * ~6.47 =
+// 3.24s per 1000 effective px. At that rate the tallest real screenshot
+// lands around 24s, typical ones still floor near 4s.
 const DEFAULT_REFERENCE_WIDTH = 1600; // fallback if a screenshot's largest manifest variant has no declared width
 const MIN_PAN_SECONDS = 4;
-const PAN_SECONDS_PER_1000PX = 1.5;
+const PAN_SECONDS_PER_1000PX = 3.24;
 
 // Below this fraction of overflow, object-fit: cover crops so little
 // vertically that panning through it barely moves - stretched over the

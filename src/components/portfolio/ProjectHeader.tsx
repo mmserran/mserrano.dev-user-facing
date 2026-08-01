@@ -12,7 +12,7 @@ export default function ProjectHeader({ project }: { project: Project }) {
   const { general, screenshot } = project;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:gap-16 lg:px-8">
+    <div className="mx-auto flex w-full max-w-[768px] flex-col gap-10 px-5 py-10 md:max-w-[1024px] md:px-[60px] lg:flex-row lg:items-center lg:gap-16 xl:max-w-[1440px] xl:px-[100px]">
       <div className="flex w-full flex-col items-start lg:w-1/2">
         <h1 className="shine-text animate-shine motion-reduce:animate-none text-3xl font-bold text-white uppercase tracking-wide sm:text-4xl">
           {general.title}

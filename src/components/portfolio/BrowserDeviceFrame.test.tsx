@@ -77,9 +77,9 @@ describe("BrowserDeviceFrame", () => {
     );
     const screenshot = container.querySelector('img[src*="screencapture-cygnusmgmt-desktop"]') as HTMLImageElement;
 
-    // naturalWidth 1600, naturalHeight 16000 -> duration = max(4, (16000/1000)*1.5) = 24s
+    // naturalWidth 1600, naturalHeight 16000 -> duration = max(4, (16000/1000)*3.24) = 51.84s
     loadWith(screenshot, 1600, 16000);
-    expect(screenshot.style.animationDuration).toBe("24s");
+    expect(screenshot.style.animationDuration).toBe("51.84s");
   });
 
   it("floors the computed duration at 4s for a short screenshot", () => {
@@ -88,8 +88,8 @@ describe("BrowserDeviceFrame", () => {
     );
     const screenshot = container.querySelector('img[src*="screencapture-cygnusmgmt-desktop"]') as HTMLImageElement;
 
-    // naturalWidth 1600, naturalHeight 2000 -> duration = max(4, (2000/1000)*1.5) = max(4, 3) = 4s
-    loadWith(screenshot, 1600, 2000);
+    // naturalWidth 1600, naturalHeight 1100 -> duration = max(4, (1100/1000)*3.24) = max(4, 3.564) = 4s
+    loadWith(screenshot, 1600, 1100);
     expect(screenshot.style.animationDuration).toBe("4s");
   });
 
@@ -101,9 +101,9 @@ describe("BrowserDeviceFrame", () => {
 
     // Same aspect ratio as the 1600x16000 case above (1:10), but as if the
     // browser loaded the smaller 400w manifest variant instead - the
-    // computed duration should still normalize back to 24s.
+    // computed duration should still normalize back to 51.84s.
     loadWith(screenshot, 400, 4000);
-    expect(screenshot.style.animationDuration).toBe("24s");
+    expect(screenshot.style.animationDuration).toBe("51.84s");
   });
 
   it("does not measure a duration or report it when not animating", () => {
@@ -131,7 +131,7 @@ describe("BrowserDeviceFrame", () => {
     const screenshot = container.querySelector('img[src*="screencapture-cygnusmgmt-desktop"]') as HTMLImageElement;
 
     loadWith(screenshot, 1600, 16000);
-    expect(onPanDuration).toHaveBeenCalledWith(24);
+    expect(onPanDuration).toHaveBeenCalledWith(51.84);
   });
 
   it("does not pan a screenshot that's barely taller than the frame - it rests statically instead", () => {
