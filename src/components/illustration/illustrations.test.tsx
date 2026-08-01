@@ -40,6 +40,7 @@ describe("Illustration Components", () => {
 
   it("renders deterministic star layers with reduced-motion fallbacks", () => {
     const { container } = render(<StarField />);
+    expect(container.firstElementChild).toHaveClass("-z-10");
     const layers = Array.from(container.firstElementChild!.children) as HTMLElement[];
 
     expect(layers).toHaveLength(3);
@@ -58,6 +59,9 @@ describe("Illustration Components", () => {
         secondRender.firstElementChild!.firstElementChild as HTMLElement
       ).style.getPropertyValue("--star-shadow"),
     ).toBe(starShadows[0]);
+
+    const { container: foregroundRender } = render(<StarField foreground />);
+    expect(foregroundRender.firstElementChild).toHaveClass("z-10");
   });
 
   it("cycles smoke twice on the far-left pipe before switching pipes", () => {

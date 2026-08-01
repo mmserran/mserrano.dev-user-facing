@@ -39,9 +39,12 @@ function generateStarShadow(count: number, seed: number) {
   }).join(", ");
 }
 
-export default function StarField() {
+export default function StarField({ foreground = false }: { foreground?: boolean }) {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-0 overflow-hidden ${foreground ? "z-10" : "-z-10"}`}
+    >
       {STAR_LAYERS.map((layer) => {
         const shadow = generateStarShadow(layer.count, layer.seed);
         return (

@@ -69,6 +69,7 @@ describe("ProjectPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Developer, Designer/)).toBeInTheDocument();
     expect(screen.getByText(/My uncle needed a website/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
 
     const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
     expect(backLink).toHaveAttribute("href", "/projects");

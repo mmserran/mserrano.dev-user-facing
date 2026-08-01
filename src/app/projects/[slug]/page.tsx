@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
 import ProjectHeader from "@/components/portfolio/ProjectHeader";
 import RelatedProjects from "@/components/portfolio/RelatedProjects";
+import TechnologyBreakdown from "@/components/portfolio/TechnologyBreakdown";
 import TechnologyCarousel from "@/components/portfolio/TechnologyCarousel";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
@@ -52,6 +53,8 @@ export default async function ProjectPage({
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
       <ProjectHeader project={project} />
+
+      <TechnologyBreakdown project={project} />
 
       <TechnologyCarousel project={project} />
 
