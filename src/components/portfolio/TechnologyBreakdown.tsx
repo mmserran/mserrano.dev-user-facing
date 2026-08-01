@@ -2,6 +2,7 @@
 
 import { useState, type MouseEvent, type ReactNode } from "react";
 
+import StarField from "@/components/illustration/StarField";
 import {
   getTechnologyBreakdown,
   type Project,
@@ -239,6 +240,7 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
           <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.8125} fill="#fff" fillOpacity="0.9" />
           <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.5875} fill="#fff" fillOpacity="0.65" />
         </svg>
+        <StarField foreground />
         {tooltip.label && (
           <div
             role="tooltip"
