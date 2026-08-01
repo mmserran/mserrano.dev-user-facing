@@ -22,10 +22,10 @@ type PageBuilderComponent = (props: {
 //   - Component receives `{ project, section, index }` (mirroring Gridsome's
 //     singleProject.vue `:section` / array index). A type that is always a
 //     singleton in real content may ignore `section`/`index` and self-locate
-//     via a `find<Type>Block()` helper in content.ts (how today's five
-//     singleton mapped types work). A multi-instance type (pbTriplet,
-//     pbImageText) must read its data from the passed `section` instead of
-//     find-first, since find-first would only surface the first occurrence.
+//     via a `find<Type>Block()` helper in content.ts (how today's five mapped
+//     types work). A multi-instance type (pbTriplet, pbImageText) must read
+//     its data from the passed `section` instead of find-first, since
+//     find-first would only surface the first occurrence.
 //   - Renders null when its block is absent or resolves to empty content.
 //   - Owns its own title chrome (SectionDivider, or deliberately suppressed
 //     per pbDivider.vue's rules) - the dispatcher inserts no dividers itself.
