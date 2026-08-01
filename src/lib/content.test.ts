@@ -5,6 +5,7 @@ import {
   getHeaderLinks,
   getMediaUrl,
   getMediaVariants,
+  getPageBuilderSections,
   getProjectBySlug,
   getProjectFilters,
   getProjects,
@@ -284,6 +285,35 @@ describe("content lib", () => {
       };
 
       expect(getTechnologyCarousel(emptied).technologies).toEqual([]);
+    });
+  });
+
+  describe("getPageBuilderSections", () => {
+    it("returns the ordered pagebuilder array with types and payloads preserved", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withSections: Project = {
+        ...project,
+        pagebuilder: JSON.stringify([
+          { type: "pbHeader", title: "Intro" },
+          { type: "pbTriplet", title: "Technology" },
+          { type: "pbTriplet", title: "Usage vs Similar" },
+          { type: "pbGraphBreakdown" },
+        ]),
+      };
+
+      expect(getPageBuilderSections(withSections)).toEqual([
+        { type: "pbHeader", title: "Intro" },
+        { type: "pbTriplet", title: "Technology" },
+        { type: "pbTriplet", title: "Usage vs Similar" },
+        { type: "pbGraphBreakdown" },
+      ]);
+    });
+
+    it("returns an empty array when pagebuilder is empty or malformed", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+
+      expect(getPageBuilderSections({ ...project, pagebuilder: "[]" })).toEqual([]);
+      expect(getPageBuilderSections({ ...project, pagebuilder: "not json" })).toEqual([]);
     });
   });
 });

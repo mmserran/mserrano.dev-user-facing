@@ -272,6 +272,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+// One entry from a project's pagebuilder JSON array. Shape varies by `type`;
+// the dispatcher passes the object through so multi-instance blocks can read
+// their own payload instead of find-first helpers.
+export interface PageBuilderSection {
+  type: string;
+  [key: string]: unknown;
+}
+
+// Ports singleProject.vue's `get_pagebuilder()`: the ordered pagebuilder array
+// for components that dispatch on type (see PageBuilder).
+export function getPageBuilderSections(project: Project): PageBuilderSection[] {
+  try {
+    const blocks = JSON.parse(project.pagebuilder) as unknown;
+    if (!Array.isArray(blocks)) {
+      return [];
+    }
+    return blocks.filter(
+      (block): block is PageBuilderSection =>
+        isRecord(block) && typeof block.type === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
 function findTechnologyBreakdownBlock(pagebuilder: string): TechnologyBreakdownBlock | undefined {
   try {
     const blocks = JSON.parse(pagebuilder) as unknown;

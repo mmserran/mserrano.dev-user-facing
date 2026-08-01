@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
-import ProjectHeader from "@/components/portfolio/ProjectHeader";
-import RelatedProjects from "@/components/portfolio/RelatedProjects";
-import TechnologyBreakdown from "@/components/portfolio/TechnologyBreakdown";
-import TechnologyCarousel from "@/components/portfolio/TechnologyCarousel";
+import PageBuilder from "@/components/portfolio/PageBuilder";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -52,11 +49,7 @@ export default async function ProjectPage({
 
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
-      <ProjectHeader project={project} />
-
-      <TechnologyBreakdown project={project} />
-
-      <TechnologyCarousel project={project} />
+      <PageBuilder project={project} />
 
       <div className="flex justify-center px-4 pb-16">
         <Link
@@ -66,8 +59,6 @@ export default async function ProjectPage({
           Back to Portfolio
         </Link>
       </div>
-
-      <RelatedProjects project={project} />
 
       <EndcapShell />
     </main>
