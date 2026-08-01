@@ -92,10 +92,22 @@ function getPageGeometry(
 
   const edgeFadeWidthPx =
     itemStride > 0
-      ? Math.min(itemStride, track.clientWidth * MAX_EDGE_FADE_WIDTH_FRACTION)
+      ? Math.max(
+          0,
+          Math.min(
+            itemStride,
+            track.clientWidth * MAX_EDGE_FADE_WIDTH_FRACTION,
+            (track.clientWidth - itemStride) / 2,
+          ),
+        )
       : track.clientWidth * FALLBACK_EDGE_FADE_WIDTH_FRACTION;
   const pageAdvancePx =
-    itemStride > 0 ? Math.max(itemStride, track.clientWidth - 2 * edgeFadeWidthPx) : track.clientWidth;
+    itemStride > 0
+      ? Math.max(
+          itemStride,
+          Math.floor((track.clientWidth - 2 * edgeFadeWidthPx) / itemStride) * itemStride,
+        )
+      : track.clientWidth;
 
   return {
     pageAdvancePx,
