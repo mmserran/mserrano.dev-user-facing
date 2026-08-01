@@ -11,6 +11,7 @@ import {
   getRelatedProjects,
   getTechnologyBreakdown,
   getResumeUrl,
+  getTechnologyCarousel,
   truncate,
   type Project,
 } from "./content";
@@ -238,6 +239,51 @@ describe("content lib", () => {
       ]);
 
       expect(getTechnologyBreakdown({ ...project, pagebuilder })?.graph).toEqual([]);
+    });
+  });
+
+  describe("getTechnologyCarousel", () => {
+    it("resolves only the flagged categories, in language/framework/deployment/software order", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const carousel = getTechnologyCarousel(project);
+
+      expect(carousel.title).toBe("Exposed To");
+      expect(carousel.technologies.map((t) => t.title)).toEqual(["Git", "GitHub", "Heroku", "Bash", "Windows"]);
+    });
+
+    it("skips a slug that has no matching project-filter instead of crashing", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withBadSlug: Project = {
+        ...project,
+        technology: { ...project.technology, software: [...project.technology.software, "not-a-real-slug"] },
+      };
+
+      const carousel = getTechnologyCarousel(withBadSlug);
+      expect(carousel.technologies.every((t) => t !== undefined)).toBe(true);
+    });
+
+    it("returns an empty result when the project has no technology-carousel block", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withoutBlock: Project = { ...project, pagebuilder: "[]" };
+
+      expect(getTechnologyCarousel(withoutBlock)).toEqual({ title: "", technologies: [] });
+    });
+
+    it("returns an empty result when pagebuilder fails to parse", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const malformed: Project = { ...project, pagebuilder: "not json" };
+
+      expect(getTechnologyCarousel(malformed)).toEqual({ title: "", technologies: [] });
+    });
+
+    it("returns no technologies when every flagged category is empty", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const emptied: Project = {
+        ...project,
+        technology: { language: [], framework: [], deployment: [], software: [] },
+      };
+
+      expect(getTechnologyCarousel(emptied).technologies).toEqual([]);
     });
   });
 });

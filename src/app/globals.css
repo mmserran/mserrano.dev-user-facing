@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+/* Registers the technology carousel's edge-fade opacities as genuinely
+   animatable numbers (CSS Properties and Values API). A plain custom
+   property, or swapping the whole mask-image gradient string, is "discrete"
+   to the browser - a transition on it holds the old value and snaps to the
+   new one partway through, not a crossfade. Typing it as <number> here is
+   what makes the two values actually glide between 0 and 1 instead of
+   flipping, which is what makes the fade read as the icons fading in place
+   rather than a wipe sliding across them. Unsupported browsers just keep
+   the untyped, non-animating fallback - Carousel.tsx's transition is a
+   strict enhancement either way. */
+@property --carousel-edge-fade-left-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --carousel-edge-fade-right-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
 @theme {
   /* Brand colors carried over from the Gridsome frontend's _base-styles.scss */
   --color-brand-blue: #006bb6;

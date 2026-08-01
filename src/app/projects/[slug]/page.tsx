@@ -5,6 +5,7 @@ import EndcapShell from "@/components/illustration/EndcapShell";
 import ProjectHeader from "@/components/portfolio/ProjectHeader";
 import RelatedProjects from "@/components/portfolio/RelatedProjects";
 import TechnologyBreakdown from "@/components/portfolio/TechnologyBreakdown";
+import TechnologyCarousel from "@/components/portfolio/TechnologyCarousel";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -54,6 +55,8 @@ export default async function ProjectPage({
       <ProjectHeader project={project} />
 
       <TechnologyBreakdown project={project} />
+
+      <TechnologyCarousel project={project} />
 
       <div className="flex justify-center px-4 pb-16">
         <Link

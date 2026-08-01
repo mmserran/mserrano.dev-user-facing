@@ -23,6 +23,19 @@ vi.mock("@/components/portfolio/RelatedProjects", () => ({
   },
 }));
 
+// TechnologyCarousel renders the shared Carousel primitive, which needs a
+// real ResizeObserver; its own rendering/composition logic is covered by
+// TechnologyCarousel.test.tsx, so it's stubbed here for the same reason as
+// RelatedProjects - this file only cares that ProjectPage wires the current
+// project into it.
+const technologyCarouselSpy = vi.fn();
+vi.mock("@/components/portfolio/TechnologyCarousel", () => ({
+  default: (props: { project: { slug: string } }) => {
+    technologyCarouselSpy(props);
+    return <div data-testid="technology-carousel" />;
+  },
+}));
+
 describe("ProjectPage", () => {
   it("generates static params for all project slugs", async () => {
     const params = await generateStaticParams();
@@ -63,6 +76,10 @@ describe("ProjectPage", () => {
     expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
     expect(screen.getByTestId("related-projects")).toBeInTheDocument();
     expect(relatedProjectsSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+    );
+    expect(screen.getByTestId("technology-carousel")).toBeInTheDocument();
+    expect(technologyCarouselSpy).toHaveBeenCalledWith(
       expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
     );
   });
