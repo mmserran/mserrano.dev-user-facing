@@ -118,7 +118,7 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
         aria-describedby="technology-graph-description"
         className="mx-auto block h-auto w-full max-w-[800px]"
       >
-        <title id="technology-graph-title">Technology usage breakdown for {project.general.title}</title>
+        <title id="technology-graph-title">{`Technology usage breakdown for ${project.general.title}`}</title>
         <desc id="technology-graph-description">
           A weighted semicircle showing the project&apos;s primary technologies and their nested frameworks.
           The linked legend following the chart lists every technology by category.
