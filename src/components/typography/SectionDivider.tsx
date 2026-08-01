@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
 // Mirrors the Gridsome frontend's pbDivider.vue: a centered, uppercase,
-// tracked-out heading flanked by horizontal rules - rendered ahead of every
-// titled page-builder block (Technology, Related, Exposed To, ...). Only the
-// centered variant is ported here since every block currently in scope uses
-// it; pbDivider also supports left/right-aligned variants via
+// tracked-out heading flanked by horizontal rules - used by titled page-builder
+// blocks that share this chrome (Related, Exposed To, ...). TechnologyBreakdown
+// uses its own header/legend treatment instead. Only the centered variant is
+// ported here; pbDivider also supports left/right-aligned variants via
 // `divider_position`, unused by any block built so far.
 export default function SectionDivider({ children }: { children: ReactNode }) {
   return (
