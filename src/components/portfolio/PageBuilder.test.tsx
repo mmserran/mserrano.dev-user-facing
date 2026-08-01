@@ -1,10 +1,18 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { getProjectBySlug, type Project } from "@/lib/content";
+import { getProjectBySlug, type PageBuilderSection, type Project } from "@/lib/content";
 import PageBuilder from "./PageBuilder";
 
+const projectHeaderSpy = vi.fn();
 vi.mock("./ProjectHeader", () => ({
-  default: () => <div data-testid="pbHeader" />,
+  default: (props: {
+    project: Project;
+    section: PageBuilderSection;
+    index: number;
+  }) => {
+    projectHeaderSpy(props);
+    return <div data-testid="pbHeader" />;
+  },
 }));
 vi.mock("./TechnologyBreakdown", () => ({
   default: () => <div data-testid="pbGraphBreakdown" />,
@@ -16,7 +24,7 @@ vi.mock("./RelatedProjects", () => ({
   default: () => <div data-testid="pbCarouselRelatedPosts" />,
 }));
 
-function projectWithPageBuilder(sections: { type: string }[]): Project {
+function projectWithPageBuilder(sections: Record<string, unknown>[]): Project {
   const base = getProjectBySlug("cygnus-management-llc") as Project;
   return { ...base, pagebuilder: JSON.stringify(sections) };
 }
@@ -50,11 +58,30 @@ describe("PageBuilder", () => {
     expect(screen.queryByTestId("pbTriplet")).not.toBeInTheDocument();
   });
 
-  it("renders a block type once even if it appears more than once", () => {
-    const project = projectWithPageBuilder([{ type: "pbHeader" }, { type: "pbHeader" }]);
+  it("renders a repeated block type once per occurrence with its own section and index", () => {
+    projectHeaderSpy.mockClear();
+    const project = projectWithPageBuilder([
+      { type: "pbHeader", title: "First" },
+      { type: "pbHeader", title: "Second" },
+    ]);
     render(<PageBuilder project={project} />);
 
-    expect(screen.getAllByTestId("pbHeader")).toHaveLength(1);
+    expect(screen.getAllByTestId("pbHeader")).toHaveLength(2);
+    expect(projectHeaderSpy).toHaveBeenCalledTimes(2);
+    expect(projectHeaderSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        section: expect.objectContaining({ type: "pbHeader", title: "First" }),
+        index: 0,
+      }),
+    );
+    expect(projectHeaderSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        section: expect.objectContaining({ type: "pbHeader", title: "Second" }),
+        index: 1,
+      }),
+    );
   });
 
   it("renders nothing for a project with an empty pagebuilder array", () => {
