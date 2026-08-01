@@ -95,12 +95,17 @@ export default function BrowserDeviceFrame({
   // instance, new screenshot src and/or frame src) - reset during render,
   // React's documented pattern for state that depends on a prop, so the
   // placeholder reappears for the next slide's own loads instead of
-  // carrying over the previous slide's.
-  const [trackedKey, setTrackedKey] = useState(`${filename}|${browser}`);
-  const key = `${filename}|${browser}`;
-  if (key !== trackedKey) {
-    setTrackedKey(key);
+  // carrying over the previous slide's. Reset each flag only when its own
+  // src changes: next/image fires onLoad once per src, so a filename-only
+  // change must not clear frameLoaded for an unchanged browser SVG.
+  const [trackedFilename, setTrackedFilename] = useState(filename);
+  const [trackedBrowser, setTrackedBrowser] = useState(browser);
+  if (filename !== trackedFilename) {
+    setTrackedFilename(filename);
     setLoaded(false);
+  }
+  if (browser !== trackedBrowser) {
+    setTrackedBrowser(browser);
     setFrameLoaded(false);
   }
 
@@ -116,7 +121,7 @@ export default function BrowserDeviceFrame({
     // handleLoad closes over this render's props/filename; it only needs to
     // re-run this catch-up check when the src itself changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [filename]);
 
   const variants = getMediaVariants(filename);
   if (variants.length === 0) return null;

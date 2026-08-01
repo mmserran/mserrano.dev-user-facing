@@ -203,18 +203,22 @@ describe("BrowserDeviceFrame", () => {
     await waitFor(() => expect(cutout.className).not.toContain("invisible"));
   });
 
-  it("re-shows the placeholder for the next screenshot when the filename changes", () => {
+  it("re-shows the placeholder for the next screenshot when the filename changes", async () => {
     const { container, rerender } = render(
       <BrowserDeviceFrame filename="screencapture-cygnusmgmt-desktop.jpg" browser="chrome" animate={false} />,
     );
     const cutout = container.querySelector(".bg-white") as HTMLElement;
+    const frame = container.querySelector('img[src*="browser-chrome.svg"]') as HTMLImageElement;
     const firstScreenshot = container.querySelector('img[src*="screencapture-cygnusmgmt-desktop"]') as HTMLImageElement;
+    loadWith(frame, 644, 460);
+    await waitFor(() => expect(cutout.className).not.toContain("invisible"));
     loadWith(firstScreenshot, 1600, 1000);
     expect(cutout.querySelector(".animate-spin")).toBeNull();
 
     rerender(
       <BrowserDeviceFrame filename="screencapture-hospitalitypulse-desktop.jpg" browser="chrome" animate={false} />,
     );
+    expect(cutout.className).not.toContain("invisible");
     expect(cutout.querySelector(".animate-spin")).not.toBeNull();
   });
 
