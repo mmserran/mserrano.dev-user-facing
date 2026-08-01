@@ -76,12 +76,14 @@ function TechnologyLink({
   technology,
   subdued = false,
   active = false,
-  onActiveChange,
+  onHoverChange,
+  onFocusChange,
 }: {
   technology: ProjectFilter;
   subdued?: boolean;
   active?: boolean;
-  onActiveChange: (slug: string | null) => void;
+  onHoverChange: (slug: string | null) => void;
+  onFocusChange: (slug: string | null) => void;
 }) {
   const content = (
     <>
@@ -102,10 +104,10 @@ function TechnologyLink({
   );
   const className = `group flex min-h-10 w-fit items-center gap-2.5 text-sm leading-5 text-white transition-opacity focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:min-h-6 ${subdued ? "opacity-50 hover:opacity-100 focus-visible:opacity-100" : ""}`;
   const interactionProps = {
-    onMouseEnter: () => onActiveChange(technology.slug),
-    onMouseLeave: () => onActiveChange(null),
-    onFocus: () => onActiveChange(technology.slug),
-    onBlur: () => onActiveChange(null),
+    onMouseEnter: () => onHoverChange(technology.slug),
+    onMouseLeave: () => onHoverChange(null),
+    onFocus: () => onFocusChange(technology.slug),
+    onBlur: () => onFocusChange(null),
   };
 
   return technology.url ? (
@@ -119,7 +121,7 @@ function TechnologyLink({
       {content}
     </a>
   ) : (
-    <span className={className} {...interactionProps}>
+    <span tabIndex={0} className={className} {...interactionProps}>
       {content}
     </span>
   );
@@ -131,7 +133,9 @@ function headingId(title: string) {
 
 export default function TechnologyBreakdown({ project }: { project: Project }) {
   const [tooltip, setTooltip] = useState({ label: "", x: 0, y: 0 });
-  const [activeTechnology, setActiveTechnology] = useState<string | null>(null);
+  const [hoveredTechnology, setHoveredTechnologySlug] = useState<string | null>(null);
+  const [focusedTechnology, setFocusedTechnology] = useState<string | null>(null);
+  const activeTechnology = hoveredTechnology ?? focusedTechnology;
   const breakdown = getTechnologyBreakdown(project);
   if (!breakdown || breakdown.graph.length === 0) {
     return null;
@@ -153,7 +157,7 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
 
   const setHoveredTechnology = (technology: ProjectFilter | null) => {
     setTooltip((current) => ({ ...current, label: technology?.title ?? "" }));
-    setActiveTechnology(technology?.slug ?? null);
+    setHoveredTechnologySlug(technology?.slug ?? null);
   };
 
   return (
@@ -267,7 +271,8 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
                   <TechnologyLink
                     technology={entry.technology}
                     active={entry.technology.slug === activeTechnology}
-                    onActiveChange={setActiveTechnology}
+                    onHoverChange={setHoveredTechnologySlug}
+                    onFocusChange={setFocusedTechnology}
                   />
                 )}
                 {entry.children.map((technology) => (
@@ -276,7 +281,8 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
                       technology={technology}
                       subdued={entry.general}
                       active={technology.slug === activeTechnology}
-                      onActiveChange={setActiveTechnology}
+                      onHoverChange={setHoveredTechnologySlug}
+                      onFocusChange={setFocusedTechnology}
                     />
                   </div>
                 ))}

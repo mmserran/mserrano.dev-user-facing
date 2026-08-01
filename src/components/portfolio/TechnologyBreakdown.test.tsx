@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { getProjectBySlug, type Project } from "@/lib/content";
+import { getProjectBySlug, getProjectFilters, type Project } from "@/lib/content";
 import TechnologyBreakdown from "./TechnologyBreakdown";
 
 describe("TechnologyBreakdown", () => {
@@ -36,6 +36,48 @@ describe("TechnologyBreakdown", () => {
     expect(graph.querySelector('path[data-technology-outline="vue"]')).toHaveAttribute("stroke", "#fff");
     fireEvent.mouseLeave(vueLink);
     expect(graph.querySelector('path[data-technology-outline="vue"]')).not.toBeInTheDocument();
+  }, 15_000);
+
+  it("keeps legend focus outlines after unrelated hover leave", () => {
+    const project = getProjectBySlug("mserrano-dev") as Project;
+    render(<TechnologyBreakdown project={project} />);
+
+    const graph = screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` });
+    const scripts = screen.getByRole("heading", { name: "Scripts" }).closest("section") as HTMLElement;
+    const vueLink = within(scripts).getByRole("link", { name: "Vue" });
+    const javascriptLink = within(scripts).getByRole("link", { name: "JavaScript" });
+    const outerVueWedge = graph.querySelector('path[fill="#41B883"]:not([fill-opacity])') as SVGPathElement;
+
+    fireEvent.focus(vueLink);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).toBeInTheDocument();
+
+    fireEvent.mouseEnter(javascriptLink);
+    fireEvent.mouseLeave(javascriptLink);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).toBeInTheDocument();
+
+    fireEvent.mouseEnter(outerVueWedge);
+    fireEvent.mouseLeave(outerVueWedge);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).toBeInTheDocument();
+
+    fireEvent.blur(vueLink);
+    expect(graph.querySelector('path[data-technology-outline="vue"]')).not.toBeInTheDocument();
+  }, 15_000);
+
+  it("makes legend entries without URLs keyboard-focusable", () => {
+    const project = getProjectBySlug("mserrano-dev") as Project;
+    const cloudinary = getProjectFilters().find((filter) => filter.slug === "cloudinary");
+    expect(cloudinary?.url).toBe("");
+
+    render(<TechnologyBreakdown project={project} />);
+
+    const cloudinaryEntry = screen.getByText("Cloudinary").closest(".group") as HTMLElement;
+    expect(cloudinaryEntry.tagName).toBe("SPAN");
+    expect(cloudinaryEntry).toHaveAttribute("tabIndex", "0");
+
+    fireEvent.focus(cloudinaryEntry);
+    expect(cloudinaryEntry.querySelector("[data-technology-diamond]")).toHaveClass("opacity-100");
+    fireEvent.blur(cloudinaryEntry);
+    expect(cloudinaryEntry.querySelector("[data-technology-diamond]")).toHaveClass("opacity-0");
   }, 15_000);
 
   it("does not render when the graph block is unavailable", () => {
