@@ -36,6 +36,17 @@ vi.mock("@/components/portfolio/TechnologyCarousel", () => ({
   },
 }));
 
+// MobileMosaic also needs a real ResizeObserver, for the same reason as
+// TechnologyCarousel above; its own rendering/composition logic is covered
+// by MobileMosaic.test.tsx.
+const mobileMosaicSpy = vi.fn();
+vi.mock("@/components/portfolio/MobileMosaic", () => ({
+  default: (props: { project: { slug: string } }) => {
+    mobileMosaicSpy(props);
+    return <div data-testid="mobile-mosaic" />;
+  },
+}));
+
 describe("ProjectPage", () => {
   it("generates static params for all project slugs", async () => {
     const params = await generateStaticParams();
@@ -80,6 +91,10 @@ describe("ProjectPage", () => {
     );
     expect(screen.getByTestId("technology-carousel")).toBeInTheDocument();
     expect(technologyCarouselSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+    );
+    expect(screen.getByTestId("mobile-mosaic")).toBeInTheDocument();
+    expect(mobileMosaicSpy).toHaveBeenCalledWith(
       expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
     );
   });

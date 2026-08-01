@@ -100,6 +100,22 @@
      site (0.3s cubic-bezier(0.25, 0.8, 0.5, 1)), not guessed. */
   --animate-carousel-fade-in: carousel-fade-in 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
   --animate-carousel-fade-out: carousel-fade-out 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
+
+  /* Mobile mosaic (pbMobileMozaic): the whole tilted stage rocks back and
+     forth forever, independent of the row-scroll animation below - carried
+     over from pbMobileMozaicActual.vue's .perspective rule verbatim. */
+  --animate-mosaic-roll: mosaic-roll 10s linear infinite alternate;
+
+  /* The three named pan curves from decorDeviceFrame.vue, ported 1:1
+     (including their delays). Duration here is only a pre-measurement
+     fallback - MobileDeviceFrame overrides it inline once the screenshot
+     loads, scaled to its natural height (same technique as
+     project-screenshot-pan/BrowserDeviceFrame). Unlike that pan, these hold
+     their end position indefinitely (forwards, iteration-count 1) rather
+     than looping. */
+  --animate-mosaic-slow-scroll-from-top: mosaic-slow-scroll-from-top 4s linear 0.5s forwards;
+  --animate-mosaic-footer-scroll-up: mosaic-footer-scroll-up 4s linear 1.25s forwards;
+  --animate-mosaic-mid-scroll: mosaic-mid-scroll 4s linear forwards;
 }
 
 @keyframes technology-star-twirl {
@@ -499,6 +515,56 @@
   }
   to {
     opacity: 0;
+  }
+}
+
+@keyframes mosaic-roll {
+  0% {
+    transform: perspective(1000px) rotateX(20deg) translate(0, 0) rotate3d(0, 1, 0.2, 20deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(40deg) rotate3d(-1, 1, 0.5, -20deg);
+  }
+}
+
+@keyframes mosaic-slow-scroll-from-top {
+  0%,
+  8% {
+    object-position: 0 0%;
+  }
+  14% {
+    object-position: 0 20%;
+  }
+  80%,
+  100% {
+    object-position: 0 50%;
+  }
+}
+
+@keyframes mosaic-footer-scroll-up {
+  0%,
+  8% {
+    object-position: 0 100%;
+  }
+  12% {
+    object-position: 0 80%;
+  }
+  100% {
+    object-position: 0 70%;
+  }
+}
+
+@keyframes mosaic-mid-scroll {
+  0%,
+  8% {
+    object-position: 0 30%;
+  }
+  14% {
+    object-position: 0 50%;
+  }
+  80%,
+  100% {
+    object-position: 0 100%;
   }
 }
 
