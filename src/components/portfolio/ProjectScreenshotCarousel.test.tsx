@@ -51,13 +51,13 @@ describe("ProjectScreenshotCarousel", () => {
       <ProjectScreenshotCarousel screenshots={SCREENSHOTS} supportedBrowsers={BROWSERS} />,
     );
 
-    // naturalWidth 1600, naturalHeight 16000 -> duration = max(4, (16000/1000)*1.5) = 24s
+    // naturalWidth 1600, naturalHeight 16000 -> duration = max(4, (16000/1000)*3.24) = 51.84s
     act(() => {
       loadActiveScreenshot(container, 1600, 16000);
     });
 
     act(() => {
-      vi.advanceTimersByTime(23999);
+      vi.advanceTimersByTime(51839);
     });
     expect(
       container.querySelector('img[src*="screencapture-cygnusmgmt-desktop-1600"]')?.closest(".animate-carousel-fade-out"),
@@ -66,7 +66,7 @@ describe("ProjectScreenshotCarousel", () => {
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    // The measured 24s duration elapsed - the outgoing slide starts fading.
+    // The measured 51.84s duration elapsed - the outgoing slide starts fading.
     const outgoing = container.querySelector('img[src*="screencapture-cygnusmgmt-desktop-1600"]') as HTMLImageElement;
     expect(outgoing.closest(".animate-carousel-fade-out")).not.toBeNull();
   });
