@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { getProjectBySlug, type Project } from "@/lib/content";
 import TechnologyBreakdown from "./TechnologyBreakdown";
@@ -12,7 +12,11 @@ describe("TechnologyBreakdown", () => {
     const graph = screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` });
     expect(graph).toBeInTheDocument();
     expect(graph.querySelector('path[fill="#41B883"]:not([fill-opacity])')).toBeInTheDocument();
-    expect(graph.querySelector('path[fill="#41B883"][fill-opacity="0.25"]')).toBeInTheDocument();
+    const nestedVueOverlay = graph.querySelector('path[fill="#41B883"][fill-opacity="0.25"]');
+    expect(nestedVueOverlay).toHaveAttribute("pointer-events", "none");
+    const outerVueWedge = graph.querySelector('path[fill="#41B883"]:not([fill-opacity])');
+    fireEvent.mouseEnter(outerVueWedge as SVGPathElement);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Vue");
     expect(screen.getByRole("heading", { level: 3, name: "Scripts" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Template / Styles" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Server" })).toBeInTheDocument();

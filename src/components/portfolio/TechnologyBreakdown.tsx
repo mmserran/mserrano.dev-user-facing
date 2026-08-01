@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, type MouseEvent, type ReactNode } from "react";
+
 import {
   getTechnologyBreakdown,
   type Project,
@@ -41,8 +45,9 @@ function childWedges(
   start: number,
   end: number,
   layer: "underlay" | "overlay",
+  onHover: (label: string | null) => void,
 ) {
-  const paths: React.ReactNode[] = [];
+  const paths: ReactNode[] = [];
   let position = start;
 
   children.forEach((child, index) => {
@@ -54,6 +59,9 @@ function childWedges(
           d={wedgePath(sliceRadius(child.weight, true), position, childEnd)}
           fill={child.technology.primary}
           fillOpacity={layer === "overlay" ? 0.25 : undefined}
+          pointerEvents={layer === "overlay" ? "none" : undefined}
+          onMouseEnter={layer === "underlay" ? () => onHover(child.technology?.title ?? null) : undefined}
+          onMouseLeave={layer === "underlay" ? () => onHover(null) : undefined}
         />,
       );
     }
@@ -96,6 +104,7 @@ function headingId(title: string) {
 }
 
 export default function TechnologyBreakdown({ project }: { project: Project }) {
+  const [tooltip, setTooltip] = useState({ label: "", x: 0, y: 0 });
   const breakdown = getTechnologyBreakdown(project);
   if (!breakdown || breakdown.graph.length === 0) {
     return null;
@@ -105,6 +114,19 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
     const start = 180 + breakdown.graph.slice(0, index).reduce((sum, previous) => sum + previous.weight * 180, 0);
     return { slice, start, end: start + slice.weight * 180 };
   });
+
+  const moveTooltip = (event: MouseEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    setTooltip((current) => ({
+      ...current,
+      x: event.clientX - bounds.left + 12,
+      y: event.clientY - bounds.top + 12,
+    }));
+  };
+
+  const setHoveredTechnology = (label: string | null) => {
+    setTooltip((current) => ({ ...current, label: label ?? "" }));
+  };
 
   return (
     <section
@@ -116,31 +138,51 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
       </h2>
       <div aria-hidden="true" className="mb-8 h-px w-full bg-white/62" />
 
-      <svg
-        viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
-        role="img"
-        aria-labelledby="technology-graph-title"
-        aria-describedby="technology-graph-description"
-        className="mx-auto block h-auto w-full max-w-[800px]"
+      <div
+        className="relative mx-auto w-full max-w-[800px]"
+        onMouseMove={moveTooltip}
+        onMouseLeave={() => setHoveredTechnology(null)}
       >
-        <title id="technology-graph-title">{`Technology usage breakdown for ${project.general.title}`}</title>
-        <desc id="technology-graph-description">
-          A weighted semicircle showing the project&apos;s primary technologies and their nested frameworks.
-          The linked legend following the chart lists every technology by category.
-        </desc>
-        {graphSlices.map(({ slice, start, end }) => {
-          return (
-            <g key={slice.technology.slug}>
-              {childWedges(slice.breakdown, start, end, "underlay")}
-              <path d={wedgePath(sliceRadius(slice.weight), start, end)} fill={slice.technology.primary} />
-              {childWedges(slice.breakdown, start, end, "overlay")}
-            </g>
-          );
-        })}
-        <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#000" fillOpacity="0.2" />
-        <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.8125} fill="#fff" fillOpacity="0.9" />
-        <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.5875} fill="#fff" fillOpacity="0.65" />
-      </svg>
+        <svg
+          viewBox={`0 0 ${GRAPH_WIDTH} ${GRAPH_HEIGHT}`}
+          role="img"
+          aria-labelledby="technology-graph-title"
+          aria-describedby="technology-graph-description"
+          className="block h-auto w-full"
+        >
+          <title id="technology-graph-title">{`Technology usage breakdown for ${project.general.title}`}</title>
+          <desc id="technology-graph-description">
+            A weighted semicircle showing the project&apos;s primary technologies and their nested frameworks.
+            The linked legend following the chart lists every technology by category.
+          </desc>
+          {graphSlices.map(({ slice, start, end }) => {
+            return (
+              <g key={slice.technology.slug}>
+                {childWedges(slice.breakdown, start, end, "underlay", setHoveredTechnology)}
+                <path
+                  d={wedgePath(sliceRadius(slice.weight), start, end)}
+                  fill={slice.technology.primary}
+                  onMouseEnter={() => setHoveredTechnology(slice.technology.title)}
+                  onMouseLeave={() => setHoveredTechnology(null)}
+                />
+                {childWedges(slice.breakdown, start, end, "overlay", setHoveredTechnology)}
+              </g>
+            );
+          })}
+          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS} fill="#000" fillOpacity="0.2" />
+          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.8125} fill="#fff" fillOpacity="0.9" />
+          <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.5875} fill="#fff" fillOpacity="0.65" />
+        </svg>
+        {tooltip.label && (
+          <div
+            role="tooltip"
+            className="pointer-events-none absolute z-20 rounded-sm border border-white/30 bg-[#090a0f]/95 px-2.5 py-1.5 text-xs font-semibold tracking-widest whitespace-nowrap text-white uppercase shadow-lg"
+            style={{ left: tooltip.x, top: tooltip.y }}
+          >
+            {tooltip.label}
+          </div>
+        )}
+      </div>
 
       <div className="mx-auto grid w-full max-w-[1000px] grid-cols-1 gap-10 md:grid-cols-2 md:gap-x-0 xl:grid-cols-4 xl:gap-10">
         {breakdown.legend.map((section) => (
