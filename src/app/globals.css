@@ -476,3 +476,11 @@
   mask-size: 200%;
   -webkit-mask-size: 200%;
 }
+
+/* Technology carousel edge fade, carried over from pbCarouselTechnology.vue's
+   .flickity-viewport mask. Opt-in via Carousel's `edgeFade` prop - Related
+   Projects doesn't use it. */
+.carousel-edge-fade {
+  mask-image: linear-gradient(to right, transparent, white 40% 60%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, white 40% 60%, transparent);
+}

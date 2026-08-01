@@ -45,9 +45,14 @@ function usePrefersReducedMotion(): boolean {
 export default function Carousel({
   children,
   ariaLabel,
+  edgeFade = false,
 }: {
   children: ReactNode;
   ariaLabel: string;
+  // Fades the track's left/right edges to transparent, matching the
+  // Gridsome technology carousel's flickity-viewport mask. Off by default -
+  // Related Projects doesn't use it.
+  edgeFade?: boolean;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
@@ -116,7 +121,7 @@ export default function Carousel({
         ref={trackRef}
         role="region"
         aria-label={ariaLabel}
-        className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-1 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-1 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${edgeFade ? "carousel-edge-fade" : ""}`}
       >
         {children}
       </div>

@@ -2,7 +2,8 @@
 
 import { useId, useMemo, useRef, useState } from "react";
 import { MdClose } from "react-icons/md";
-import { getMediaVariants, type ProjectFilter } from "@/lib/content";
+import { type ProjectFilter } from "@/lib/content";
+import TechLogo from "./TechLogo";
 
 function stubFilter(slug: string): ProjectFilter {
   return {
@@ -35,36 +36,9 @@ function matchesQuery(filter: ProjectFilter, query: string): boolean {
 // illustrator) plus anything tagged "workplace", even for filters that do
 // have an image asset. Here, any filter whose image resolves to an actual
 // manifest variant gets its icon; only a genuinely missing/unprocessed asset
-// falls back to a letter avatar on the filter's brand color.
-//
-// The circular `primary`-color backdrop behind the logo (for contrast
-// against white/mono marks like WordPress/Shopify) is skipped for logos
-// content.json flags as already full-color, e.g. Vue/jQuery/AngularJS.
+// falls back to a letter avatar on the filter's brand color (see TechLogo).
 function FilterAvatar({ filter }: { filter: ProjectFilter }) {
-  const [variant] = getMediaVariants(filter.image);
-
-  if (variant) {
-    const backgroundColor = filter.is_full_color ? "transparent" : filter.primary;
-    return (
-      // eslint-disable-next-line @next/next/no-img-element -- tiny fixed-size icon, not worth Next Image's loader machinery
-      <img
-        src={variant.url}
-        alt=""
-        className="box-border size-5 shrink-0 rounded-full object-contain p-0.5"
-        style={{ backgroundColor }}
-      />
-    );
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className="flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
-      style={{ backgroundColor: filter.primary, color: filter.secondary }}
-    >
-      {filter.title.slice(0, 1).toUpperCase()}
-    </span>
-  );
+  return <TechLogo filter={filter} size={20} />;
 }
 
 function FilterChip({ filter, onRemove }: { filter: ProjectFilter; onRemove: () => void }) {
