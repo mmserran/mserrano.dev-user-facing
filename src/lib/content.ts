@@ -263,6 +263,63 @@ export function getRelatedProjects(project: Project): RelatedProjects {
   };
 }
 
+interface TechnologyCarouselBlock {
+  type: "pbCarouselTechnology";
+  title: string;
+  use_language: boolean;
+  use_framework: boolean;
+  use_deployment: boolean;
+  use_software: boolean;
+}
+
+export interface TechnologyCarousel {
+  title: string;
+  technologies: ProjectFilter[];
+}
+
+function findTechnologyCarouselBlock(pagebuilder: string): TechnologyCarouselBlock | undefined {
+  try {
+    const blocks = JSON.parse(pagebuilder) as unknown[];
+    return blocks.find(
+      (block): block is TechnologyCarouselBlock =>
+        typeof block === "object" && block !== null && (block as { type?: unknown }).type === "pbCarouselTechnology",
+    );
+  } catch {
+    return undefined;
+  }
+}
+
+const TECHNOLOGY_CATEGORIES: { key: keyof ProjectTechnology; flag: keyof TechnologyCarouselBlock }[] = [
+  { key: "language", flag: "use_language" },
+  { key: "framework", flag: "use_framework" },
+  { key: "deployment", flag: "use_deployment" },
+  { key: "software", flag: "use_software" },
+];
+
+// Ports the Gridsome frontend's pbCarouselTechnology get_technology(): the
+// block itself carries no logo list, just flags saying which of the
+// project's own technology categories to pull slugs from (in field order -
+// language, framework, deployment, software). Each slug is then resolved
+// against project-filters for its title/url/logo. Diverges from the Vue
+// source in the same way getRelatedProjects does: a slug with no matching
+// filter is skipped rather than pushed into the result as undefined.
+export function getTechnologyCarousel(project: Project): TechnologyCarousel {
+  const block = findTechnologyCarouselBlock(project.pagebuilder);
+  if (!block) {
+    return { title: "", technologies: [] };
+  }
+
+  const filterBySlug = new Map(content["project-filters"].map((filter) => [filter.slug, filter]));
+
+  const technologies = TECHNOLOGY_CATEGORIES.filter(({ flag }) => block[flag]).flatMap(({ key }) =>
+    project.technology[key]
+      .map((slug) => filterBySlug.get(slug))
+      .filter((filter): filter is ProjectFilter => filter !== undefined),
+  );
+
+  return { title: block.title, technologies };
+}
+
 export function getMediaUrl(filename: string): string {
   const trimmedFilename = filename.trim();
 
