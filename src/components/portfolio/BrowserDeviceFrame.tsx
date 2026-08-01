@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useState, type SyntheticEvent } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { getMediaVariants } from "@/lib/content";
 
 const SIZES = "(min-width: 1024px) 50vw, 100vw";
@@ -80,6 +80,43 @@ export default function BrowserDeviceFrame({
 }) {
   const [panSeconds, setPanSeconds] = useState<number | null>(null);
   const [scrollEligible, setScrollEligible] = useState(true);
+  // Screenshots routinely load slower than the frame chrome around them -
+  // this backs the neutral placeholder + spinner shown in the cutout until
+  // the current src actually paints, rather than leaving it empty.
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+  // Whether the SVG frame chrome itself has loaded. The cutout (placeholder
+  // and screenshot alike) stays invisible until this flips true, so a
+  // slow-loading frame never leaves the grey placeholder floating on its
+  // own with no chrome around it - they always appear together.
+  const [frameLoaded, setFrameLoaded] = useState(false);
+
+  // filename/browser change on every carousel slide (same component
+  // instance, new screenshot src and/or frame src) - reset during render,
+  // React's documented pattern for state that depends on a prop, so the
+  // placeholder reappears for the next slide's own loads instead of
+  // carrying over the previous slide's.
+  const [trackedKey, setTrackedKey] = useState(`${filename}|${browser}`);
+  const key = `${filename}|${browser}`;
+  if (key !== trackedKey) {
+    setTrackedKey(key);
+    setLoaded(false);
+    setFrameLoaded(false);
+  }
+
+  // Catches images the browser already finished decoding (SSR'd markup can
+  // complete loading before React hydrates and attaches the onLoad listener
+  // below, which would otherwise miss that load event and strand the
+  // spinner forever).
+  useEffect(() => {
+    const img = imgRef.current;
+    if (img?.complete) {
+      handleLoad({ currentTarget: img } as SyntheticEvent<HTMLImageElement>);
+    }
+    // handleLoad closes over this render's props/filename; it only needs to
+    // re-run this catch-up check when the src itself changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   const variants = getMediaVariants(filename);
   if (variants.length === 0) return null;
@@ -95,6 +132,9 @@ export default function BrowserDeviceFrame({
   const roundedBottom = browser !== "ie8";
 
   function handleLoad(event: SyntheticEvent<HTMLImageElement>) {
+    setLoaded(true);
+    if (!animate) return;
+
     const img = event.currentTarget;
     if (!img.naturalWidth || !img.naturalHeight) return;
 
@@ -123,18 +163,35 @@ export default function BrowserDeviceFrame({
 
   return (
     <div className="relative aspect-[644/460] w-full">
-      <div className={`absolute overflow-hidden ${roundedBottom ? "rounded-b-[4px]" : ""}`} style={CUTOUT_STYLE}>
+      <div
+        className={`absolute overflow-hidden bg-white ${roundedBottom ? "rounded-b-[4px]" : ""} ${
+          frameLoaded ? "" : "invisible"
+        }`}
+        style={CUTOUT_STYLE}
+      >
+        {!loaded && (
+          <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-slate-400/50 border-t-brand-blue motion-reduce:animate-none" />
+          </div>
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element -- discrete manifest widths need a manual srcset */}
         <img
+          // Positioned elements always paint above non-positioned in-flow
+          // content, regardless of DOM order - without `relative` here the
+          // spinner (position: absolute) would stack above this img even
+          // after it decodes, so a load that paints a frame or two before
+          // React's onLoad-triggered re-render removes the spinner would
+          // flash the spinner over the already-visible screenshot.
+          ref={imgRef}
           src={largest.url}
           srcSet={srcSet || undefined}
           sizes={srcSet ? SIZES : undefined}
           alt=""
           loading="lazy"
           decoding="async"
-          onLoad={animate ? handleLoad : undefined}
+          onLoad={handleLoad}
           style={shouldPan && panSeconds !== null ? { animationDuration: `${panSeconds}s` } : undefined}
-          className={`h-full w-full object-cover ${
+          className={`relative h-full w-full object-cover ${
             shouldPan
               ? "object-left-top animate-project-screenshot-pan motion-reduce:animate-none motion-reduce:object-left-top"
               : restPosition === "bottom" && scrollEligible
@@ -148,6 +205,7 @@ export default function BrowserDeviceFrame({
         alt=""
         fill
         unoptimized
+        onLoad={() => setFrameLoaded(true)}
         className="pointer-events-none absolute inset-0 z-10 object-contain"
       />
     </div>
