@@ -7,10 +7,16 @@ import TechnologyCarousel from "./TechnologyCarousel";
 
 type PageBuilderComponent = (props: { project: Project }) => ReactNode;
 
-// Maps a pagebuilder block's `type` to the component that renders it. Each
-// component locates its own block within project.pagebuilder and renders
-// nothing if that block is absent or empty, so this registry only needs to
-// know which types are recognized - not each block's shape.
+// Maps a pagebuilder block's `type` to the component that renders it.
+// Contract for a new entry:
+//   - Component takes only `{ project }`, and re-locates its own block via a
+//     `find<Type>Block()` helper in content.ts (see findTechnologyCarouselBlock) -
+//     never receives `section` directly, so this registry stays shape-agnostic.
+//   - Renders null when its block is absent or resolves to empty content.
+//   - Owns its own title chrome (SectionDivider, or deliberately suppressed
+//     per pbDivider.vue's rules) - the dispatcher inserts no dividers itself.
+//   - Test it standalone against real content.json fixtures; PageBuilder's
+//     own tests only need touching to assert a type's position in the array.
 //
 // Block types without a ported component yet (pbTriplet, pbMobileMozaic,
 // pbFeatured, pbImageText, pbCarouselCenterEmphasis, pbParallax) are simply
