@@ -19,6 +19,28 @@ function getPrefersReducedMotionServerSnapshot() {
 
 const BOUNDARY_TOLERANCE_PX = 8;
 
+// Gridsome's flickity-viewport mask fades both edges unconditionally, which
+// only reads right on an infinitely-wrapping carousel - whatever sits at the
+// edge is never truly the first/last item, just mid-loop. This carousel
+// doesn't wrap, so a static two-sided fade would permanently obscure the
+// real first/last card once Previous/Next disables at that boundary with no
+// way to scroll further and reveal it. Faded edges are only where there's
+// still more to scroll toward.
+//
+// Every branch keeps the same 4-stop shape (transparent/white/white/
+// transparent), only sliding the two inner stops - atStart collapses the
+// left stop to 0% (no left fade) and atEnd pushes the right stop to 100%
+// (no right fade). Because the stop count and order never change, browsers
+// that support gradient interpolation can crossfade between them on the
+// `mask-image` transition below instead of snapping; browsers that don't
+// just snap, same as before, so this is a strict progressive enhancement.
+function getEdgeFadeMask(atStart: boolean, atEnd: boolean): string | undefined {
+  if (atStart && atEnd) return undefined;
+  const leftStop = atStart ? 0 : 40;
+  const rightStop = atEnd ? 100 : 60;
+  return `linear-gradient(to right, transparent 0%, white ${leftStop}%, white ${rightStop}%, transparent 100%)`;
+}
+
 // Matches ProjectTileImage's/AppShell's media-query-tracking pattern:
 // subscribe via useSyncExternalStore so SSR and the first client render agree
 // (both see `false`) with no hydration mismatch.
@@ -115,13 +137,31 @@ export default function Carousel({
     });
   }
 
+  const edgeFadeMask = edgeFade ? getEdgeFadeMask(atStart, atEnd) : undefined;
+  // Crossfades the mask between shapes (see getEdgeFadeMask) instead of
+  // snapping, in browsers that interpolate compatible gradients. Slow and
+  // ease-in-out rather than a snappy UI transition, to match the site's
+  // other slow ambient motion (the star field's 150-600s drift, the 5s
+  // shine sweep) instead of feeling like a button-press response. Skipped
+  // under prefers-reduced-motion, same as the scroll behavior above.
+  const edgeFadeStyle = edgeFadeMask
+    ? {
+        WebkitMaskImage: edgeFadeMask,
+        maskImage: edgeFadeMask,
+        transitionProperty: "mask-image, -webkit-mask-image",
+        transitionDuration: reducedMotion ? "0ms" : "900ms",
+        transitionTimingFunction: "ease-in-out",
+      }
+    : undefined;
+
   return (
     <div className="relative">
       <div
         ref={trackRef}
         role="region"
         aria-label={ariaLabel}
-        className={`flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-1 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${edgeFade ? "carousel-edge-fade" : ""}`}
+        style={edgeFadeStyle}
+        className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-1 motion-reduce:scroll-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {children}
       </div>

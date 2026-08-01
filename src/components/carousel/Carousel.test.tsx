@@ -23,9 +23,9 @@ function setScrollGeometry(track: HTMLElement, { scrollLeft = 0, clientWidth = 3
 
 const items = ["a", "b", "c"];
 
-function renderCarousel() {
+function renderCarousel({ edgeFade = false }: { edgeFade?: boolean } = {}) {
   return render(
-    <Carousel ariaLabel="Test items">
+    <Carousel ariaLabel="Test items" edgeFade={edgeFade}>
       {items.map((item) => (
         <span key={item}>Card {item}</span>
       ))}
@@ -132,5 +132,108 @@ describe("Carousel", () => {
     fireEvent.scroll(track);
 
     expect(screen.getByRole("button", { name: "Go to page 4 of 4" })).toHaveAttribute("aria-current", "true");
+  });
+
+  describe("edgeFade", () => {
+    it("applies no mask when edgeFade is off, even mid-scroll", () => {
+      renderCarousel({ edgeFade: false });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 300, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.maskImage).toBe("");
+    });
+
+    it("applies no mask at rest when there's nothing to scroll", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 0, clientWidth: 900, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.maskImage).toBe("");
+    });
+
+    it("fades only the trailing edge at the start, so the true first card stays fully visible", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 0, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.maskImage).toBe("linear-gradient(to right, transparent 0%, white 0%, white 60%, transparent 100%)");
+    });
+
+    it("fades only the leading edge at the end, so the true last card stays fully visible", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 600, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.maskImage).toBe("linear-gradient(to right, transparent 0%, white 40%, white 100%, transparent 100%)");
+    });
+
+    it("fades both edges mid-scroll", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 300, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.maskImage).toBe("linear-gradient(to right, transparent 0%, white 40%, white 60%, transparent 100%)");
+    });
+
+    it("shares the same 4-stop gradient shape across every fading state, so browsers can crossfade between them", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      const stopPattern = /^linear-gradient\(to right, transparent 0%, white \d+%, white \d+%, transparent 100%\)$/;
+
+      setScrollGeometry(track, { scrollLeft: 0, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+      expect(track.style.maskImage).toMatch(stopPattern);
+
+      setScrollGeometry(track, { scrollLeft: 300, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+      expect(track.style.maskImage).toMatch(stopPattern);
+
+      setScrollGeometry(track, { scrollLeft: 600, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+      expect(track.style.maskImage).toMatch(stopPattern);
+    });
+
+    it("transitions the mask slowly by default", () => {
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 300, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.transitionDuration).toBe("900ms");
+      expect(track.style.transitionTimingFunction).toBe("ease-in-out");
+    });
+
+    it("skips the mask transition when the user prefers reduced motion", () => {
+      vi.mocked(window.matchMedia).mockImplementation((query: string) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }));
+
+      renderCarousel({ edgeFade: true });
+
+      const track = screen.getByRole("region", { name: "Test items" });
+      setScrollGeometry(track, { scrollLeft: 300, clientWidth: 300, scrollWidth: 900 });
+      fireEvent.scroll(track);
+
+      expect(track.style.transitionDuration).toBe("0ms");
+    });
   });
 });
