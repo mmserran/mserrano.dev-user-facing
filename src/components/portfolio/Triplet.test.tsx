@@ -135,4 +135,48 @@ describe("Triplet", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
+
+  it("uses secondary for striped segments when primary is white", () => {
+    const composer = makeFilter({
+      slug: "composer",
+      title: "Composer",
+      primary: "#FFFFFF",
+      secondary: "#131313",
+    });
+    const yarn = makeFilter({ slug: "yarn", title: "Yarn", primary: "#2C8EBB", secondary: "#ffffff" });
+    const view: TripletSectionView = {
+      title: "Usage vs Similar",
+      content: "",
+      items: [
+        {
+          type: "itemGraph",
+          key: "graph-0",
+          title: "Software",
+          columns: [
+            {
+              key: "yarn",
+              technology: yarn,
+              segments: [
+                { technology: yarn, usage: 2, striped: false },
+                { technology: composer, usage: 3, striped: true },
+              ],
+              total: 5,
+            },
+          ],
+        },
+      ],
+    };
+    getTripletSectionView.mockReturnValue(view);
+
+    const { container } = render(<Triplet section={section} project={project} />);
+    const solid = container.querySelector('[title="Yarn: 2"]') as HTMLElement;
+    const striped = container.querySelector('[title="Composer: 3"]') as HTMLElement;
+
+    expect(solid.style.backgroundColor).toBe("rgb(44, 142, 187)");
+    expect(solid.style.backgroundImage).toBe("");
+    expect(striped.style.backgroundColor).toBe("transparent");
+    expect(striped.style.backgroundImage).toBe(
+      "repeating-linear-gradient(45deg, rgb(19, 19, 19) 0 3px, transparent 3px 7px)",
+    );
+  });
 });

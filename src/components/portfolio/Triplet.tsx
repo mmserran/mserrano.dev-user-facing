@@ -110,19 +110,26 @@ function TripletGraphColumnBar({ column, maxTotal }: { column: TripletGraphColum
         className="flex w-10 flex-col-reverse overflow-hidden rounded-sm bg-white/10"
         style={{ height: GRAPH_CHART_HEIGHT }}
       >
-        {column.segments.map((segment, index) => (
-          <div
-            key={`${segment.technology.slug}-${index}`}
-            title={`${segment.technology.title}: ${segment.usage}`}
-            style={{
-              height: `${(segment.usage / maxTotal) * 100}%`,
-              backgroundColor: segment.striped ? "transparent" : segment.technology.primary,
-              backgroundImage: segment.striped
-                ? `repeating-linear-gradient(45deg, ${segment.technology.primary} 0 3px, transparent 3px 7px)`
-                : undefined,
-            }}
-          />
-        ))}
+        {column.segments.map((segment, index) => {
+          const stripeColor =
+            segment.technology.primary === "#FFFFFF"
+              ? segment.technology.secondary
+              : segment.technology.primary;
+
+          return (
+            <div
+              key={`${segment.technology.slug}-${index}`}
+              title={`${segment.technology.title}: ${segment.usage}`}
+              style={{
+                height: `${(segment.usage / maxTotal) * 100}%`,
+                backgroundColor: segment.striped ? "transparent" : segment.technology.primary,
+                backgroundImage: segment.striped
+                  ? `repeating-linear-gradient(45deg, ${stripeColor} 0 3px, transparent 3px 7px)`
+                  : undefined,
+              }}
+            />
+          );
+        })}
       </div>
       <span className="shine-text animate-shine motion-reduce:animate-none text-center text-xs font-semibold tracking-wide text-white uppercase">
         {column.technology.title}
