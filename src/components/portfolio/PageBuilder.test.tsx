@@ -23,6 +23,13 @@ vi.mock("./TechnologyCarousel", () => ({
 vi.mock("./RelatedProjects", () => ({
   default: () => <div data-testid="pbCarouselRelatedPosts" />,
 }));
+const tripletSpy = vi.fn();
+vi.mock("./Triplet", () => ({
+  default: (props: { project: Project; section: PageBuilderSection; index: number }) => {
+    tripletSpy(props);
+    return <div data-testid="pbTriplet" />;
+  },
+}));
 
 function projectWithPageBuilder(sections: Record<string, unknown>[]): Project {
   const base = getProjectBySlug("cygnus-management-llc") as Project;
@@ -39,7 +46,9 @@ describe("PageBuilder", () => {
       .map((element) => element.getAttribute("data-testid"));
     expect(rendered).toEqual([
       "pbHeader",
+      "pbTriplet",
       "pbGraphBreakdown",
+      "pbTriplet",
       "pbCarouselTechnology",
       "pbCarouselRelatedPosts",
     ]);
@@ -48,14 +57,41 @@ describe("PageBuilder", () => {
   it("skips block types without a ported component", () => {
     const project = projectWithPageBuilder([
       { type: "pbHeader" },
-      { type: "pbTriplet" },
+      { type: "pbImageText" },
       { type: "pbCarouselTechnology" },
     ]);
     render(<PageBuilder project={project} />);
 
     expect(screen.getByTestId("pbHeader")).toBeInTheDocument();
     expect(screen.getByTestId("pbCarouselTechnology")).toBeInTheDocument();
-    expect(screen.queryByTestId("pbTriplet")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pbImageText")).not.toBeInTheDocument();
+  });
+
+  it("dispatches a repeated pbTriplet block once per occurrence with its own section and index", () => {
+    tripletSpy.mockClear();
+    const project = projectWithPageBuilder([
+      { type: "pbTriplet", title: "Technology" },
+      { type: "pbGraphBreakdown" },
+      { type: "pbTriplet", title: "Usage vs Similar" },
+    ]);
+    render(<PageBuilder project={project} />);
+
+    expect(screen.getAllByTestId("pbTriplet")).toHaveLength(2);
+    expect(tripletSpy).toHaveBeenCalledTimes(2);
+    expect(tripletSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        section: expect.objectContaining({ type: "pbTriplet", title: "Technology" }),
+        index: 0,
+      }),
+    );
+    expect(tripletSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        section: expect.objectContaining({ type: "pbTriplet", title: "Usage vs Similar" }),
+        index: 2,
+      }),
+    );
   });
 
   it("renders a repeated block type once per occurrence with its own section and index", () => {

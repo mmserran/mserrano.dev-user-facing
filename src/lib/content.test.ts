@@ -13,9 +13,15 @@ import {
   getTechnologyBreakdown,
   getResumeUrl,
   getTechnologyCarousel,
+  getTripletSectionView,
   truncate,
+  type PageBuilderSection,
   type Project,
 } from "./content";
+
+function getTripletBlocks(project: Project): PageBuilderSection[] {
+  return getPageBuilderSections(project).filter((section) => section.type === "pbTriplet");
+}
 
 describe("content lib", () => {
   it("getHeaderLinks returns header links sorted by sort order", () => {
@@ -314,6 +320,79 @@ describe("content lib", () => {
 
       expect(getPageBuilderSections({ ...project, pagebuilder: "[]" })).toEqual([]);
       expect(getPageBuilderSections({ ...project, pagebuilder: "not json" })).toEqual([]);
+    });
+  });
+
+  describe("getTripletSectionView", () => {
+    it("resolves each itemTechnology entry to its project-filter, in list order", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [technologyBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(technologyBlock, project);
+
+      expect(view.title).toBe("Technology");
+      expect(view.items.map((item) => (item.type === "itemTechnology" ? item.technology.title : undefined))).toEqual([
+        "Bootstrap",
+        "AngularJS",
+        "Django",
+      ]);
+    });
+
+    it("resolves a canned-message shortcode in the section content to its plain text", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+
+      expect(view.title).toBe("Usage vs Similar");
+      expect(view.content).toBe("Striped bars represent similar technology used by my other projects.");
+    });
+
+    it("builds a usage-comparison column per deployment technology, deduping a redundant one and recoloring its still-in-project appearance solid", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const deployment = view.items.find(
+        (item) => item.type === "itemGraph" && item.title === "Deployment",
+      );
+      expect(deployment?.type).toBe("itemGraph");
+      if (deployment?.type !== "itemGraph") {
+        throw new Error("expected an itemGraph view");
+      }
+
+      // "github" shares git's exact related-technology set (git, bitbucket)
+      // so it's folded out of its own column...
+      expect(deployment.columns.map((column) => column.technology.slug)).toEqual(["git", "heroku"]);
+
+      // ...but still shows up, solid instead of textured, as a related
+      // segment inside git's column, since it really is used on this project.
+      const gitColumn = deployment.columns[0];
+      expect(gitColumn.segments.map((segment) => [segment.technology.slug, segment.usage, segment.striped])).toEqual([
+        ["git", 12, false],
+        ["github", 9, false],
+        ["bitbucket", 9, true],
+      ]);
+      expect(gitColumn.total).toBe(30);
+    });
+
+    it("returns no items when every item resolves to nothing", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const section: PageBuilderSection = {
+        type: "pbTriplet",
+        title: "Technology",
+        content: "",
+        list_triplet: [{ type: "itemTechnology", title: "", technology: [{ value: "term:framework:9999" }] }],
+      };
+
+      expect(getTripletSectionView(section, project).items).toEqual([]);
+    });
+
+    it("returns no items for a malformed or empty section", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+
+      expect(getTripletSectionView({ type: "pbTriplet" }, project).items).toEqual([]);
+      expect(getTripletSectionView({ type: "pbTriplet", list_triplet: "not an array" }, project).items).toEqual([]);
     });
   });
 });

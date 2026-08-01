@@ -81,6 +81,11 @@ export interface ProjectFilter {
   stats: ProjectFilterStats;
 }
 
+interface CannedMessage {
+  title: string;
+  content: string;
+}
+
 interface Content {
   "nav-header": HeaderLink[];
   projects: Project[];
@@ -89,6 +94,7 @@ interface Content {
     filename: string;
     contact_email: string;
   };
+  "theme-options/canned-msgs": CannedMessage[];
 }
 
 const content = rawContent as Content;
@@ -537,6 +543,231 @@ export function getTechnologyCarousel(project: Project): TechnologyCarousel {
   );
 
   return { title: block.title, technologies };
+}
+
+interface TripletTechnologyRef {
+  value: string;
+}
+
+export interface TripletItemTechnology {
+  type: "itemTechnology";
+  title: string;
+  technology: TripletTechnologyRef[];
+}
+
+export interface TripletItemGraph {
+  type: "itemGraph";
+  title: string;
+  use_language: boolean;
+  use_framework: boolean;
+  use_deployment: boolean;
+  use_software: boolean;
+}
+
+export type TripletItem = TripletItemTechnology | TripletItemGraph;
+
+export interface TripletTechnologyItemView {
+  type: "itemTechnology";
+  key: string;
+  technology: ProjectFilter;
+}
+
+export interface TripletGraphSegment {
+  technology: ProjectFilter;
+  usage: number;
+  // A related technology already used elsewhere on this project (folded out
+  // of its own column by the de-duplication below) renders solid instead of
+  // textured, matching the Gridsome source's still_in_project recolor.
+  striped: boolean;
+}
+
+export interface TripletGraphColumn {
+  key: string;
+  technology: ProjectFilter;
+  // Bottom-to-top stacking order: the project's own usage bar first, then
+  // related technologies oldest-first.
+  segments: TripletGraphSegment[];
+  total: number;
+}
+
+export interface TripletGraphItemView {
+  type: "itemGraph";
+  key: string;
+  title: string;
+  columns: TripletGraphColumn[];
+}
+
+export type TripletItemView = TripletTechnologyItemView | TripletGraphItemView;
+
+export interface TripletSectionView {
+  title: string;
+  content: string;
+  items: TripletItemView[];
+}
+
+const TRIPLET_GRAPH_CATEGORIES: { key: keyof ProjectTechnology; flag: keyof TripletItemGraph; label: string }[] = [
+  { key: "language", flag: "use_language", label: "Languages" },
+  { key: "framework", flag: "use_framework", label: "Frameworks" },
+  { key: "deployment", flag: "use_deployment", label: "Deployment" },
+  { key: "software", flag: "use_software", label: "Software" },
+];
+
+function technologyType(filter: ProjectFilter): string {
+  return filter.value.split(":")[1] ?? "";
+}
+
+function jaccard(a: string[], b: string[]): number {
+  const union = new Set([...a, ...b]);
+  if (union.size === 0) {
+    return 0;
+  }
+  const intersection = a.filter((trait) => b.includes(trait));
+  return intersection.length / union.size;
+}
+
+// Ports pbTripletItemGraph.vue's get_related: technologies of the same kind
+// (matched by the "term:<type>:<id>" value's type segment) ranked by trait
+// overlap (Jaccard similarity), capped to the top 5, thresholded at a 0.5
+// rating, then re-ordered oldest-first for the stacked bar.
+function getRelatedTechnology(technology: ProjectFilter, allFilters: ProjectFilter[]): ProjectFilter[] {
+  const type = technologyType(technology);
+
+  return allFilters
+    .filter((candidate) => technologyType(candidate) === type)
+    .map((candidate) => ({ candidate, rating: jaccard(technology.list_trait, candidate.list_trait) }))
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 5)
+    .filter((entry) => entry.rating >= 0.5)
+    .sort((a, b) => a.candidate.stats.first_year_used - b.candidate.stats.first_year_used)
+    .map((entry) => entry.candidate)
+    .filter((candidate) => candidate.slug !== technology.slug);
+}
+
+// Ports pbTripletItemGraph.vue's mounted(): a column is built per technology
+// in the flagged category, but a column whose self+related slug signature
+// exactly matches an earlier column's is dropped as redundant - its slug is
+// tracked so it can still recolor a matching related segment elsewhere solid
+// instead of textured, since it genuinely is one of the project's own.
+function buildGraphColumns(technologySlugs: string[], allFilters: ProjectFilter[]): TripletGraphColumn[] {
+  const bySlug = new Map(allFilters.map((filter) => [filter.slug, filter]));
+  const technologies = technologySlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((filter): filter is ProjectFilter => filter !== undefined);
+
+  const seenSignatures = new Set<string>();
+  const stillInProject = new Set<string>();
+  const survivors: ProjectFilter[] = [];
+
+  for (const technology of technologies) {
+    const related = getRelatedTechnology(technology, allFilters);
+    const signature = [technology.slug, ...related.map((entry) => entry.slug)].sort().join("+");
+    if (seenSignatures.has(signature)) {
+      stillInProject.add(technology.slug);
+    } else {
+      seenSignatures.add(signature);
+      survivors.push(technology);
+    }
+  }
+
+  return survivors.map((technology) => {
+    const related = getRelatedTechnology(technology, allFilters);
+    const segments: TripletGraphSegment[] = [
+      { technology, usage: technology.stats.usage, striped: false },
+      ...related.map((relatedTechnology) => ({
+        technology: relatedTechnology,
+        usage: relatedTechnology.stats.usage,
+        striped: !stillInProject.has(relatedTechnology.slug),
+      })),
+    ].filter((segment) => segment.usage > 0);
+
+    return {
+      key: technology.slug,
+      technology,
+      segments,
+      total: segments.reduce((sum, segment) => sum + segment.usage, 0),
+    };
+  });
+}
+
+function buildGraphItemView(
+  item: TripletItemGraph,
+  project: Project,
+  allFilters: ProjectFilter[],
+  index: number,
+): TripletGraphItemView | undefined {
+  const category = TRIPLET_GRAPH_CATEGORIES.find((entry) => item[entry.flag] === true);
+  const slugs = category ? project.technology[category.key] : [];
+  const columns = buildGraphColumns(slugs, allFilters);
+
+  if (columns.length === 0) {
+    return undefined;
+  }
+
+  return {
+    type: "itemGraph",
+    key: `graph-${index}`,
+    title: category ? category.label : item.title,
+    columns,
+  };
+}
+
+const CANNED_MESSAGE_PATTERN = /^\[canned msg="([^"]+)"\]$/;
+
+// Ports useShortcodes/scCanned.vue for the one shortcode pbTriplet's section
+// content actually uses ("Usage vs Similar"'s caption). Canned messages are
+// trusted, build-time CMS copy (not user input), but every one used by a
+// pbTriplet block today is a plain sentence, so this resolves to plain text
+// rather than porting baseText's general HTML shortcode engine.
+function resolveTripletContent(rawContentValue: string): string {
+  const trimmed = rawContentValue.trim();
+  const match = CANNED_MESSAGE_PATTERN.exec(trimmed);
+  if (!match) {
+    return trimmed;
+  }
+
+  const canned = content["theme-options/canned-msgs"].find((entry) => entry.title === match[1]);
+  return canned?.content ?? "";
+}
+
+function isTripletItem(value: unknown): value is TripletItem {
+  if (!isRecord(value)) {
+    return false;
+  }
+  if (value.type === "itemTechnology") {
+    return Array.isArray(value.technology);
+  }
+  return value.type === "itemGraph";
+}
+
+// Ports pbTriplet.vue + pbTripletItemTechnology.vue + pbTripletItemGraph.vue.
+// Unlike the other page-builder blocks above, pbTriplet can appear more than
+// once per project (e.g. "Technology" then "Usage vs Similar"), so this reads
+// its data from the PageBuilder-dispatched section rather than finding the
+// first matching block itself.
+export function getTripletSectionView(section: PageBuilderSection, project: Project): TripletSectionView {
+  const title = typeof section.title === "string" ? section.title : "";
+  const rawContentValue = typeof section.content === "string" ? section.content : "";
+  const listTriplet = Array.isArray(section.list_triplet) ? section.list_triplet.filter(isTripletItem) : [];
+
+  const allFilters = getProjectFilters();
+  const filterByValue = new Map(allFilters.map((filter) => [filter.value, filter]));
+
+  const items: TripletItemView[] = listTriplet.flatMap((item, index): TripletItemView[] => {
+    if (item.type === "itemTechnology") {
+      const ref = item.technology[0];
+      const technology = ref ? filterByValue.get(ref.value) : undefined;
+      return technology ? [{ type: "itemTechnology", key: `tech-${index}`, technology }] : [];
+    }
+
+    const graphItem = buildGraphItemView(item, project, allFilters, index);
+    return graphItem ? [graphItem] : [];
+  });
+
+  return {
+    title,
+    content: resolveTripletContent(rawContentValue),
+    items,
+  };
 }
 
 export function getMediaUrl(filename: string): string {
