@@ -68,7 +68,7 @@ function TechnologyLink({ technology, subdued = false }: { technology: ProjectFi
     <>
       <span
         aria-hidden="true"
-        className="h-[0.6em] w-12 shrink-0"
+        className="h-[0.6em] w-[50px] shrink-0"
         style={{ backgroundColor: technology.primary }}
       />
       <span className="relative tracking-widest uppercase">
@@ -80,7 +80,7 @@ function TechnologyLink({ technology, subdued = false }: { technology: ProjectFi
       </span>
     </>
   );
-  const className = `group flex min-h-11 w-fit items-center gap-2.5 py-1 text-sm text-white transition-opacity focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue ${subdued ? "opacity-50 hover:opacity-100 focus-visible:opacity-100" : ""}`;
+  const className = `group flex min-h-10 w-fit items-center gap-2.5 text-sm leading-5 text-white transition-opacity focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue sm:min-h-6 ${subdued ? "opacity-50 hover:opacity-100 focus-visible:opacity-100" : ""}`;
 
   return technology.url ? (
     <a href={technology.url} target="_blank" rel="noopener noreferrer" className={className}>
@@ -142,12 +142,12 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
         <circle cx={CENTER_X} cy={CENTER_Y} r={CENTER_RADIUS * 0.5875} fill="#fff" fillOpacity="0.65" />
       </svg>
 
-      <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-x-0 xl:grid-cols-4 xl:gap-10">
+      <div className="mx-auto grid w-full max-w-[1000px] grid-cols-1 gap-10 md:grid-cols-2 md:gap-x-0 xl:grid-cols-4 xl:gap-10">
         {breakdown.legend.map((section) => (
           <section key={section.title} aria-labelledby={headingId(section.title)} className="w-full min-w-0 max-w-80 justify-self-center">
             <h3
               id={headingId(section.title)}
-              className="shine-text animate-shine motion-reduce:animate-none mb-1 text-base font-semibold tracking-widest text-white uppercase"
+              className="shine-text animate-shine motion-reduce:animate-none mb-[3px] text-base font-semibold tracking-widest text-white uppercase"
             >
               {section.title}
             </h3>
