@@ -29,7 +29,7 @@ function wedgePath(radius: number, start: number, end: number) {
 }
 
 function sliceRadius(weight: number, isChild = false) {
-  if (!isChild && weight <= 0.05) {
+  if (weight <= 0.05) {
     return 0.875 * SLICE_RANGE + CENTER_RADIUS + MIN_RADIUS;
   }
   const scaledWeight = isChild ? Math.min(1, weight + 0.5) : weight;
