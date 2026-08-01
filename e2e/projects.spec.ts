@@ -16,6 +16,19 @@ test("links each tile to its project detail page", async ({ page }) => {
   await expect(link).toHaveAttribute("href", "/projects/mserrano-dev/");
 });
 
+test("renders the project technology breakdown with an accessible graph and keyboard-operable legend", async ({ page }) => {
+  await page.goto("/projects/mserrano-dev/");
+
+  await expect(page.getByRole("img", { name: "Technology usage breakdown for My Portfolio Website" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Scripts", level: 3 })).toBeVisible();
+
+  const javascript = page.getByRole("link", { name: "JavaScript" });
+  await javascript.focus();
+  await expect(javascript).toBeFocused();
+  await expect(javascript).toHaveAttribute("target", "_blank");
+  await expect(javascript).toHaveAttribute("rel", "noopener noreferrer");
+});
+
 test("filtering narrows the visible tiles, updates the count, and syncs the URL", async ({ page }) => {
   await page.goto("/projects/");
 
@@ -48,5 +61,17 @@ test.describe("mobile viewport", () => {
     expect(secondBox).not.toBeNull();
     // Single column on mobile: tiles stack vertically, not side by side.
     expect(secondBox!.y).toBeGreaterThan(firstBox!.y + firstBox!.height - 1);
+  });
+
+  test("keeps the technology graph and legend within the mobile viewport", async ({ page }) => {
+    await page.goto("/projects/mserrano-dev/");
+
+    await expect(page.getByRole("img", { name: "Technology usage breakdown for My Portfolio Website" })).toBeVisible();
+    const breakdown = page.getByRole("region", { name: "Technology breakdown" });
+    const hasHorizontalOverflow = await breakdown.evaluate(
+      (element) => element.scrollWidth > element.clientWidth,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+    await expect(page.getByRole("heading", { name: "Dev Environment", level: 3 })).toBeVisible();
   });
 });

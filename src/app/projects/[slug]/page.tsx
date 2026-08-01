@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
 import ProjectHeader from "@/components/portfolio/ProjectHeader";
 import RelatedProjects from "@/components/portfolio/RelatedProjects";
+import TechnologyBreakdown from "@/components/portfolio/TechnologyBreakdown";
 import { getProjectBySlug, getProjects } from "@/lib/content";
 
 export async function generateStaticParams() {
@@ -51,6 +52,8 @@ export default async function ProjectPage({
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
       <ProjectHeader project={project} />
+
+      <TechnologyBreakdown project={project} />
 
       <div className="flex justify-center px-4 pb-16">
         <Link

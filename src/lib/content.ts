@@ -212,6 +212,200 @@ export interface RelatedProjects {
   projects: Project[];
 }
 
+interface PageBuilderSelection {
+  value: string;
+}
+
+interface TechnologyBreakdownEntry {
+  technology__weight: string;
+  technology__use_language: boolean;
+  technology__selection: PageBuilderSelection[];
+}
+
+interface LanguageBreakdownEntry {
+  language__weight: string;
+  language__selection: PageBuilderSelection[];
+  complex_technology: TechnologyBreakdownEntry[];
+}
+
+interface TechnologyBreakdownBlock {
+  type: "pbGraphBreakdown";
+  title: string;
+  complex_language: LanguageBreakdownEntry[];
+}
+
+export interface TechnologyGraphSlice {
+  technology: ProjectFilter;
+  weight: number;
+  breakdown: TechnologyGraphChildSlice[];
+}
+
+export interface TechnologyGraphChildSlice {
+  technology?: ProjectFilter;
+  weight: number;
+}
+
+export interface TechnologyLegendEntry {
+  technology?: ProjectFilter;
+  children: ProjectFilter[];
+  general: boolean;
+}
+
+export interface TechnologyLegendSection {
+  title: string;
+  entries: TechnologyLegendEntry[];
+}
+
+export interface TechnologyBreakdown {
+  graph: TechnologyGraphSlice[];
+  legend: TechnologyLegendSection[];
+}
+
+const TECHNOLOGY_LEGEND_SECTIONS = [
+  ["Scripts", "scripts"],
+  ["Template / Styles", "template-styles"],
+  ["Server", "server"],
+  ["Dev Environment", "dev_env"],
+] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function findTechnologyBreakdownBlock(pagebuilder: string): TechnologyBreakdownBlock | undefined {
+  try {
+    const blocks = JSON.parse(pagebuilder) as unknown;
+    if (!Array.isArray(blocks)) {
+      return undefined;
+    }
+
+    const block = blocks.find(
+      (candidate) => isRecord(candidate) && candidate.type === "pbGraphBreakdown",
+    );
+    if (!isRecord(block) || !Array.isArray(block.complex_language)) {
+      return undefined;
+    }
+
+    return block as unknown as TechnologyBreakdownBlock;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseWeight(value: unknown): number | undefined {
+  const weight = typeof value === "string" || typeof value === "number" ? Number(value) / 100 : Number.NaN;
+  return Number.isFinite(weight) && weight >= 0 ? weight : undefined;
+}
+
+// Ports pbGraphBreakdown.vue's data transformation while keeping malformed or
+// stale CMS references from breaking the static export. Page-builder selections
+// use the filter's canonical Carbon Fields value; the project's technology
+// lists use filter slugs, so both lookup maps are required.
+export function getTechnologyBreakdown(project: Project): TechnologyBreakdown | undefined {
+  const block = findTechnologyBreakdownBlock(project.pagebuilder);
+  if (!block) {
+    return undefined;
+  }
+
+  const filters = getProjectFilters();
+  const byValue = new Map(filters.map((filter) => [filter.value, filter]));
+  const bySlug = new Map(filters.map((filter) => [filter.slug, filter]));
+  const technologyPool = Object.values(project.technology).flat();
+  const grouped = new Map<string, TechnologyLegendEntry[]>();
+  const graph: TechnologyGraphSlice[] = [];
+
+  const removeFromPool = (slug: string) => {
+    let index = technologyPool.indexOf(slug);
+    while (index !== -1) {
+      technologyPool.splice(index, 1);
+      index = technologyPool.indexOf(slug);
+    }
+  };
+
+  for (const language of block.complex_language) {
+    if (!isRecord(language) || !Array.isArray(language.language__selection)) {
+      continue;
+    }
+
+    const languageSelection = language.language__selection[0];
+    const languageTechnology = isRecord(languageSelection)
+      ? byValue.get(String(languageSelection.value))
+      : undefined;
+    const languageWeight = parseWeight(language.language__weight);
+    if (!languageTechnology || languageWeight === undefined) {
+      continue;
+    }
+
+    const children: ProjectFilter[] = [];
+    const childSlices: TechnologyGraphChildSlice[] = [];
+    const complexTechnology = Array.isArray(language.complex_technology)
+      ? language.complex_technology
+      : [];
+
+    for (const child of complexTechnology) {
+      if (!isRecord(child)) {
+        continue;
+      }
+      const childWeight = parseWeight(child.technology__weight);
+      if (childWeight === undefined) {
+        continue;
+      }
+
+      const selections = Array.isArray(child.technology__selection)
+        ? child.technology__selection
+        : [];
+      const selection = selections[0];
+      const childTechnology = isRecord(selection)
+        ? byValue.get(String(selection.value))
+        : undefined;
+
+      if (childTechnology) {
+        children.push(childTechnology);
+        childSlices.push({ technology: childTechnology, weight: childWeight });
+        removeFromPool(childTechnology.slug);
+      } else if (child.technology__use_language === true) {
+        childSlices.push({ weight: childWeight });
+      }
+    }
+
+    const entries = grouped.get(languageTechnology.affinity) ?? [];
+    entries.push({ technology: languageTechnology, children, general: false });
+    grouped.set(languageTechnology.affinity, entries);
+    removeFromPool(languageTechnology.slug);
+    graph.push({ technology: languageTechnology, weight: languageWeight, breakdown: childSlices });
+  }
+
+  const generalByAffinity = new Map<string, ProjectFilter[]>();
+  for (const slug of technologyPool) {
+    const technology = bySlug.get(slug);
+    if (!technology) {
+      continue;
+    }
+    const entries = generalByAffinity.get(technology.affinity) ?? [];
+    if (!entries.some((entry) => entry.slug === technology.slug)) {
+      entries.push(technology);
+    }
+    generalByAffinity.set(technology.affinity, entries);
+  }
+
+  for (const [affinity, technologies] of generalByAffinity) {
+    technologies.sort((a, b) => a.title.localeCompare(b.title));
+    const entries = grouped.get(affinity) ?? [];
+    entries.unshift({ children: technologies, general: true });
+    grouped.set(affinity, entries);
+  }
+
+  const legend = TECHNOLOGY_LEGEND_SECTIONS.map(([title, affinity]) => {
+    const entries = [...(grouped.get(affinity) ?? [])];
+    if (affinity === "template-styles") {
+      entries.reverse();
+    }
+    return { title, entries };
+  });
+
+  return { graph, legend };
+}
+
 function findRelatedPostsBlock(pagebuilder: string): RelatedPostsBlock | undefined {
   try {
     const blocks = JSON.parse(pagebuilder) as unknown[];

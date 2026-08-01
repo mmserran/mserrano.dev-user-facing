@@ -9,6 +9,7 @@ import {
   getProjectFilters,
   getProjects,
   getRelatedProjects,
+  getTechnologyBreakdown,
   getResumeUrl,
   truncate,
   type Project,
@@ -182,6 +183,61 @@ describe("content lib", () => {
       const malformed: Project = { ...project, pagebuilder: "not json" };
 
       expect(getRelatedProjects(malformed)).toEqual({ title: "", projects: [] });
+    });
+  });
+
+  describe("getTechnologyBreakdown", () => {
+    it("builds the weighted graph and four legend sections from the page-builder block", () => {
+      const project = getProjectBySlug("mserrano-dev") as Project;
+      const breakdown = getTechnologyBreakdown(project);
+
+      expect(breakdown?.graph.map((slice) => [slice.technology.title, slice.weight])).toEqual([
+        ["JavaScript", 0.33],
+        ["CSS3", 0.2],
+        ["HTML5", 0.14],
+        ["PHP", 0.33],
+      ]);
+      expect(breakdown?.legend.map((section) => section.title)).toEqual([
+        "Scripts",
+        "Template / Styles",
+        "Server",
+        "Dev Environment",
+      ]);
+      expect(
+        breakdown?.legend.flatMap((section) =>
+          section.entries.flatMap((entry) => [entry.technology, ...entry.children]),
+        ).filter(Boolean),
+      ).toHaveLength(new Set(Object.values(project.technology).flat()).size);
+    });
+
+    it("returns no breakdown for missing or malformed page-builder data", () => {
+      const project = getProjectBySlug("mserrano-dev") as Project;
+
+      expect(getTechnologyBreakdown({ ...project, pagebuilder: "[]" })).toBeUndefined();
+      expect(getTechnologyBreakdown({ ...project, pagebuilder: "not json" })).toBeUndefined();
+    });
+
+    it("skips invalid weights and unknown filter references without crashing", () => {
+      const project = getProjectBySlug("mserrano-dev") as Project;
+      const pagebuilder = JSON.stringify([
+        {
+          type: "pbGraphBreakdown",
+          complex_language: [
+            {
+              language__weight: "invalid",
+              language__selection: [{ value: "term:language:5" }],
+              complex_technology: [],
+            },
+            {
+              language__weight: "50",
+              language__selection: [{ value: "term:language:9999" }],
+              complex_technology: [],
+            },
+          ],
+        },
+      ]);
+
+      expect(getTechnologyBreakdown({ ...project, pagebuilder })?.graph).toEqual([]);
     });
   });
 });

@@ -80,6 +80,16 @@
   --animate-carousel-fade-out: carousel-fade-out 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
 }
 
+@keyframes technology-star-twirl {
+  0% {
+    transform: translateY(-50%) rotate(45deg) rotateY(0deg);
+  }
+  70%,
+  100% {
+    transform: translateY(-50%) rotate(45deg) rotateY(540deg);
+  }
+}
+
 @keyframes star-drift {
   from {
     transform: translateY(0);
