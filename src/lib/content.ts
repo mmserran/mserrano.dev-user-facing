@@ -272,6 +272,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+// Ports singleProject.vue's `get_pagebuilder()`: the ordered list of block
+// types in the project's pagebuilder array, for components that dispatch on
+// type rather than parse a specific block's shape (see PageBuilder).
+export function getPageBuilderSectionTypes(project: Project): string[] {
+  try {
+    const blocks = JSON.parse(project.pagebuilder) as unknown;
+    if (!Array.isArray(blocks)) {
+      return [];
+    }
+    return blocks
+      .filter(isRecord)
+      .map((block) => block.type)
+      .filter((type): type is string => typeof type === "string");
+  } catch {
+    return [];
+  }
+}
+
 function findTechnologyBreakdownBlock(pagebuilder: string): TechnologyBreakdownBlock | undefined {
   try {
     const blocks = JSON.parse(pagebuilder) as unknown;
