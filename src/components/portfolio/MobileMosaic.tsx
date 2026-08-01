@@ -254,7 +254,7 @@ export default function MobileMosaic({ project }: { project: Project }) {
                       {row.cells.map((cell, cellIndex) => (
                         <div
                           key={`${row.generation}-${cellIndex}`}
-                          className={`flex w-60 shrink-0 justify-center ${rowIndex % 2 === 1 ? "-translate-y-[250px]" : ""}`}
+                          className={`flex w-60 shrink-0 justify-center ${cellIndex % 2 === 1 ? "-translate-y-[250px]" : ""}`}
                         >
                           <MobileDeviceFrame
                             filename={row.screenshot}

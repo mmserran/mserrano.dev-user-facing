@@ -110,12 +110,12 @@
      (including their delays). Duration here is only a pre-measurement
      fallback - MobileDeviceFrame overrides it inline once the screenshot
      loads, scaled to its natural height (same technique as
-     project-screenshot-pan/BrowserDeviceFrame). Unlike that pan, these hold
-     their end position indefinitely (forwards, iteration-count 1) rather
-     than looping. */
-  --animate-mosaic-slow-scroll-from-top: mosaic-slow-scroll-from-top 4s linear 0.5s forwards;
-  --animate-mosaic-footer-scroll-up: mosaic-footer-scroll-up 4s linear 1.25s forwards;
-  --animate-mosaic-mid-scroll: mosaic-mid-scroll 4s linear forwards;
+     project-screenshot-pan/BrowserDeviceFrame). Fill-mode both matches
+     decorDeviceFrame.vue's .play rule so the 0% crop holds through the
+     delay; after the single iteration the end crop holds (forwards). */
+  --animate-mosaic-slow-scroll-from-top: mosaic-slow-scroll-from-top 4s linear 0.5s both;
+  --animate-mosaic-footer-scroll-up: mosaic-footer-scroll-up 4s linear 1.25s both;
+  --animate-mosaic-mid-scroll: mosaic-mid-scroll 4s linear both;
 }
 
 @keyframes technology-star-twirl {

@@ -23,33 +23,58 @@ export type MobileDeviceKey =
 // every mobile device frame has a different intrinsic shape.
 const DEVICE_FRAMES: Record<
   MobileDeviceKey,
-  { aspectRatio: number; cutout: { top: number; left: number; width: number; height: number } }
+  {
+    aspectRatio: number;
+    // Cap from decorDeviceFrame.vue's per-device max-width (e.g. 350px * 0.5
+    // for iphone4). Cells are 240px wide; without this every frame stretches
+    // to full cell width and the mosaic denser/larger than the live site.
+    maxWidthPx: number;
+    cutout: { top: number; left: number; width: number; height: number };
+  }
 > = {
-  "mobile-iphone4": { aspectRatio: 337.18 / 174.36, cutout: { top: 0.1675, left: 0.075, width: 0.85, height: 0.665 } },
-  "mobile-iphone4--white": {
-    aspectRatio: 337.18 / 174.35,
+  "mobile-iphone4": {
+    aspectRatio: 337.18 / 174.36,
+    maxWidthPx: 175,
     cutout: { top: 0.1675, left: 0.075, width: 0.85, height: 0.665 },
   },
-  "mobile-iphone6s": { aspectRatio: 396.96 / 193.13, cutout: { top: 0.125, left: 0.063, width: 0.88, height: 0.75 } },
-  "mobile-iphone6s--white": {
+  "mobile-iphone4--white": {
+    aspectRatio: 337.18 / 174.35,
+    maxWidthPx: 175,
+    cutout: { top: 0.1675, left: 0.075, width: 0.85, height: 0.665 },
+  },
+  "mobile-iphone6s": {
     aspectRatio: 396.96 / 193.13,
+    maxWidthPx: 193.5,
     cutout: { top: 0.125, left: 0.063, width: 0.88, height: 0.75 },
   },
-  "mobile-iphoneXs": { aspectRatio: 425.35 / 213.38, cutout: { top: 0.03, left: 0.063, width: 0.88, height: 0.94 } },
+  "mobile-iphone6s--white": {
+    aspectRatio: 396.96 / 193.13,
+    maxWidthPx: 193.5,
+    cutout: { top: 0.125, left: 0.063, width: 0.88, height: 0.75 },
+  },
+  "mobile-iphoneXs": {
+    aspectRatio: 425.35 / 213.38,
+    maxWidthPx: 213.5,
+    cutout: { top: 0.03, left: 0.063, width: 0.88, height: 0.94 },
+  },
   "mobile-iphoneXs--roseGold": {
     aspectRatio: 425.35 / 213.38,
+    maxWidthPx: 213.5,
     cutout: { top: 0.03, left: 0.063, width: 0.88, height: 0.94 },
   },
   "mobile-galaxyNote3": {
     aspectRatio: 442.98 / 233.08,
+    maxWidthPx: 234,
     cutout: { top: 0.08, left: 0.053, width: 0.895, height: 0.84 },
   },
   "mobile-galaxyNote9--blue": {
     aspectRatio: 466.54 / 219.33,
+    maxWidthPx: 219.5,
     cutout: { top: 0.05, left: 0.03, width: 0.944, height: 0.91 },
   },
   "mobile-galaxyNote9--purple": {
     aspectRatio: 466.54 / 219.33,
+    maxWidthPx: 219.5,
     cutout: { top: 0.05, left: 0.03, width: 0.944, height: 0.91 },
   },
 };
@@ -130,7 +155,10 @@ export default function MobileDeviceFrame({
   }
 
   return (
-    <div className="relative w-full" style={{ aspectRatio: `1 / ${frame.aspectRatio}` }}>
+    <div
+      className="relative w-full"
+      style={{ aspectRatio: `1 / ${frame.aspectRatio}`, maxWidth: frame.maxWidthPx }}
+    >
       <div
         className="absolute overflow-hidden"
         style={{
