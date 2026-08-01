@@ -9,7 +9,10 @@ describe("TechnologyBreakdown", () => {
     render(<TechnologyBreakdown project={project} />);
 
     expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` })).toBeInTheDocument();
+    const graph = screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` });
+    expect(graph).toBeInTheDocument();
+    expect(graph.querySelector('path[fill="#41B883"]:not([fill-opacity])')).toBeInTheDocument();
+    expect(graph.querySelector('path[fill="#41B883"][fill-opacity="0.25"]')).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Scripts" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Template / Styles" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Server" })).toBeInTheDocument();

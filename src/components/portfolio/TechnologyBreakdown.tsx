@@ -36,7 +36,12 @@ function sliceRadius(weight: number, isChild = false) {
   return scaledWeight * SLICE_RANGE + CENTER_RADIUS + MIN_RADIUS;
 }
 
-function childWedges(children: TechnologyGraphChildSlice[], start: number, end: number) {
+function childWedges(
+  children: TechnologyGraphChildSlice[],
+  start: number,
+  end: number,
+  layer: "underlay" | "overlay",
+) {
   const paths: React.ReactNode[] = [];
   let position = start;
 
@@ -45,10 +50,10 @@ function childWedges(children: TechnologyGraphChildSlice[], start: number, end: 
     if (child.technology && childEnd > position) {
       paths.push(
         <path
-          key={`${child.technology.slug}-${index}`}
+          key={`${layer}-${child.technology.slug}-${index}`}
           d={wedgePath(sliceRadius(child.weight, true), position, childEnd)}
           fill={child.technology.primary}
-          fillOpacity="0.25"
+          fillOpacity={layer === "overlay" ? 0.25 : undefined}
         />,
       );
     }
@@ -126,8 +131,9 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
         {graphSlices.map(({ slice, start, end }) => {
           return (
             <g key={slice.technology.slug}>
+              {childWedges(slice.breakdown, start, end, "underlay")}
               <path d={wedgePath(sliceRadius(slice.weight), start, end)} fill={slice.technology.primary} />
-              {childWedges(slice.breakdown, start, end)}
+              {childWedges(slice.breakdown, start, end, "overlay")}
             </g>
           );
         })}
