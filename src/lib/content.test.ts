@@ -344,7 +344,7 @@ describe("content lib", () => {
 
       const view = getTripletSectionView(usageBlock, project);
 
-      expect(view.title).toBe("Usage vs Similar");
+      expect(view.title).toBe("Notable Technologies");
       expect(view.content).toBe("Striped bars represent similar technology used by my other projects.");
     });
 
@@ -389,7 +389,7 @@ describe("content lib", () => {
       expect(heroku.statistic).toBe("Hosting of choice in 2014");
     });
 
-    it("caps a category at 4 cards, pinning every first-used-here technology even over higher-usage peers", () => {
+    it("caps a category at 4 cards, pinning first-used-here technologies even over higher-usage peers", () => {
       const project = getProjectBySlug("black-friday-2019") as Project;
       const [, usageBlock] = getTripletBlocks(project);
 
@@ -410,6 +410,27 @@ describe("content lib", () => {
         "composer",
       ]);
       expect(software.cards.find((card) => card.isHighProficiency)?.technology.slug).toBe("bash");
+    });
+
+    it("caps pinned first-used-here technologies themselves when they exceed 4, and badges high proficiency among the displayed set", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const deployment = view.items.find((item) => item.type === "itemGraph" && item.title === "Deployment");
+      const software = view.items.find((item) => item.type === "itemGraph" && item.title === "Software");
+      expect(deployment?.type).toBe("itemGraph");
+      expect(software?.type).toBe("itemGraph");
+      if (deployment?.type !== "itemGraph" || software?.type !== "itemGraph") {
+        throw new Error("expected itemGraph views");
+      }
+
+      expect(deployment.cards).toHaveLength(4);
+      expect(software.cards).toHaveLength(4);
+      expect(deployment.cards.every((card) => card.isFirstUsedHere)).toBe(true);
+      expect(software.cards.every((card) => card.isFirstUsedHere)).toBe(true);
+      expect(deployment.cards.some((card) => card.isHighProficiency)).toBe(true);
+      expect(software.cards.some((card) => card.isHighProficiency)).toBe(true);
     });
 
     it("returns no items when every item resolves to nothing", () => {

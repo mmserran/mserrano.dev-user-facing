@@ -709,15 +709,16 @@ function buildTripletCards(
   const thisProjectYear = projectYear(project);
   const isFirstUsedHere = (technology: ProjectFilter) => technology.stats.first_year_used === thisProjectYear;
 
-  const highProficiencySlug = [...technologies].sort((a, b) => b.stats.usage - a.stats.usage)[0]?.slug;
-
-  const pinned = technologies.filter(isFirstUsedHere);
-  const pinnedSlugs = new Set(pinned.map((technology) => technology.slug));
+  const pinned = technologies
+    .filter(isFirstUsedHere)
+    .sort((a, b) => b.stats.usage - a.stats.usage)
+    .slice(0, MAX_CARDS_PER_CATEGORY);
   const rest = technologies
-    .filter((technology) => !pinnedSlugs.has(technology.slug))
+    .filter((technology) => !isFirstUsedHere(technology))
     .sort((a, b) => b.stats.usage - a.stats.usage);
   const remainingSlots = Math.max(0, MAX_CARDS_PER_CATEGORY - pinned.length);
   const selected = [...pinned, ...rest.slice(0, remainingSlots)].sort((a, b) => b.stats.usage - a.stats.usage);
+  const highProficiencySlug = selected[0]?.slug;
 
   return selected.map((technology) => {
     const traitSlug = primaryTraitSlug(technology);

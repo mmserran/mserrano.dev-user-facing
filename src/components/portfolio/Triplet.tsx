@@ -103,10 +103,10 @@ function TripletGraphItem({ item }: { item: TripletGraphItemView }) {
 // legend, so every technology mention in the app is consistently clickable.
 function TripletTechCard({ card }: { card: TripletTechCardView }) {
   const { technology } = card;
-  const className = `group/card relative flex flex-col items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-3 ${card.isActive ? "" : "opacity-70"}`;
+  const bodyClassName = `flex flex-col items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-3`;
 
   const badges = (card.isHighProficiency || card.isFirstUsedHere) && (
-    <div className="absolute -top-2 left-1/2 flex -translate-x-1/2 gap-1">
+    <div className="absolute -top-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
       {card.isHighProficiency && <TripletCardBadge kind="proficiency" label="High Proficiency" glyph="★" />}
       {card.isFirstUsedHere && <TripletCardBadge kind="new" label="First used here" glyph="✦" />}
     </div>
@@ -125,26 +125,23 @@ function TripletTechCard({ card }: { card: TripletTechCardView }) {
     </>
   );
 
-  if (!technology.url) {
-    return (
-      <div className={className}>
-        {badges}
-        {body}
-      </div>
-    );
-  }
-
   return (
-    <a
-      href={technology.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={technology.title}
-      className={`${className} transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none`}
-    >
+    <div className={`group/card relative ${card.isActive ? "" : "opacity-70"}`}>
       {badges}
-      {body}
-    </a>
+      {technology.url ? (
+        <a
+          href={technology.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={technology.title}
+          className={`${bodyClassName} transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none`}
+        >
+          {body}
+        </a>
+      ) : (
+        <div className={bodyClassName}>{body}</div>
+      )}
+    </div>
   );
 }
 

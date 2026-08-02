@@ -192,6 +192,11 @@ describe("Triplet", () => {
 
     expect(screen.getByText("High Proficiency")).toBeInTheDocument();
     expect(screen.getByText("First used here")).toBeInTheDocument();
+
+    const djangoLink = screen.getByRole("link", { name: /Django/ });
+    expect(djangoLink).not.toContainElement(screen.getByText("High Proficiency"));
+    const flaskLink = screen.getByRole("link", { name: /Flask/ });
+    expect(flaskLink).not.toContainElement(screen.getByText("First used here"));
   });
 
   it("dims a dormant card without a High Proficiency or First used here badge", () => {
