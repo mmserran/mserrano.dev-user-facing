@@ -86,10 +86,17 @@ interface CannedMessage {
   content: string;
 }
 
+export interface Trait {
+  slug: string;
+  value: string;
+  title: string;
+}
+
 interface Content {
   "nav-header": HeaderLink[];
   projects: Project[];
   "project-filters": ProjectFilter[];
+  traits: Trait[];
   resume: {
     filename: string;
     contact_email: string;
@@ -151,6 +158,10 @@ export function getProjectBySlug(slug: string): Project | undefined {
 
 export function getProjectFilters(): ProjectFilter[] {
   return [...content["project-filters"]].sort((a, b) => a.priority - b.priority);
+}
+
+export function getTraits(): Trait[] {
+  return content.traits;
 }
 
 // Mirrors the Gridsome frontend's momentFormat('round') filter: a project's
@@ -572,29 +583,33 @@ export interface TripletTechnologyItemView {
   technology: ProjectFilter;
 }
 
-export interface TripletGraphSegment {
-  technology: ProjectFilter;
-  usage: number;
-  // A related technology already used elsewhere on this project (folded out
-  // of its own column by the de-duplication below) renders solid instead of
-  // textured, matching the Gridsome source's still_in_project recolor.
-  striped: boolean;
-}
-
-export interface TripletGraphColumn {
+export interface TripletTechCardView {
   key: string;
   technology: ProjectFilter;
-  // Bottom-to-top stacking order: the project's own usage bar first, then
-  // related technologies oldest-first.
-  segments: TripletGraphSegment[];
-  total: number;
+  projects: number;
+  // Highest usage among every technology in this category for this project
+  // (not just the displayed cards).
+  isHighProficiency: boolean;
+  // This project's own year is this technology's stats.first_year_used.
+  isFirstUsedHere: boolean;
+  // Used within the active window (see ACTIVE_WINDOW_YEARS) of the
+  // portfolio's most recent project.
+  isActive: boolean;
+  // "Using <trait> since <year>" when active (year is the earliest
+  // first_year_used among every technology sharing that trait, portfolio-
+  // wide - a more general "how long have you had this capability" claim
+  // than this one tool's own start date), or a closed, past-tense form when
+  // dormant so a stale tool never borrows an "active since" claim from more
+  // current siblings: "<trait> used <first>-<last>" if it spans more than
+  // one year, or "<trait> of choice in <year>" for a single year.
+  statistic: string;
 }
 
 export interface TripletGraphItemView {
   type: "itemGraph";
   key: string;
   title: string;
-  columns: TripletGraphColumn[];
+  cards: TripletTechCardView[];
 }
 
 export type TripletItemView = TripletTechnologyItemView | TripletGraphItemView;
@@ -612,79 +627,113 @@ const TRIPLET_GRAPH_CATEGORIES: { key: keyof ProjectTechnology; flag: keyof Trip
   { key: "software", flag: "use_software", label: "Software" },
 ];
 
-function technologyType(filter: ProjectFilter): string {
-  return filter.value.split(":")[1] ?? "";
+const MAX_CARDS_PER_CATEGORY = 4;
+const ACTIVE_WINDOW_YEARS = 2;
+
+function projectYear(project: Project): number {
+  return Number(project.general.date.split("-")[0]);
 }
 
-function jaccard(a: string[], b: string[]): number {
-  const union = new Set([...a, ...b]);
-  if (union.size === 0) {
-    return 0;
+function getPortfolioMaxYear(): number {
+  return Math.max(...getProjects().map(projectYear));
+}
+
+// A technology's last-used year isn't tracked directly on project-filters
+// (only first_year_used is) - it's derived by scanning every project's own
+// technology lists, since that's the only place usage-by-year exists.
+function buildLastUsedYearBySlug(): Map<string, number> {
+  const lastUsed = new Map<string, number>();
+  for (const project of getProjects()) {
+    const year = projectYear(project);
+    for (const slug of Object.values(project.technology).flat()) {
+      const existing = lastUsed.get(slug);
+      if (existing === undefined || year > existing) {
+        lastUsed.set(slug, year);
+      }
+    }
   }
-  const intersection = a.filter((trait) => b.includes(trait));
-  return intersection.length / union.size;
+  return lastUsed;
 }
 
-// Ports pbTripletItemGraph.vue's get_related: technologies of the same kind
-// (matched by the "term:<type>:<id>" value's type segment) ranked by trait
-// overlap (Jaccard similarity), capped to the top 5, thresholded at a 0.5
-// rating, then re-ordered oldest-first for the stacked bar.
-function getRelatedTechnology(technology: ProjectFilter, allFilters: ProjectFilter[]): ProjectFilter[] {
-  const type = technologyType(technology);
-
-  return allFilters
-    .filter((candidate) => technologyType(candidate) === type)
-    .map((candidate) => ({ candidate, rating: jaccard(technology.list_trait, candidate.list_trait) }))
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 5)
-    .filter((entry) => entry.rating >= 0.5)
-    .sort((a, b) => a.candidate.stats.first_year_used - b.candidate.stats.first_year_used)
-    .map((entry) => entry.candidate)
-    .filter((candidate) => candidate.slug !== technology.slug);
+function primaryTraitSlug(technology: ProjectFilter): string | undefined {
+  return technology.list_trait.find((slug): slug is string => Boolean(slug));
 }
 
-// Ports pbTripletItemGraph.vue's mounted(): a column is built per technology
-// in the flagged category, but a column whose self+related slug signature
-// exactly matches an earlier column's is dropped as redundant - its slug is
-// tracked so it can still recolor a matching related segment elsewhere solid
-// instead of textured, since it genuinely is one of the project's own.
-function buildGraphColumns(technologySlugs: string[], allFilters: ProjectFilter[]): TripletGraphColumn[] {
+function traitEarliestYear(traitSlug: string, allFilters: ProjectFilter[]): number {
+  return Math.min(
+    ...allFilters.filter((filter) => filter.list_trait.includes(traitSlug)).map((filter) => filter.stats.first_year_used),
+  );
+}
+
+function formatStatistic(
+  traitTitle: string | undefined,
+  isActive: boolean,
+  earliestTraitYear: number | undefined,
+  firstYearUsed: number,
+  lastYearUsed: number,
+): string {
+  if (isActive && earliestTraitYear !== undefined) {
+    return traitTitle ? `Using ${traitTitle} since ${earliestTraitYear}` : `Active since ${earliestTraitYear}`;
+  }
+  if (firstYearUsed === lastYearUsed) {
+    return traitTitle ? `${traitTitle} of choice in ${firstYearUsed}` : `Used in ${firstYearUsed}`;
+  }
+  return traitTitle ? `${traitTitle} used ${firstYearUsed}–${lastYearUsed}` : `Used ${firstYearUsed}–${lastYearUsed}`;
+}
+
+// Ports pbTripletItemGraph.vue's category selection (which of the project's
+// own technology lists to read) but replaces its Chart.js usage-comparison
+// bars entirely with plain proficiency cards: a technology's own usage count
+// and a "since"/date-range statistic, capped to the 4 most representative
+// technologies per category ("first used here" ones are pinned into that
+// cap even when a higher-usage peer would otherwise bump them out).
+function buildTripletCards(
+  technologySlugs: string[],
+  project: Project,
+  allFilters: ProjectFilter[],
+  traitTitleBySlug: Map<string, string>,
+  lastUsedYearBySlug: Map<string, number>,
+  portfolioMaxYear: number,
+): TripletTechCardView[] {
   const bySlug = new Map(allFilters.map((filter) => [filter.slug, filter]));
   const technologies = technologySlugs
     .map((slug) => bySlug.get(slug))
     .filter((filter): filter is ProjectFilter => filter !== undefined);
 
-  const seenSignatures = new Set<string>();
-  const stillInProject = new Set<string>();
-  const survivors: ProjectFilter[] = [];
-
-  for (const technology of technologies) {
-    const related = getRelatedTechnology(technology, allFilters);
-    const signature = [technology.slug, ...related.map((entry) => entry.slug)].sort().join("+");
-    if (seenSignatures.has(signature)) {
-      stillInProject.add(technology.slug);
-    } else {
-      seenSignatures.add(signature);
-      survivors.push(technology);
-    }
+  if (technologies.length === 0) {
+    return [];
   }
 
-  return survivors.map((technology) => {
-    const related = getRelatedTechnology(technology, allFilters);
-    const segments: TripletGraphSegment[] = [
-      { technology, usage: technology.stats.usage, striped: false },
-      ...related.map((relatedTechnology) => ({
-        technology: relatedTechnology,
-        usage: relatedTechnology.stats.usage,
-        striped: !stillInProject.has(relatedTechnology.slug),
-      })),
-    ].filter((segment) => segment.usage > 0);
+  const activeThreshold = portfolioMaxYear - (ACTIVE_WINDOW_YEARS - 1);
+  const isActive = (technology: ProjectFilter) => (lastUsedYearBySlug.get(technology.slug) ?? 0) >= activeThreshold;
+  const thisProjectYear = projectYear(project);
+  const isFirstUsedHere = (technology: ProjectFilter) => technology.stats.first_year_used === thisProjectYear;
+
+  const highProficiencySlug = [...technologies].sort((a, b) => b.stats.usage - a.stats.usage)[0]?.slug;
+
+  const pinned = technologies.filter(isFirstUsedHere);
+  const pinnedSlugs = new Set(pinned.map((technology) => technology.slug));
+  const rest = technologies
+    .filter((technology) => !pinnedSlugs.has(technology.slug))
+    .sort((a, b) => b.stats.usage - a.stats.usage);
+  const remainingSlots = Math.max(0, MAX_CARDS_PER_CATEGORY - pinned.length);
+  const selected = [...pinned, ...rest.slice(0, remainingSlots)].sort((a, b) => b.stats.usage - a.stats.usage);
+
+  return selected.map((technology) => {
+    const traitSlug = primaryTraitSlug(technology);
+    const traitTitle = traitSlug ? traitTitleBySlug.get(traitSlug) : undefined;
+    const active = isActive(technology);
+    const lastYearUsed = lastUsedYearBySlug.get(technology.slug) ?? technology.stats.first_year_used;
+    const earliestTraitYear = active && traitSlug ? traitEarliestYear(traitSlug, allFilters) : undefined;
 
     return {
       key: technology.slug,
       technology,
-      segments,
-      total: segments.reduce((sum, segment) => sum + segment.usage, 0),
+      projects: technology.stats.usage,
+      isHighProficiency: technology.slug === highProficiencySlug,
+      isFirstUsedHere: isFirstUsedHere(technology),
+      isActive: active,
+      statistic: formatStatistic(traitTitle, active, earliestTraitYear, technology.stats.first_year_used, lastYearUsed),
     };
   });
 }
@@ -693,13 +742,16 @@ function buildGraphItemView(
   item: TripletItemGraph,
   project: Project,
   allFilters: ProjectFilter[],
+  traitTitleBySlug: Map<string, string>,
+  lastUsedYearBySlug: Map<string, number>,
+  portfolioMaxYear: number,
   index: number,
 ): TripletGraphItemView | undefined {
   const category = TRIPLET_GRAPH_CATEGORIES.find((entry) => item[entry.flag] === true);
   const slugs = category ? project.technology[category.key] : [];
-  const columns = buildGraphColumns(slugs, allFilters);
+  const cards = buildTripletCards(slugs, project, allFilters, traitTitleBySlug, lastUsedYearBySlug, portfolioMaxYear);
 
-  if (columns.length === 0) {
+  if (cards.length === 0) {
     return undefined;
   }
 
@@ -707,7 +759,7 @@ function buildGraphItemView(
     type: "itemGraph",
     key: `graph-${index}`,
     title: category ? category.label : item.title,
-    columns,
+    cards,
   };
 }
 
@@ -751,6 +803,9 @@ export function getTripletSectionView(section: PageBuilderSection, project: Proj
 
   const allFilters = getProjectFilters();
   const filterByValue = new Map(allFilters.map((filter) => [filter.value, filter]));
+  const traitTitleBySlug = new Map(getTraits().map((trait) => [trait.slug, trait.title]));
+  const lastUsedYearBySlug = buildLastUsedYearBySlug();
+  const portfolioMaxYear = getPortfolioMaxYear();
 
   const items: TripletItemView[] = listTriplet.flatMap((item, index): TripletItemView[] => {
     if (item.type === "itemTechnology") {
@@ -759,7 +814,15 @@ export function getTripletSectionView(section: PageBuilderSection, project: Proj
       return technology ? [{ type: "itemTechnology", key: `tech-${index}`, technology }] : [];
     }
 
-    const graphItem = buildGraphItemView(item, project, allFilters, index);
+    const graphItem = buildGraphItemView(
+      item,
+      project,
+      allFilters,
+      traitTitleBySlug,
+      lastUsedYearBySlug,
+      portfolioMaxYear,
+      index,
+    );
     return graphItem ? [graphItem] : [];
   });
 

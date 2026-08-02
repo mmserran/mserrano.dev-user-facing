@@ -3,18 +3,17 @@ import {
   getTripletSectionView,
   type PageBuilderSection,
   type Project,
-  type TripletGraphColumn,
   type TripletGraphItemView,
+  type TripletTechCardView,
   type TripletTechnologyItemView,
 } from "@/lib/content";
 import TechLogo from "./TechLogo";
 
-const GRAPH_CHART_HEIGHT = 180;
-
 // Mirrors the Gridsome frontend's pbTriplet.vue: a titled row of exactly
 // three items, each either a technology logo (pbTripletItemTechnology.vue)
-// or a small usage-comparison bar chart (pbTripletItemGraph.vue). Unlike the
-// other page-builder components, pbTriplet can appear more than once per
+// or a proficiency breakdown (replacing pbTripletItemGraph.vue's Chart.js
+// usage-vs-similar-market bars - see getTripletSectionView for why). Unlike
+// the other page-builder components, pbTriplet can appear more than once per
 // project ("Technology", then "Usage vs Similar"), so per PageBuilder's
 // contract this reads its data from the dispatched section instead of
 // finding the first matching block itself.
@@ -79,70 +78,96 @@ function TripletTechnologyItem({ item }: { item: TripletTechnologyItemView }) {
 }
 
 function TripletGraphItem({ item }: { item: TripletGraphItemView }) {
-  const maxTotal = Math.max(...item.columns.map((column) => column.total), 1);
-
   return (
     <div className="flex w-full max-w-[320px] flex-col items-center">
       <h5 className="shine-text animate-shine motion-reduce:animate-none mb-6 text-sm font-semibold tracking-widest text-white uppercase">
         {item.title}
       </h5>
-      <div className="flex w-full items-end justify-center gap-6">
-        {item.columns.map((column) => (
-          <TripletGraphColumnBar key={column.key} column={column} maxTotal={maxTotal} />
+      <div className="grid w-full max-w-[260px] grid-cols-2 gap-3">
+        {item.cards.map((card) => (
+          <TripletTechCard key={card.key} card={card} />
         ))}
       </div>
     </div>
   );
 }
 
-// Ports pbTripletItemGraph.vue's stacked Chart.js bar as plain divs: the
-// project's own usage bar sits solid at the bottom, related technologies
-// stack on top (striped, in the project's own brand color, unless that
-// related slug is also used elsewhere on this project - see
-// getTripletSectionView's still_in_project recolor). A native `title`
-// attribute exposes each segment's exact figure on hover, matching the
-// Gridsome chart's tooltip; the sr-only line beneath covers screen readers
-// and keyboard users the hover tooltip can't reach.
-function TripletGraphColumnBar({ column, maxTotal }: { column: TripletGraphColumn; maxTotal: number }) {
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className="flex w-10 flex-col-reverse overflow-hidden rounded-sm bg-white/10"
-        style={{ height: GRAPH_CHART_HEIGHT }}
-      >
-        {column.segments.map((segment, index) => {
-          const stripeColor =
-            segment.technology.primary === "#FFFFFF"
-              ? segment.technology.secondary
-              : segment.technology.primary;
+// Ports pbTripletItemGraph.vue's category selection, but replaces its
+// Chart.js bars comparing this project's tech against unrelated "similar"
+// market alternatives with a plain proficiency reading - see
+// getTripletSectionView for the reasoning. "High Proficiency" and "First
+// used here" render as compact icon badges (not wide always-visible pills),
+// expanding inline on hover/focus to reveal the full label, so the card's
+// default state stays uncluttered. Same link-purpose and no-url-fallback
+// treatment as TripletTechnologyItem/TechnologyCarousel/TechnologyBreakdown's
+// legend, so every technology mention in the app is consistently clickable.
+function TripletTechCard({ card }: { card: TripletTechCardView }) {
+  const { technology } = card;
+  const className = `group/card relative flex flex-col items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-3 ${card.isActive ? "" : "opacity-70"}`;
 
-          return (
-            <div
-              key={`${segment.technology.slug}-${index}`}
-              title={`${segment.technology.title}: ${segment.usage}`}
-              style={{
-                height: `${(segment.usage / maxTotal) * 100}%`,
-                backgroundColor: segment.striped ? "transparent" : segment.technology.primary,
-                backgroundImage: segment.striped
-                  ? `repeating-linear-gradient(45deg, ${stripeColor} 0 3px, transparent 3px 7px)`
-                  : undefined,
-              }}
-            />
-          );
-        })}
-      </div>
-      <span className="shine-text animate-shine motion-reduce:animate-none text-center text-xs font-semibold tracking-wide text-white uppercase">
-        {column.technology.title}
-      </span>
-      <span className="sr-only">
-        {column.segments
-          .map((segment) =>
-            segment.technology.slug === column.technology.slug
-              ? `${segment.technology.title} usage: ${segment.usage}`
-              : `Related technology ${segment.technology.title} usage: ${segment.usage}`,
-          )
-          .join(". ")}
-      </span>
+  const badges = (card.isHighProficiency || card.isFirstUsedHere) && (
+    <div className="absolute -top-2 left-1/2 flex -translate-x-1/2 gap-1">
+      {card.isHighProficiency && <TripletCardBadge kind="proficiency" label="High Proficiency" glyph="★" />}
+      {card.isFirstUsedHere && <TripletCardBadge kind="new" label="First used here" glyph="✦" />}
     </div>
+  );
+
+  const body = (
+    <>
+      <TechLogo filter={technology} size={48} backdrop={false} square={technology.is_square} />
+      <span className="shine-text animate-shine motion-reduce:animate-none text-center text-[11px] font-semibold tracking-wide text-white uppercase">
+        {technology.title}
+      </span>
+      <span className="text-center text-[10px] text-white/55">
+        {card.projects} {card.projects === 1 ? "project" : "projects"}
+      </span>
+      <span className="text-center text-[10px] font-semibold text-[#7fc4ff]">{card.statistic}</span>
+    </>
+  );
+
+  if (!technology.url) {
+    return (
+      <div className={className}>
+        {badges}
+        {body}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={technology.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={technology.title}
+      className={`${className} transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none`}
+    >
+      {badges}
+      {body}
+    </a>
+  );
+}
+
+// Collapsed to just the glyph by default (a fixed-size circle, never part of
+// the collapsing measurement so nothing ever peeks out); hovering anywhere on
+// the card (group/card, from TripletTechCard) or focusing this badge directly
+// grows a sibling span from zero width/padding to reveal the label already
+// sitting in the DOM (clipped, not `aria-hidden`), so the full text is always
+// in the accessibility tree - no floating tooltip needed.
+function TripletCardBadge({ kind, label, glyph }: { kind: "proficiency" | "new"; label: string; glyph: string }) {
+  return (
+    <span
+      tabIndex={0}
+      className={`group/badge flex items-center rounded-full text-xs leading-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${
+        kind === "proficiency" ? "bg-brand-blue text-white" : "bg-brand-yellow text-black"
+      }`}
+    >
+      <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center">
+        {glyph}
+      </span>
+      <span className="max-w-0 overflow-hidden pr-0 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase transition-all duration-200 ease-out group-hover/card:max-w-[140px] group-hover/card:pr-2 group-focus-visible/badge:max-w-[140px] group-focus-visible/badge:pr-2">
+        {label}
+      </span>
+    </span>
   );
 }

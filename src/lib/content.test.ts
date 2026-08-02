@@ -348,7 +348,7 @@ describe("content lib", () => {
       expect(view.content).toBe("Striped bars represent similar technology used by my other projects.");
     });
 
-    it("builds a usage-comparison column per deployment technology, deduping a redundant one and recoloring its still-in-project appearance solid", () => {
+    it("builds a proficiency card per deployment technology, with an active/first-used-here-aware statistic", () => {
       const project = getProjectBySlug("cygnus-management-llc") as Project;
       const [, usageBlock] = getTripletBlocks(project);
 
@@ -361,19 +361,55 @@ describe("content lib", () => {
         throw new Error("expected an itemGraph view");
       }
 
-      // "github" shares git's exact related-technology set (git, bitbucket)
-      // so it's folded out of its own column...
-      expect(deployment.columns.map((column) => column.technology.slug)).toEqual(["git", "heroku"]);
+      // Ordered by usage, descending - cygnus's deployment category has only
+      // 3 technologies, so nothing gets capped here.
+      expect(deployment.cards.map((card) => card.technology.slug)).toEqual(["git", "github", "heroku"]);
+      const [git, github, heroku] = deployment.cards;
 
-      // ...but still shows up, solid instead of textured, as a related
-      // segment inside git's column, since it really is used on this project.
-      const gitColumn = deployment.columns[0];
-      expect(gitColumn.segments.map((segment) => [segment.technology.slug, segment.usage, segment.striped])).toEqual([
-        ["git", 12, false],
-        ["github", 9, false],
-        ["bitbucket", 9, true],
+      // Git: highest usage in the category, still used within 2 years of the
+      // portfolio's most recent project (2020), and cygnus-management-llc
+      // (2014) is also its own first_year_used.
+      expect(git.projects).toBe(12);
+      expect(git.isHighProficiency).toBe(true);
+      expect(git.isFirstUsedHere).toBe(true);
+      expect(git.isActive).toBe(true);
+      // "Version Control"'s portfolio-wide earliest use (2014, tied with Git
+      // itself) rather than Git's own start date specifically.
+      expect(git.statistic).toBe("Using Version Control since 2014");
+
+      // GitHub: last used 2018, outside the 2-year active window - falls
+      // back to its own real range instead of the trait-wide framing.
+      expect(github.isActive).toBe(false);
+      expect(github.isHighProficiency).toBe(false);
+      expect(github.statistic).toBe("Version Control used 2014–2018");
+
+      // Heroku: only ever used in cygnus-management-llc's own year (2014) -
+      // a single-year, not a range.
+      expect(heroku.isActive).toBe(false);
+      expect(heroku.statistic).toBe("Hosting of choice in 2014");
+    });
+
+    it("caps a category at 4 cards, pinning every first-used-here technology even over higher-usage peers", () => {
+      const project = getProjectBySlug("black-friday-2019") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const software = view.items.find((item) => item.type === "itemGraph" && item.title === "Software");
+      expect(software?.type).toBe("itemGraph");
+      if (software?.type !== "itemGraph") {
+        throw new Error("expected an itemGraph view");
+      }
+
+      // The real category has 10 technologies; Composer and Yarn (both
+      // first used in this project's own year, 2019) are pinned in even
+      // though Apache2 (16) and VirtualBox (17) rank higher by usage.
+      expect(software.cards).toHaveLength(4);
+      expect(software.cards.map((card) => card.technology.slug)).toEqual(["bash", "linux", "yarn", "composer"]);
+      expect(software.cards.filter((card) => card.isFirstUsedHere).map((card) => card.technology.slug)).toEqual([
+        "yarn",
+        "composer",
       ]);
-      expect(gitColumn.total).toBe(30);
+      expect(software.cards.find((card) => card.isHighProficiency)?.technology.slug).toBe("bash");
     });
 
     it("returns no items when every item resolves to nothing", () => {

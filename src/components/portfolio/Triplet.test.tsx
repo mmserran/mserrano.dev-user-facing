@@ -91,12 +91,15 @@ describe("Triplet", () => {
           type: "itemGraph",
           key: "graph-0",
           title: "Frameworks",
-          columns: [
+          cards: [
             {
               key: "django",
               technology: makeFilter({ slug: "django", title: "Django" }),
-              segments: [{ technology: makeFilter({ slug: "django", title: "Django" }), usage: 4, striped: false }],
-              total: 4,
+              projects: 4,
+              isHighProficiency: false,
+              isFirstUsedHere: false,
+              isActive: true,
+              statistic: "Using Web Framework since 2018",
             },
           ],
         },
@@ -110,6 +113,119 @@ describe("Triplet", () => {
       screen.getByText("Striped bars represent similar technology used by my other projects."),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 5, name: "Frameworks" })).toBeInTheDocument();
+    expect(screen.getByText("4 projects")).toBeInTheDocument();
+    expect(screen.getByText("Using Web Framework since 2018")).toBeInTheDocument();
+
+    const djangoLink = screen.getByRole("link", { name: /Django/ });
+    expect(djangoLink).toHaveAttribute("href", "https://example.com");
+    expect(djangoLink).toHaveAttribute("target", "_blank");
+  });
+
+  it("renders a graph card with no url as a plain, non-interactive cell", () => {
+    const view: TripletSectionView = {
+      title: "Usage vs Similar",
+      content: "",
+      items: [
+        {
+          type: "itemGraph",
+          key: "graph-0",
+          title: "Frameworks",
+          cards: [
+            {
+              key: "cloudinary",
+              technology: makeFilter({ slug: "cloudinary", title: "Cloudinary", url: "" }),
+              projects: 2,
+              isHighProficiency: false,
+              isFirstUsedHere: false,
+              isActive: true,
+              statistic: "Using CDN since 2018",
+            },
+          ],
+        },
+      ],
+    };
+    getTripletSectionView.mockReturnValue(view);
+
+    render(<Triplet section={section} project={project} />);
+
+    expect(screen.getByText("Cloudinary")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Cloudinary/ })).not.toBeInTheDocument();
+  });
+
+  it("shows a High Proficiency badge and a First used here badge as accessible, hoverable icons", () => {
+    const django = makeFilter({ slug: "django", title: "Django" });
+    const flask = makeFilter({ slug: "flask", title: "Flask" });
+    const view: TripletSectionView = {
+      title: "Usage vs Similar",
+      content: "",
+      items: [
+        {
+          type: "itemGraph",
+          key: "graph-0",
+          title: "Frameworks",
+          cards: [
+            {
+              key: "django",
+              technology: django,
+              projects: 8,
+              isHighProficiency: true,
+              isFirstUsedHere: false,
+              isActive: true,
+              statistic: "Using Web Framework since 2014",
+            },
+            {
+              key: "flask",
+              technology: flask,
+              projects: 1,
+              isHighProficiency: false,
+              isFirstUsedHere: true,
+              isActive: true,
+              statistic: "Using Web Framework since 2014",
+            },
+          ],
+        },
+      ],
+    };
+    getTripletSectionView.mockReturnValue(view);
+
+    render(<Triplet section={section} project={project} />);
+
+    expect(screen.getByText("High Proficiency")).toBeInTheDocument();
+    expect(screen.getByText("First used here")).toBeInTheDocument();
+  });
+
+  it("dims a dormant card without a High Proficiency or First used here badge", () => {
+    const cobol = makeFilter({ slug: "cobol", title: "COBOL" });
+    const view: TripletSectionView = {
+      title: "Usage vs Similar",
+      content: "",
+      items: [
+        {
+          type: "itemGraph",
+          key: "graph-0",
+          title: "Languages",
+          cards: [
+            {
+              key: "cobol",
+              technology: cobol,
+              projects: 1,
+              isHighProficiency: false,
+              isFirstUsedHere: false,
+              isActive: false,
+              statistic: "Web Framework of choice in 2014",
+            },
+          ],
+        },
+      ],
+    };
+    getTripletSectionView.mockReturnValue(view);
+
+    const { container } = render(<Triplet section={section} project={project} />);
+
+    expect(screen.getByText("Web Framework of choice in 2014")).toBeInTheDocument();
+    expect(screen.queryByText("High Proficiency")).not.toBeInTheDocument();
+    expect(screen.queryByText("First used here")).not.toBeInTheDocument();
+    expect(container.querySelector(".opacity-70")).toBeInTheDocument();
   });
 
   it("omits the heading when the section has no title", () => {
@@ -136,47 +252,4 @@ describe("Triplet", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("uses secondary for striped segments when primary is white", () => {
-    const composer = makeFilter({
-      slug: "composer",
-      title: "Composer",
-      primary: "#FFFFFF",
-      secondary: "#131313",
-    });
-    const yarn = makeFilter({ slug: "yarn", title: "Yarn", primary: "#2C8EBB", secondary: "#ffffff" });
-    const view: TripletSectionView = {
-      title: "Usage vs Similar",
-      content: "",
-      items: [
-        {
-          type: "itemGraph",
-          key: "graph-0",
-          title: "Software",
-          columns: [
-            {
-              key: "yarn",
-              technology: yarn,
-              segments: [
-                { technology: yarn, usage: 2, striped: false },
-                { technology: composer, usage: 3, striped: true },
-              ],
-              total: 5,
-            },
-          ],
-        },
-      ],
-    };
-    getTripletSectionView.mockReturnValue(view);
-
-    const { container } = render(<Triplet section={section} project={project} />);
-    const solid = container.querySelector('[title="Yarn: 2"]') as HTMLElement;
-    const striped = container.querySelector('[title="Composer: 3"]') as HTMLElement;
-
-    expect(solid.style.backgroundColor).toBe("rgb(44, 142, 187)");
-    expect(solid.style.backgroundImage).toBe("");
-    expect(striped.style.backgroundColor).toBe("transparent");
-    expect(striped.style.backgroundImage).toBe(
-      "repeating-linear-gradient(45deg, rgb(19, 19, 19) 0 3px, transparent 3px 7px)",
-    );
-  });
 });
