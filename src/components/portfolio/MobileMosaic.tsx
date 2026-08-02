@@ -254,7 +254,7 @@ export default function MobileMosaic({ project }: { project: Project }) {
                       {row.cells.map((cell, cellIndex) => (
                         <div
                           key={`${row.generation}-${cellIndex}`}
-                          className={`flex w-60 shrink-0 justify-center ${cellIndex % 2 === 1 ? "-translate-y-[250px]" : ""}`}
+                          className={`flex min-w-60 flex-1 justify-center ${cellIndex % 2 === 1 ? "-translate-y-[250px]" : ""}`}
                         >
                           <MobileDeviceFrame
                             filename={row.screenshot}
@@ -302,7 +302,7 @@ function StaticMosaicRow({ screenshots, columnCount }: { screenshots: string[]; 
   return (
     <div className="flex h-[500px] w-full items-center justify-center">
       {row.devices.map((device, index) => (
-        <div key={index} className="flex w-60 shrink-0 justify-center">
+        <div key={index} className="flex min-w-60 flex-1 justify-center">
           <MobileDeviceFrame filename={row.screenshot} device={device} offset="0%" reducedMotion />
         </div>
       ))}
