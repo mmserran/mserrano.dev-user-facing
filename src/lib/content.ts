@@ -587,8 +587,8 @@ export interface TripletTechCardView {
   key: string;
   technology: ProjectFilter;
   projects: number;
-  // Highest usage among every technology in this category for this project
-  // (not just the displayed cards).
+  // Highest usage among the displayed cards for this category (the capped
+  // selection), not among every technology in the project's category list.
   isHighProficiency: boolean;
   // This project's own year is this technology's stats.first_year_used.
   isFirstUsedHere: boolean;
