@@ -834,6 +834,43 @@ export function getTripletSectionView(section: PageBuilderSection, project: Proj
   };
 }
 
+interface MobileMosaicBlock {
+  type: "pbMobileMozaic";
+  title: string;
+}
+
+export interface MobileMosaic {
+  title: string;
+  screenshots: string[];
+}
+
+function findMobileMosaicBlock(pagebuilder: string): MobileMosaicBlock | undefined {
+  try {
+    const blocks = JSON.parse(pagebuilder) as unknown;
+    if (!Array.isArray(blocks)) {
+      return undefined;
+    }
+    const block = blocks.find((candidate) => isRecord(candidate) && candidate.type === "pbMobileMozaic");
+    return isRecord(block) && typeof block.title === "string" ? (block as unknown as MobileMosaicBlock) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Ports the Gridsome frontend's pbMobileMozaic block: an infinitely-scrolling
+// collage of a project's own mobile screenshots. The block itself carries no
+// screenshot list - project.screenshot.mobile is the actual source - so a
+// project can have the block present but nothing to draw from (e.g.
+// mserrano-dev), which MobileMosaic must treat as "render nothing".
+export function getMobileMosaic(project: Project): MobileMosaic {
+  const block = findMobileMosaicBlock(project.pagebuilder);
+  if (!block) {
+    return { title: "", screenshots: [] };
+  }
+
+  return { title: block.title, screenshots: project.screenshot.mobile };
+}
+
 export function getMediaUrl(filename: string): string {
   const trimmedFilename = filename.trim();
 

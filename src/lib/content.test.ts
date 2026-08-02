@@ -5,6 +5,7 @@ import {
   getHeaderLinks,
   getMediaUrl,
   getMediaVariants,
+  getMobileMosaic,
   getPageBuilderSections,
   getProjectBySlug,
   getProjectFilters,
@@ -291,6 +292,37 @@ describe("content lib", () => {
       };
 
       expect(getTechnologyCarousel(emptied).technologies).toEqual([]);
+    });
+  });
+
+  describe("getMobileMosaic", () => {
+    it("returns the block's title and the project's own mobile screenshots", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const mosaic = getMobileMosaic(project);
+
+      expect(mosaic.title).toBe("Mobile");
+      expect(mosaic.screenshots).toEqual(project.screenshot.mobile);
+      expect(mosaic.screenshots.length).toBeGreaterThan(0);
+    });
+
+    it("returns an empty result when the project has no mobile-mosaic block", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withoutBlock: Project = { ...project, pagebuilder: "[]" };
+
+      expect(getMobileMosaic(withoutBlock)).toEqual({ title: "", screenshots: [] });
+    });
+
+    it("returns an empty result when pagebuilder fails to parse", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const malformed: Project = { ...project, pagebuilder: "not json" };
+
+      expect(getMobileMosaic(malformed)).toEqual({ title: "", screenshots: [] });
+    });
+
+    it("returns an empty screenshot list when the block is present but the project has none (e.g. mserrano-dev)", () => {
+      const project = getProjectBySlug("mserrano-dev") as Project;
+
+      expect(getMobileMosaic(project)).toEqual({ title: "Mobile", screenshots: [] });
     });
   });
 

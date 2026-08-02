@@ -4,6 +4,7 @@ import {
   type PageBuilderSection,
   type Project,
 } from "@/lib/content";
+import MobileMosaic from "./MobileMosaic";
 import ProjectHeader from "./ProjectHeader";
 import RelatedProjects from "./RelatedProjects";
 import TechnologyBreakdown from "./TechnologyBreakdown";
@@ -21,17 +22,17 @@ type PageBuilderComponent = (props: {
 //   - Component receives `{ project, section, index }` (mirroring Gridsome's
 //     singleProject.vue `:section` / array index). A type that is always a
 //     singleton in real content may ignore `section`/`index` and self-locate
-//     via a `find<Type>Block()` helper in content.ts (how today's four
-//     singleton mapped types work). A multi-instance type (pbTriplet,
-//     pbImageText) must read its data from the passed `section` instead of
-//     find-first, since find-first would only surface the first occurrence.
+//     via a `find<Type>Block()` helper in content.ts (how today's five mapped
+//     types work). A multi-instance type (pbTriplet, pbImageText) must read
+//     its data from the passed `section` instead of find-first, since
+//     find-first would only surface the first occurrence.
 //   - Renders null when its block is absent or resolves to empty content.
 //   - Owns its own title chrome (SectionDivider, or deliberately suppressed
 //     per pbDivider.vue's rules) - the dispatcher inserts no dividers itself.
 //   - Test it standalone against real content.json fixtures; PageBuilder's
 //     own tests only need touching to assert a type's position in the array.
 //
-// Block types without a ported component yet (pbMobileMozaic, pbFeatured,
+// Block types without a ported component yet (pbFeatured,
 // pbImageText, pbCarouselCenterEmphasis, pbParallax) are simply absent here
 // and get skipped below; each is a future one-component-at-a-time addition
 // per AGENTS.md.
@@ -39,6 +40,7 @@ const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
   pbHeader: ProjectHeader as PageBuilderComponent,
   pbGraphBreakdown: TechnologyBreakdown as PageBuilderComponent,
   pbCarouselTechnology: TechnologyCarousel as PageBuilderComponent,
+  pbMobileMozaic: MobileMosaic as PageBuilderComponent,
   pbCarouselRelatedPosts: RelatedProjects as PageBuilderComponent,
   pbTriplet: Triplet as PageBuilderComponent,
 };
