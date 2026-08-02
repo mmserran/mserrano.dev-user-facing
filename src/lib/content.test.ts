@@ -13,9 +13,15 @@ import {
   getTechnologyBreakdown,
   getResumeUrl,
   getTechnologyCarousel,
+  getTripletSectionView,
   truncate,
+  type PageBuilderSection,
   type Project,
 } from "./content";
+
+function getTripletBlocks(project: Project): PageBuilderSection[] {
+  return getPageBuilderSections(project).filter((section) => section.type === "pbTriplet");
+}
 
 describe("content lib", () => {
   it("getHeaderLinks returns header links sorted by sort order", () => {
@@ -314,6 +320,136 @@ describe("content lib", () => {
 
       expect(getPageBuilderSections({ ...project, pagebuilder: "[]" })).toEqual([]);
       expect(getPageBuilderSections({ ...project, pagebuilder: "not json" })).toEqual([]);
+    });
+  });
+
+  describe("getTripletSectionView", () => {
+    it("resolves each itemTechnology entry to its project-filter, in list order", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [technologyBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(technologyBlock, project);
+
+      expect(view.title).toBe("Technology");
+      expect(view.items.map((item) => (item.type === "itemTechnology" ? item.technology.title : undefined))).toEqual([
+        "Bootstrap",
+        "AngularJS",
+        "Django",
+      ]);
+    });
+
+    it("resolves a canned-message shortcode in the section content to its plain text", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+
+      expect(view.title).toBe("Notable Technologies");
+      expect(view.content).toBe("Striped bars represent similar technology used by my other projects.");
+    });
+
+    it("builds a proficiency card per deployment technology, with an active/first-used-here-aware statistic", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const deployment = view.items.find(
+        (item) => item.type === "itemGraph" && item.title === "Deployment",
+      );
+      expect(deployment?.type).toBe("itemGraph");
+      if (deployment?.type !== "itemGraph") {
+        throw new Error("expected an itemGraph view");
+      }
+
+      // Ordered by usage, descending - cygnus's deployment category has only
+      // 3 technologies, so nothing gets capped here.
+      expect(deployment.cards.map((card) => card.technology.slug)).toEqual(["git", "github", "heroku"]);
+      const [git, github, heroku] = deployment.cards;
+
+      // Git: highest usage in the category, still used within 2 years of the
+      // portfolio's most recent project (2020), and cygnus-management-llc
+      // (2014) is also its own first_year_used.
+      expect(git.projects).toBe(12);
+      expect(git.isHighProficiency).toBe(true);
+      expect(git.isFirstUsedHere).toBe(true);
+      expect(git.isActive).toBe(true);
+      // "Version Control"'s portfolio-wide earliest use (2014, tied with Git
+      // itself) rather than Git's own start date specifically.
+      expect(git.statistic).toBe("Using Version Control since 2014");
+
+      // GitHub: last used 2018, outside the 2-year active window - falls
+      // back to its own real range instead of the trait-wide framing.
+      expect(github.isActive).toBe(false);
+      expect(github.isHighProficiency).toBe(false);
+      expect(github.statistic).toBe("Version Control used 2014–2018");
+
+      // Heroku: only ever used in cygnus-management-llc's own year (2014) -
+      // a single-year, not a range.
+      expect(heroku.isActive).toBe(false);
+      expect(heroku.statistic).toBe("Hosting of choice in 2014");
+    });
+
+    it("caps a category at 4 cards, pinning first-used-here technologies even over higher-usage peers", () => {
+      const project = getProjectBySlug("black-friday-2019") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const software = view.items.find((item) => item.type === "itemGraph" && item.title === "Software");
+      expect(software?.type).toBe("itemGraph");
+      if (software?.type !== "itemGraph") {
+        throw new Error("expected an itemGraph view");
+      }
+
+      // The real category has 10 technologies; Composer and Yarn (both
+      // first used in this project's own year, 2019) are pinned in even
+      // though Apache2 (16) and VirtualBox (17) rank higher by usage.
+      expect(software.cards).toHaveLength(4);
+      expect(software.cards.map((card) => card.technology.slug)).toEqual(["bash", "linux", "yarn", "composer"]);
+      expect(software.cards.filter((card) => card.isFirstUsedHere).map((card) => card.technology.slug)).toEqual([
+        "yarn",
+        "composer",
+      ]);
+      expect(software.cards.find((card) => card.isHighProficiency)?.technology.slug).toBe("bash");
+    });
+
+    it("caps pinned first-used-here technologies themselves when they exceed 4, and badges high proficiency among the displayed set", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const [, usageBlock] = getTripletBlocks(project);
+
+      const view = getTripletSectionView(usageBlock, project);
+      const deployment = view.items.find((item) => item.type === "itemGraph" && item.title === "Deployment");
+      const software = view.items.find((item) => item.type === "itemGraph" && item.title === "Software");
+      expect(deployment?.type).toBe("itemGraph");
+      expect(software?.type).toBe("itemGraph");
+      if (deployment?.type !== "itemGraph" || software?.type !== "itemGraph") {
+        throw new Error("expected itemGraph views");
+      }
+
+      expect(deployment.cards).toHaveLength(4);
+      expect(software.cards).toHaveLength(4);
+      expect(deployment.cards.every((card) => card.isFirstUsedHere)).toBe(true);
+      expect(software.cards.every((card) => card.isFirstUsedHere)).toBe(true);
+      expect(deployment.cards.some((card) => card.isHighProficiency)).toBe(true);
+      expect(software.cards.some((card) => card.isHighProficiency)).toBe(true);
+    });
+
+    it("returns no items when every item resolves to nothing", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const section: PageBuilderSection = {
+        type: "pbTriplet",
+        title: "Technology",
+        content: "",
+        list_triplet: [{ type: "itemTechnology", title: "", technology: [{ value: "term:framework:9999" }] }],
+      };
+
+      expect(getTripletSectionView(section, project).items).toEqual([]);
+    });
+
+    it("returns no items for a malformed or empty section", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+
+      expect(getTripletSectionView({ type: "pbTriplet" }, project).items).toEqual([]);
+      expect(getTripletSectionView({ type: "pbTriplet", list_triplet: "not an array" }, project).items).toEqual([]);
     });
   });
 });

@@ -81,14 +81,27 @@ export interface ProjectFilter {
   stats: ProjectFilterStats;
 }
 
+interface CannedMessage {
+  title: string;
+  content: string;
+}
+
+export interface Trait {
+  slug: string;
+  value: string;
+  title: string;
+}
+
 interface Content {
   "nav-header": HeaderLink[];
   projects: Project[];
   "project-filters": ProjectFilter[];
+  traits: Trait[];
   resume: {
     filename: string;
     contact_email: string;
   };
+  "theme-options/canned-msgs": CannedMessage[];
 }
 
 const content = rawContent as Content;
@@ -145,6 +158,10 @@ export function getProjectBySlug(slug: string): Project | undefined {
 
 export function getProjectFilters(): ProjectFilter[] {
   return [...content["project-filters"]].sort((a, b) => a.priority - b.priority);
+}
+
+export function getTraits(): Trait[] {
+  return content.traits;
 }
 
 // Mirrors the Gridsome frontend's momentFormat('round') filter: a project's
@@ -537,6 +554,284 @@ export function getTechnologyCarousel(project: Project): TechnologyCarousel {
   );
 
   return { title: block.title, technologies };
+}
+
+interface TripletTechnologyRef {
+  value: string;
+}
+
+export interface TripletItemTechnology {
+  type: "itemTechnology";
+  title: string;
+  technology: TripletTechnologyRef[];
+}
+
+export interface TripletItemGraph {
+  type: "itemGraph";
+  title: string;
+  use_language: boolean;
+  use_framework: boolean;
+  use_deployment: boolean;
+  use_software: boolean;
+}
+
+export type TripletItem = TripletItemTechnology | TripletItemGraph;
+
+export interface TripletTechnologyItemView {
+  type: "itemTechnology";
+  key: string;
+  technology: ProjectFilter;
+}
+
+export interface TripletTechCardView {
+  key: string;
+  technology: ProjectFilter;
+  projects: number;
+  // Highest usage among the displayed cards for this category (the capped
+  // selection), not among every technology in the project's category list.
+  isHighProficiency: boolean;
+  // This project's own year is this technology's stats.first_year_used.
+  isFirstUsedHere: boolean;
+  // Used within the active window (see ACTIVE_WINDOW_YEARS) of the
+  // portfolio's most recent project.
+  isActive: boolean;
+  // "Using <trait> since <year>" when active (year is the earliest
+  // first_year_used among every technology sharing that trait, portfolio-
+  // wide - a more general "how long have you had this capability" claim
+  // than this one tool's own start date), or a closed, past-tense form when
+  // dormant so a stale tool never borrows an "active since" claim from more
+  // current siblings: "<trait> used <first>-<last>" if it spans more than
+  // one year, or "<trait> of choice in <year>" for a single year.
+  statistic: string;
+}
+
+export interface TripletGraphItemView {
+  type: "itemGraph";
+  key: string;
+  title: string;
+  cards: TripletTechCardView[];
+}
+
+export type TripletItemView = TripletTechnologyItemView | TripletGraphItemView;
+
+export interface TripletSectionView {
+  title: string;
+  content: string;
+  items: TripletItemView[];
+}
+
+const TRIPLET_GRAPH_CATEGORIES: { key: keyof ProjectTechnology; flag: keyof TripletItemGraph; label: string }[] = [
+  { key: "language", flag: "use_language", label: "Languages" },
+  { key: "framework", flag: "use_framework", label: "Frameworks" },
+  { key: "deployment", flag: "use_deployment", label: "Deployment" },
+  { key: "software", flag: "use_software", label: "Software" },
+];
+
+const MAX_CARDS_PER_CATEGORY = 4;
+const ACTIVE_WINDOW_YEARS = 2;
+
+function projectYear(project: Project): number {
+  return Number(project.general.date.split("-")[0]);
+}
+
+function getPortfolioMaxYear(): number {
+  return Math.max(...getProjects().map(projectYear));
+}
+
+// A technology's last-used year isn't tracked directly on project-filters
+// (only first_year_used is) - it's derived by scanning every project's own
+// technology lists, since that's the only place usage-by-year exists.
+function buildLastUsedYearBySlug(): Map<string, number> {
+  const lastUsed = new Map<string, number>();
+  for (const project of getProjects()) {
+    const year = projectYear(project);
+    for (const slug of Object.values(project.technology).flat()) {
+      const existing = lastUsed.get(slug);
+      if (existing === undefined || year > existing) {
+        lastUsed.set(slug, year);
+      }
+    }
+  }
+  return lastUsed;
+}
+
+function primaryTraitSlug(technology: ProjectFilter): string | undefined {
+  return technology.list_trait.find((slug): slug is string => Boolean(slug));
+}
+
+function traitEarliestYear(traitSlug: string, allFilters: ProjectFilter[]): number {
+  return Math.min(
+    ...allFilters.filter((filter) => filter.list_trait.includes(traitSlug)).map((filter) => filter.stats.first_year_used),
+  );
+}
+
+function formatStatistic(
+  traitTitle: string | undefined,
+  isActive: boolean,
+  earliestTraitYear: number | undefined,
+  firstYearUsed: number,
+  lastYearUsed: number,
+): string {
+  if (isActive && earliestTraitYear !== undefined) {
+    return traitTitle ? `Using ${traitTitle} since ${earliestTraitYear}` : `Active since ${earliestTraitYear}`;
+  }
+  if (firstYearUsed === lastYearUsed) {
+    return traitTitle ? `${traitTitle} of choice in ${firstYearUsed}` : `Used in ${firstYearUsed}`;
+  }
+  return traitTitle ? `${traitTitle} used ${firstYearUsed}–${lastYearUsed}` : `Used ${firstYearUsed}–${lastYearUsed}`;
+}
+
+// Ports pbTripletItemGraph.vue's category selection (which of the project's
+// own technology lists to read) but replaces its Chart.js usage-comparison
+// bars entirely with plain proficiency cards: a technology's own usage count
+// and a "since"/date-range statistic, capped to the 4 most representative
+// technologies per category ("first used here" ones are pinned into that
+// cap even when a higher-usage peer would otherwise bump them out).
+function buildTripletCards(
+  technologySlugs: string[],
+  project: Project,
+  allFilters: ProjectFilter[],
+  traitTitleBySlug: Map<string, string>,
+  lastUsedYearBySlug: Map<string, number>,
+  portfolioMaxYear: number,
+): TripletTechCardView[] {
+  const bySlug = new Map(allFilters.map((filter) => [filter.slug, filter]));
+  const technologies = technologySlugs
+    .map((slug) => bySlug.get(slug))
+    .filter((filter): filter is ProjectFilter => filter !== undefined);
+
+  if (technologies.length === 0) {
+    return [];
+  }
+
+  const activeThreshold = portfolioMaxYear - (ACTIVE_WINDOW_YEARS - 1);
+  const isActive = (technology: ProjectFilter) => (lastUsedYearBySlug.get(technology.slug) ?? 0) >= activeThreshold;
+  const thisProjectYear = projectYear(project);
+  const isFirstUsedHere = (technology: ProjectFilter) => technology.stats.first_year_used === thisProjectYear;
+
+  const pinned = technologies
+    .filter(isFirstUsedHere)
+    .sort((a, b) => b.stats.usage - a.stats.usage)
+    .slice(0, MAX_CARDS_PER_CATEGORY);
+  const rest = technologies
+    .filter((technology) => !isFirstUsedHere(technology))
+    .sort((a, b) => b.stats.usage - a.stats.usage);
+  const remainingSlots = Math.max(0, MAX_CARDS_PER_CATEGORY - pinned.length);
+  const selected = [...pinned, ...rest.slice(0, remainingSlots)].sort((a, b) => b.stats.usage - a.stats.usage);
+  const highProficiencySlug = selected[0]?.slug;
+
+  return selected.map((technology) => {
+    const traitSlug = primaryTraitSlug(technology);
+    const traitTitle = traitSlug ? traitTitleBySlug.get(traitSlug) : undefined;
+    const active = isActive(technology);
+    const lastYearUsed = lastUsedYearBySlug.get(technology.slug) ?? technology.stats.first_year_used;
+    const earliestTraitYear = active && traitSlug ? traitEarliestYear(traitSlug, allFilters) : undefined;
+
+    return {
+      key: technology.slug,
+      technology,
+      projects: technology.stats.usage,
+      isHighProficiency: technology.slug === highProficiencySlug,
+      isFirstUsedHere: isFirstUsedHere(technology),
+      isActive: active,
+      statistic: formatStatistic(traitTitle, active, earliestTraitYear, technology.stats.first_year_used, lastYearUsed),
+    };
+  });
+}
+
+function buildGraphItemView(
+  item: TripletItemGraph,
+  project: Project,
+  allFilters: ProjectFilter[],
+  traitTitleBySlug: Map<string, string>,
+  lastUsedYearBySlug: Map<string, number>,
+  portfolioMaxYear: number,
+  index: number,
+): TripletGraphItemView | undefined {
+  const category = TRIPLET_GRAPH_CATEGORIES.find((entry) => item[entry.flag] === true);
+  const slugs = category ? project.technology[category.key] : [];
+  const cards = buildTripletCards(slugs, project, allFilters, traitTitleBySlug, lastUsedYearBySlug, portfolioMaxYear);
+
+  if (cards.length === 0) {
+    return undefined;
+  }
+
+  return {
+    type: "itemGraph",
+    key: `graph-${index}`,
+    title: category ? category.label : item.title,
+    cards,
+  };
+}
+
+const CANNED_MESSAGE_PATTERN = /^\[canned msg="([^"]+)"\]$/;
+
+// Ports useShortcodes/scCanned.vue for the one shortcode pbTriplet's section
+// content actually uses ("Usage vs Similar"'s caption). Canned messages are
+// trusted, build-time CMS copy (not user input), but every one used by a
+// pbTriplet block today is a plain sentence, so this resolves to plain text
+// rather than porting baseText's general HTML shortcode engine.
+function resolveTripletContent(rawContentValue: string): string {
+  const trimmed = rawContentValue.trim();
+  const match = CANNED_MESSAGE_PATTERN.exec(trimmed);
+  if (!match) {
+    return trimmed;
+  }
+
+  const canned = content["theme-options/canned-msgs"].find((entry) => entry.title === match[1]);
+  return canned?.content ?? "";
+}
+
+function isTripletItem(value: unknown): value is TripletItem {
+  if (!isRecord(value)) {
+    return false;
+  }
+  if (value.type === "itemTechnology") {
+    return Array.isArray(value.technology);
+  }
+  return value.type === "itemGraph";
+}
+
+// Ports pbTriplet.vue + pbTripletItemTechnology.vue + pbTripletItemGraph.vue.
+// Unlike the other page-builder blocks above, pbTriplet can appear more than
+// once per project (e.g. "Technology" then "Usage vs Similar"), so this reads
+// its data from the PageBuilder-dispatched section rather than finding the
+// first matching block itself.
+export function getTripletSectionView(section: PageBuilderSection, project: Project): TripletSectionView {
+  const title = typeof section.title === "string" ? section.title : "";
+  const rawContentValue = typeof section.content === "string" ? section.content : "";
+  const listTriplet = Array.isArray(section.list_triplet) ? section.list_triplet.filter(isTripletItem) : [];
+
+  const allFilters = getProjectFilters();
+  const filterByValue = new Map(allFilters.map((filter) => [filter.value, filter]));
+  const traitTitleBySlug = new Map(getTraits().map((trait) => [trait.slug, trait.title]));
+  const lastUsedYearBySlug = buildLastUsedYearBySlug();
+  const portfolioMaxYear = getPortfolioMaxYear();
+
+  const items: TripletItemView[] = listTriplet.flatMap((item, index): TripletItemView[] => {
+    if (item.type === "itemTechnology") {
+      const ref = item.technology[0];
+      const technology = ref ? filterByValue.get(ref.value) : undefined;
+      return technology ? [{ type: "itemTechnology", key: `tech-${index}`, technology }] : [];
+    }
+
+    const graphItem = buildGraphItemView(
+      item,
+      project,
+      allFilters,
+      traitTitleBySlug,
+      lastUsedYearBySlug,
+      portfolioMaxYear,
+      index,
+    );
+    return graphItem ? [graphItem] : [];
+  });
+
+  return {
+    title,
+    content: resolveTripletContent(rawContentValue),
+    items,
+  };
 }
 
 export function getMediaUrl(filename: string): string {
