@@ -240,7 +240,10 @@ export default function MobileMosaic({ project }: { project: Project }) {
   const headingId = "mobile-mosaic-heading";
 
   return (
-    <section aria-labelledby={headingId} className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
+    <section
+      aria-labelledby={headingId}
+      className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+    >
       <SectionDivider>
         <span id={headingId}>{title}</span>
       </SectionDivider>
