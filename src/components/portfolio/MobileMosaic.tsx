@@ -21,12 +21,12 @@ const OFFSET_NORMAL_POOL = ["33%", "66%", "rand%", "rand%", "rand%"];
 interface Cell {
   device: MobileDeviceKey;
   offset: string;
+  screenshot: string;
 }
 
 interface RowState {
   generation: number;
   topPx: number;
-  screenshot: string;
   cells: Cell[];
 }
 
@@ -93,6 +93,13 @@ function useMounted(): boolean {
 // pbMobileMozaicActual.vue - see MobileDeviceFrame for the per-frame pan
 // curves. Renders nothing when the block is absent or the project has no
 // mobile screenshots to draw from (e.g. mserrano-dev).
+//
+// Deliberate deviation from the Vue source: pbMobileMozaicActual.vue draws
+// one screenshot per row (list_row.src) and shares it across every cell in
+// that row, so several phones in the same row often show the same capture.
+// Here each cell draws its own screenshot instead, for more variety per
+// row - device and offset selection are still drawn per cell exactly as
+// upstream.
 export default function MobileMosaic({ project }: { project: Project }) {
   const { title, screenshots } = getMobileMosaic(project);
   const reducedMotion = usePrefersReducedMotion();
@@ -156,10 +163,11 @@ export default function MobileMosaic({ project }: { project: Project }) {
         cells.push({
           device: devicePoolRef.current!.draw(),
           offset: drawOffset(throttleRef.current, offsetPoolsRef.current.special, offsetPoolsRef.current.normal),
+          screenshot: screenshotPoolRef.current!.draw(),
         });
       }
       generationRef.current += 1;
-      return { generation: generationRef.current, topPx, screenshot: screenshotPoolRef.current!.draw(), cells };
+      return { generation: generationRef.current, topPx, cells };
     }
 
     function recycleRow() {
@@ -257,7 +265,7 @@ export default function MobileMosaic({ project }: { project: Project }) {
                           className={`flex min-w-60 flex-1 justify-center ${cellIndex % 2 === 1 ? "-translate-y-[250px]" : ""}`}
                         >
                           <MobileDeviceFrame
-                            filename={row.screenshot}
+                            filename={cell.screenshot}
                             device={cell.device}
                             offset={cell.offset}
                             reducedMotion={false}
@@ -284,26 +292,28 @@ function StaticMosaicRow({ screenshots, columnCount }: { screenshots: string[]; 
     screenshot: new DrawPool(screenshots),
     device: new DrawPool(MOBILE_DEVICE_POOL),
   });
-  const [row, setRow] = useState<{ screenshot: string; devices: MobileDeviceKey[] } | null>(null);
+  const [row, setRow] = useState<{ screenshot: string; device: MobileDeviceKey }[] | null>(null);
 
   // Drawing mutates the pools, so it belongs in an effect, not render -
   // otherwise an unrelated re-render (e.g. React StrictMode's double-render)
   // would silently reshuffle the visible row.
   useEffect(() => {
     if (columnCount === 0) return;
-    setRow({
-      screenshot: poolsRef.current.screenshot.draw(),
-      devices: Array.from({ length: columnCount }, () => poolsRef.current.device.draw()),
-    });
+    setRow(
+      Array.from({ length: columnCount }, () => ({
+        screenshot: poolsRef.current.screenshot.draw(),
+        device: poolsRef.current.device.draw(),
+      })),
+    );
   }, [columnCount]);
 
   if (!row) return null;
 
   return (
     <div className="flex h-[500px] w-full items-center justify-center">
-      {row.devices.map((device, index) => (
+      {row.map((cell, index) => (
         <div key={index} className="flex min-w-60 flex-1 justify-center">
-          <MobileDeviceFrame filename={row.screenshot} device={device} offset="0%" reducedMotion />
+          <MobileDeviceFrame filename={cell.screenshot} device={cell.device} offset="0%" reducedMotion />
         </div>
       ))}
     </div>
