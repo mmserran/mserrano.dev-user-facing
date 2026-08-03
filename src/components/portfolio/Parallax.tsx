@@ -114,16 +114,12 @@ export default function Parallax({
           ? view.title
           : view.content || undefined
       }
-      className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+      className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
-      {view.title && (
-        <div className="pb-10">
-          <SectionDivider title={view.title} />
-        </div>
-      )}
+      <SectionDivider title={view.title} />
       <div
         ref={containerRef}
-        className="relative isolate flex h-[150px] w-full items-center justify-center overflow-hidden"
+        className="relative isolate mt-10 flex h-[150px] w-full items-center justify-center overflow-hidden"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- discrete pre-generated manifest widths need a manual srcset */}
         <img

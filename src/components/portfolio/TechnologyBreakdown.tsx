@@ -164,7 +164,7 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
   return (
     <section
       aria-labelledby="technology-breakdown-heading"
-      className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+      className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
       {/* The backend's title for this block is always "---" (a bare-rule
           divider, per SectionDivider's three-way mechanism) rather than a

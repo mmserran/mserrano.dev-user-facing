@@ -24,14 +24,17 @@ export default function Triplet({ section, project }: { section: PageBuilderSect
   }
 
   return (
-    <section aria-label={view.title || "Technology"} className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section
+      aria-label={view.title || "Technology"}
+      className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+    >
       <SectionDivider title={view.title} />
 
       {view.content && (
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-white/70">{view.content}</p>
       )}
 
-      <div className="my-10 flex flex-col items-center gap-10 md:flex-row md:items-start md:justify-around">
+      <div className="mt-10 flex flex-col items-center gap-10 md:flex-row md:items-start md:justify-around">
         {view.items.map((item) =>
           item.type === "itemTechnology" ? (
             <TripletTechnologyItem key={item.key} item={item} />

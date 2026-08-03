@@ -242,7 +242,7 @@ export default function MobileMosaic({ project }: { project: Project }) {
   return (
     <section
       aria-labelledby={headingId}
-      className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+      className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
       <SectionDivider id={headingId} title={title} />
 
