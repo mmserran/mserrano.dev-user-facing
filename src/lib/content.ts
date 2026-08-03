@@ -793,10 +793,9 @@ function isTripletItem(value: unknown): value is TripletItem {
 }
 
 // Ports pbTriplet.vue + pbTripletItemTechnology.vue + pbTripletItemGraph.vue.
-// Unlike the other page-builder blocks above, pbTriplet can appear more than
-// once per project (e.g. "Technology" then "Usage vs Similar"), so this reads
-// its data from the PageBuilder-dispatched section rather than finding the
-// first matching block itself.
+// Can appear more than once per project (e.g. "Technology" then "Usage vs
+// Similar"); per PageBuilder's multi-instance contract this reads the
+// dispatched section rather than find-first.
 export function getTripletSectionView(section: PageBuilderSection, project: Project): TripletSectionView {
   const title = typeof section.title === "string" ? section.title : "";
   const rawContentValue = typeof section.content === "string" ? section.content : "";
@@ -956,11 +955,10 @@ function getImageTextMediaFormat(filename: string): ImageTextMediaFormat {
 }
 
 // Ports pbImageText.vue: a titled list of alternating image/text rows (an
-// image-with-device-frame or a video, paired with a title/caption). Like
-// pbTriplet, this block can appear more than once per project ("Initial
-// Website", then "Highlights" on hospitalitypulse-inc), so per PageBuilder's
-// contract this reads its data from the dispatched section instead of
-// finding the first matching block itself.
+// image-with-device-frame or a video, paired with a title/caption). Can
+// appear more than once per project ("Initial Website", then "Highlights"
+// on hospitalitypulse-inc); per PageBuilder's multi-instance contract this
+// reads the dispatched section instead of find-first.
 export function getImageTextSectionView(section: PageBuilderSection): ImageTextSectionView {
   const title = typeof section.title === "string" ? section.title : "";
   const rawItems = Array.isArray(section.list_image_text) ? section.list_image_text : [];

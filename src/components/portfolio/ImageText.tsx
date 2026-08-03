@@ -14,13 +14,12 @@ const IMAGE_SIZES = "(min-width: 1024px) 50vw, 100vw";
 
 // Ports pbImageText.vue: a titled, alternating list of image/text rows (used
 // for e.g. hospitalitypulse-inc's "Initial Website" and "Highlights"
-// sections). Unlike the other page-builder blocks ported so far, pbImageText
-// can appear more than once per project, so per PageBuilder's contract this
-// reads its data from the dispatched section instead of finding the first
-// matching block itself. Confirmed against the live site (both desktop and
-// mobile) that multiple items render as a plain stacked list, not a
-// carousel - matches the Gridsome source, which has no Flickity wiring here
-// unlike the pbCarousel* blocks.
+// sections). Can appear more than once per project; per PageBuilder's
+// multi-instance contract this reads the dispatched section instead of
+// find-first. Confirmed against the live site (both desktop and mobile)
+// that multiple items render as a plain stacked list, not a carousel -
+// matches the Gridsome source, which has no Flickity wiring here unlike
+// the pbCarousel* blocks.
 export default function ImageText({ section }: { section: PageBuilderSection }) {
   const view = getImageTextSectionView(section);
 
