@@ -297,6 +297,41 @@ export interface PageBuilderSection {
   [key: string]: unknown;
 }
 
+export interface ParallaxSectionView {
+  title: string;
+  content: string;
+  image: string;
+}
+
+// Reads a dispatched pbParallax block defensively. Parallax is multi-instance
+// data, so this deliberately accepts the section rather than finding the first
+// block on a project.
+export function getParallaxSectionView(
+  section: PageBuilderSection,
+): ParallaxSectionView | undefined {
+  if (section.type !== "pbParallax") {
+    return undefined;
+  }
+
+  const title = typeof section.title === "string" ? section.title.trim() : "";
+  const content =
+    typeof section.content === "string" ? section.content.trim() : "";
+  const image =
+    typeof section.parallax_content === "string"
+      ? section.parallax_content.trim()
+      : "";
+
+  if (!image || getMediaVariants(image).length === 0) {
+    return undefined;
+  }
+
+  return {
+    title,
+    content,
+    image,
+  };
+}
+
 // Ports singleProject.vue's `get_pagebuilder()`: the ordered pagebuilder array
 // for components that dispatch on type (see PageBuilder).
 export function getPageBuilderSections(project: Project): PageBuilderSection[] {
