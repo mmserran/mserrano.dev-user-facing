@@ -988,6 +988,39 @@ export function getImageTextSectionView(section: PageBuilderSection): ImageTextS
   return { title, items };
 }
 
+export interface FeaturedSectionView {
+  title: string;
+  content: string;
+  filename: string;
+  usePlayer: boolean;
+  autoplay: boolean;
+}
+
+// Ports pbFeatured.vue ("Archived Video"/"Archived Recording"): a titled
+// centerpiece video of an old project demo recording. snippetMedia.vue (also
+// pbImageText's media host) supports non-video images and an is_screenshot
+// browser-chrome device frame too, but every pbFeatured block in real
+// content.json data sets featured_content to an .mp4 and leaves
+// is_screenshot false, so only the video path is ported here - reuses the
+// same detect_type("mp4" -> video) rule as getImageTextMediaFormat rather
+// than duplicating it. Can appear at most once per project in current data,
+// but - like pbImageText/pbTriplet - reads the dispatched section rather
+// than find-first, per PageBuilder's multi-instance contract.
+export function getFeaturedSectionView(section: PageBuilderSection): FeaturedSectionView | undefined {
+  const filename = typeof section.featured_content === "string" ? section.featured_content : "";
+  if (getImageTextMediaFormat(filename) !== "video") {
+    return undefined;
+  }
+
+  return {
+    title: typeof section.title === "string" ? section.title : "",
+    content: typeof section.content === "string" ? section.content.trim() : "",
+    filename,
+    usePlayer: section.use_player === true,
+    autoplay: section.is_autoplay === true,
+  };
+}
+
 export function getMediaUrl(filename: string): string {
   const trimmedFilename = filename.trim();
 

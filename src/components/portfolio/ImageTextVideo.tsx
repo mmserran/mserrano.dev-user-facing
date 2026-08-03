@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { getMediaVariants, type ImageTextMedia } from "@/lib/content";
+import usePlyrPlayer from "./usePlyrPlayer";
 
 const VIEWPORT_PLAY_THRESHOLD = 0.5;
 
@@ -24,24 +25,7 @@ const VIEWPORT_PLAY_THRESHOLD = 0.5;
 export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    if (!media.usePlayer) return;
-    const video = videoRef.current;
-    if (!video) return;
-
-    let player: import("plyr").default | undefined;
-    let cancelled = false;
-
-    Promise.all([import("plyr/dist/plyr.css"), import("plyr")]).then(([, { default: Plyr }]) => {
-      if (cancelled) return;
-      player = new Plyr(video);
-    });
-
-    return () => {
-      cancelled = true;
-      player?.destroy();
-    };
-  }, [media.usePlayer]);
+  usePlyrPlayer(videoRef, media.usePlayer);
 
   useEffect(() => {
     const video = videoRef.current;
