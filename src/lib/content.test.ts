@@ -211,6 +211,7 @@ describe("content lib", () => {
       const project = getProjectBySlug("mserrano-dev") as Project;
       const breakdown = getTechnologyBreakdown(project);
 
+      expect(breakdown?.title).toBe("---");
       expect(breakdown?.graph.map((slice) => [slice.technology.title, slice.weight])).toEqual([
         ["JavaScript", 0.33],
         ["CSS3", 0.2],

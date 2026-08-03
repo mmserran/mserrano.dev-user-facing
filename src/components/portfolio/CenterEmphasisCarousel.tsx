@@ -155,9 +155,7 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
       aria-labelledby={headingId}
       className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
-      <SectionDivider>
-        <span id={headingId}>{title}</span>
-      </SectionDivider>
+      <SectionDivider id={headingId} title={title} />
 
       {content && (
         // content.json is trusted, developer-controlled build-time data (see

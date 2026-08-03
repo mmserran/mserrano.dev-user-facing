@@ -81,6 +81,16 @@ describe("Featured", () => {
     expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
   });
 
+  it("renders a bare, unlabeled divider rule for the backend's '---' title", () => {
+    getFeaturedSectionView.mockReturnValue(makeView({ title: "---", content: "" }));
+    getMediaVariants.mockReturnValue([{ width: null, url: "/media/demo.mp4" }]);
+
+    const { container } = render(<Featured section={section} />);
+
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-hidden="true"].flex.items-center')).toBeInTheDocument();
+  });
+
   it("sets the autoplay attribute from the section's is_autoplay flag", () => {
     getFeaturedSectionView.mockReturnValue(makeView({ autoplay: true }));
     getMediaVariants.mockReturnValue([{ width: null, url: "/media/demo.mp4" }]);

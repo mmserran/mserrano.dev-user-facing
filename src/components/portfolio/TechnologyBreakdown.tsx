@@ -3,6 +3,7 @@
 import { useState, type MouseEvent, type ReactNode } from "react";
 
 import StarField from "@/components/illustration/StarField";
+import SectionDivider from "@/components/typography/SectionDivider";
 import {
   getTechnologyBreakdown,
   type Project,
@@ -165,10 +166,15 @@ export default function TechnologyBreakdown({ project }: { project: Project }) {
       aria-labelledby="technology-breakdown-heading"
       className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
+      {/* The backend's title for this block is always "---" (a bare-rule
+          divider, per SectionDivider's three-way mechanism) rather than a
+          real label, so this section needs its own sr-only heading to stay
+          discoverable/labeled independent of whatever SectionDivider
+          renders. */}
       <h2 id="technology-breakdown-heading" className="sr-only">
         Technology breakdown
       </h2>
-      <div aria-hidden="true" className="h-px w-full bg-white/62" />
+      <SectionDivider title={breakdown.title} />
 
       <div
         className="relative mx-auto mt-10 mb-4 w-full max-w-[800px] sm:mt-12 sm:mb-5"
