@@ -556,6 +556,69 @@ export function getTechnologyCarousel(project: Project): TechnologyCarousel {
   return { title: block.title, technologies };
 }
 
+interface CenterEmphasisSlideBlock {
+  title: string;
+  slide_desktop?: string;
+  slide_mobile?: string;
+  offset?: string;
+}
+
+interface CenterEmphasisCarouselBlock {
+  type: "pbCarouselCenterEmphasis";
+  title: string;
+  content?: string;
+  list_slide: CenterEmphasisSlideBlock[];
+}
+
+export interface CenterEmphasisSlide {
+  title: string;
+  filename: string;
+  offset: string;
+}
+
+export interface CenterEmphasisCarousel {
+  title: string;
+  content: string;
+  slides: CenterEmphasisSlide[];
+}
+
+function findCenterEmphasisCarouselBlock(pagebuilder: string): CenterEmphasisCarouselBlock | undefined {
+  try {
+    const blocks = JSON.parse(pagebuilder) as unknown;
+    if (!Array.isArray(blocks)) {
+      return undefined;
+    }
+    const block = blocks.find((candidate) => isRecord(candidate) && candidate.type === "pbCarouselCenterEmphasis");
+    return isRecord(block) && Array.isArray(block.list_slide)
+      ? (block as unknown as CenterEmphasisCarouselBlock)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Ports the Gridsome frontend's pbCarouselCenterEmphasisActual: a coverflow of
+// a project's own page screenshots, one slide per list_slide entry. Falls back
+// to a slide's mobile capture when no desktop one was set
+// (`obj.slide_desktop || obj.slide_mobile`, from snippetMedia.vue's `src`
+// prop); a slide with neither is skipped rather than rendered blank.
+export function getCenterEmphasisCarousel(project: Project): CenterEmphasisCarousel {
+  const block = findCenterEmphasisCarouselBlock(project.pagebuilder);
+  if (!block) {
+    return { title: "", content: "", slides: [] };
+  }
+
+  const slides = block.list_slide
+    .map((slide) => ({
+      title: slide.title,
+      filename: slide.slide_desktop || slide.slide_mobile || "",
+      offset: slide.offset ?? "",
+    }))
+    .filter((slide): slide is CenterEmphasisSlide => slide.filename !== "");
+
+  return { title: block.title, content: block.content ?? "", slides };
+}
+
 interface TripletTechnologyRef {
   value: string;
 }
