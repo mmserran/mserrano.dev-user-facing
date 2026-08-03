@@ -30,7 +30,11 @@ export default function Featured({ section }: { section: PageBuilderSection }) {
 
   return (
     <section
-      aria-label={view.title || undefined}
+      aria-label={
+        view.title && view.title !== "---"
+          ? view.title
+          : view.content || undefined
+      }
       className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
       <SectionDivider title={view.title} />
