@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   filterProjects,
   formatRoundedDate,
+  getFeaturedSectionView,
   getHeaderLinks,
   getImageTextSectionView,
   getMediaUrl,
@@ -27,6 +28,10 @@ function getTripletBlocks(project: Project): PageBuilderSection[] {
 
 function getImageTextBlocks(project: Project): PageBuilderSection[] {
   return getPageBuilderSections(project).filter((section) => section.type === "pbImageText");
+}
+
+function getFeaturedBlocks(project: Project): PageBuilderSection[] {
+  return getPageBuilderSections(project).filter((section) => section.type === "pbFeatured");
 }
 
 describe("content lib", () => {
@@ -570,6 +575,44 @@ describe("content lib", () => {
       expect(getImageTextSectionView({ type: "pbImageText", list_image_text: [{ front_image: "x.jpg" }] }).items).toEqual(
         [],
       );
+    });
+  });
+
+  describe("getFeaturedSectionView", () => {
+    it("resolves title, filename, and playback flags from a project's pbFeatured block", () => {
+      const project = getProjectBySlug("pulsemobile") as Project;
+      const [block] = getFeaturedBlocks(project);
+
+      const view = getFeaturedSectionView(block);
+
+      expect(view).toEqual({
+        title: "Archived Video",
+        content: "",
+        filename: "pulsemobile_video.mp4",
+        usePlayer: true,
+        autoplay: false,
+      });
+    });
+
+    it("trims a non-empty content caption", () => {
+      const view = getFeaturedSectionView({
+        type: "pbFeatured",
+        title: "Archived Video",
+        content: "  A demo recording.  ",
+        featured_content: "demo.mp4",
+        is_autoplay: false,
+        use_player: true,
+      });
+
+      expect(view?.content).toBe("A demo recording.");
+    });
+
+    it("returns undefined when featured_content isn't a video", () => {
+      expect(
+        getFeaturedSectionView({ type: "pbFeatured", title: "Archived Video", featured_content: "screenshot.jpg" }),
+      ).toBeUndefined();
+      expect(getFeaturedSectionView({ type: "pbFeatured", title: "Archived Video" })).toBeUndefined();
+      expect(getFeaturedSectionView({ type: "pbFeatured", featured_content: "" })).toBeUndefined();
     });
   });
 });

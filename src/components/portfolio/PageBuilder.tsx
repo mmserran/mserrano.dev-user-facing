@@ -4,6 +4,7 @@ import {
   type PageBuilderSection,
   type Project,
 } from "@/lib/content";
+import Featured from "./Featured";
 import ImageText from "./ImageText";
 import MobileMosaic from "./MobileMosaic";
 import ProjectHeader from "./ProjectHeader";
@@ -33,10 +34,9 @@ type PageBuilderComponent = (props: {
 //   - Test it standalone against real content.json fixtures; PageBuilder's
 //     own tests only need touching to assert a type's position in the array.
 //
-// Block types without a ported component yet (pbFeatured,
-// pbCarouselCenterEmphasis, pbParallax) are simply absent here and get
-// skipped below; each is a future one-component-at-a-time addition per
-// AGENTS.md.
+// Block types without a ported component yet (pbCarouselCenterEmphasis,
+// pbParallax) are simply absent here and get skipped below; each is a future
+// one-component-at-a-time addition per AGENTS.md.
 const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
   pbHeader: ProjectHeader as PageBuilderComponent,
   pbGraphBreakdown: TechnologyBreakdown as PageBuilderComponent,
@@ -45,6 +45,7 @@ const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
   pbCarouselRelatedPosts: RelatedProjects as PageBuilderComponent,
   pbTriplet: Triplet as PageBuilderComponent,
   pbImageText: ImageText as PageBuilderComponent,
+  pbFeatured: Featured as PageBuilderComponent,
 };
 
 // Ports singleProject.vue's `<component :is="section.type">`: walks the
