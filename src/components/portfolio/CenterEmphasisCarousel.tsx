@@ -64,7 +64,8 @@ function circularStep(index: number, activeIndex: number, total: number): number
 //   - The fan's transition is skipped under prefers-reduced-motion, matching
 //     every other interactive animation in this codebase.
 export default function CenterEmphasisCarousel({ project }: { project: Project }) {
-  const { title, content, slides } = getCenterEmphasisCarousel(project);
+  const { title, content, slides: rawSlides } = getCenterEmphasisCarousel(project);
+  const slides = rawSlides.filter((slide) => getMediaVariants(slide.filename).length > 0);
   const headingId = useId();
   const [activeIndex, setActiveIndex] = useState(0);
   const reducedMotion = usePrefersReducedMotion();
@@ -116,6 +117,13 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
       reducedMotion ? 0 : TRANSITION_MS,
     );
     return true;
+  }
+
+  function goToFromPointer(index: number): void {
+    const next = ((index % total) + total) % total;
+    if (goTo(index)) {
+      slideRefs.current[next]?.focus();
+    }
   }
 
   // Arrow keys move which slide is active without moving DOM focus off of
@@ -246,6 +254,8 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
                     slideRefs.current[index] = el;
                   }}
                   slide={slide}
+                  index={index}
+                  total={total}
                   step={step}
                   isActive={step === 0}
                   reducedMotion={reducedMotion}
@@ -282,7 +292,8 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
                   key={`${slide.filename}-${index}-catcher`}
                   type="button"
                   tabIndex={-1}
-                  onClick={() => goTo(index)}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => goToFromPointer(index)}
                   aria-hidden="true"
                   style={{
                     transform: `translateX(calc(-50% + ${fanOffsetPercent}%))`,
@@ -299,7 +310,7 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
           <div className="mt-6 flex items-center justify-center gap-4">
             <button
               type="button"
-              onClick={() => goTo(activeIndex - 1)}
+              onClick={() => goToFromPointer(activeIndex - 1)}
               aria-label="Previous slide"
               className="flex size-10 items-center justify-center rounded-full bg-white text-black shadow-lg hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
             >
@@ -311,7 +322,7 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
                 <button
                   key={`${slide.filename}-${index}`}
                   type="button"
-                  onClick={() => goTo(index)}
+                  onClick={() => goToFromPointer(index)}
                   aria-label={`Go to slide ${index + 1} of ${total}: ${slide.title}`}
                   aria-current={index === activeIndex}
                   className={`size-2 rounded-full transition-colors hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue ${
@@ -323,7 +334,7 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
 
             <button
               type="button"
-              onClick={() => goTo(activeIndex + 1)}
+              onClick={() => goToFromPointer(activeIndex + 1)}
               aria-label="Next slide"
               className="flex size-10 items-center justify-center rounded-full bg-white text-black shadow-lg hover:cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
             >
@@ -338,6 +349,8 @@ export default function CenterEmphasisCarousel({ project }: { project: Project }
 
 function CarouselSlide({
   slide,
+  index,
+  total,
   step,
   isActive,
   reducedMotion,
@@ -345,6 +358,8 @@ function CarouselSlide({
   ref,
 }: {
   slide: CenterEmphasisSlide;
+  index: number;
+  total: number;
   step: number;
   isActive: boolean;
   reducedMotion: boolean;
@@ -467,7 +482,7 @@ function CarouselSlide({
       tabIndex={isActive ? 0 : -1}
       aria-hidden={!isVisible}
       aria-current={isActive}
-      aria-label={`Show slide: ${slide.title}`}
+      aria-label={`Show slide ${index + 1} of ${total}: ${slide.title}`}
       className={`${className} text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue`}
     >
       {content}

@@ -176,12 +176,12 @@ describe("CenterEmphasisCarousel", () => {
 
     render(<CenterEmphasisCarousel project={project} />);
     const region = screen.getByText("Slide 1 of 4: Home Page").parentElement as HTMLElement;
-    const home = screen.getByRole("button", { name: "Show slide: Home Page" });
+    const home = screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" });
     home.focus();
 
     fireEvent.keyDown(region, { key: "ArrowRight" });
 
-    expect(screen.getByRole("button", { name: "Show slide: Services Page" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" })).toHaveFocus();
     vi.useRealTimers();
   });
 
@@ -218,7 +218,7 @@ describe("CenterEmphasisCarousel", () => {
 
     expect(screen.getByRole("heading", { level: 6, name: "Home Page" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 6, name: "Services Page" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show slide: Services Page" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" })).toHaveAttribute(
       "aria-hidden",
       "false",
     );
@@ -236,22 +236,22 @@ describe("CenterEmphasisCarousel", () => {
 
     render(<CenterEmphasisCarousel project={project} />);
 
-    expect(screen.getByRole("button", { name: "Show slide: Home Page" })).toHaveAttribute("tabindex", "0");
-    expect(screen.getByRole("button", { name: "Show slide: Services Page" })).toHaveAttribute("tabindex", "-1");
-    expect(screen.getByRole("button", { name: "Show slide: Pricing Page" })).toHaveAttribute("tabindex", "-1");
-    expect(screen.getByRole("button", { name: "Show slide: Contact Page" })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("button", { name: "Show slide 3 of 4: Pricing Page" })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("button", { name: "Show slide 4 of 4: Contact Page" })).toHaveAttribute("tabindex", "-1");
 
-    fireEvent.click(screen.getByRole("button", { name: "Show slide: Services Page" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" }));
 
-    expect(screen.getByRole("button", { name: "Show slide: Home Page" })).toHaveAttribute("tabindex", "-1");
-    expect(screen.getByRole("button", { name: "Show slide: Services Page" })).toHaveAttribute("tabindex", "0");
+    expect(screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" })).toHaveAttribute("tabindex", "-1");
+    expect(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" })).toHaveAttribute("tabindex", "0");
   });
 
   it("keeps each slide as the same DOM node across a navigation, so its transform can transition from a real previous frame", () => {
     getCenterEmphasisCarousel.mockReturnValue(fourSlideCarousel());
 
     render(<CenterEmphasisCarousel project={project} />);
-    const homeSlide = screen.getByRole("button", { name: "Show slide: Home Page" });
+    const homeSlide = screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" });
 
     fireEvent.click(screen.getByRole("button", { name: "Next slide" }));
 
@@ -260,7 +260,7 @@ describe("CenterEmphasisCarousel", () => {
     // the DOM node here instead of reusing it, which leaves the CSS
     // transition with no previous frame to animate from - it would jump
     // straight to the new transform instead of gliding to it.
-    expect(screen.getByRole("button", { name: "Show slide: Home Page" })).toBe(homeSlide);
+    expect(screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" })).toBe(homeSlide);
   });
 
   it("marks the active slide's button with aria-current", () => {
@@ -268,8 +268,8 @@ describe("CenterEmphasisCarousel", () => {
 
     render(<CenterEmphasisCarousel project={project} />);
 
-    expect(screen.getByRole("button", { name: "Show slide: Home Page" })).toHaveAttribute("aria-current", "true");
-    expect(screen.getByRole("button", { name: "Show slide: Services Page" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Show slide 1 of 4: Home Page" })).toHaveAttribute("aria-current", "true");
+    expect(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" })).toHaveAttribute(
       "aria-current",
       "false",
     );
@@ -317,6 +317,9 @@ describe("CenterEmphasisCarousel", () => {
     const { container } = render(<CenterEmphasisCarousel project={project} />);
 
     expect(container.querySelectorAll("img").length).toBe(1);
+    expect(screen.getByText("Slide 1 of 1: Home Page")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Unresolvable/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Previous slide" })).not.toBeInTheDocument();
   });
 
   // No z-index anywhere, on any slide, at any point - the stage's own
@@ -336,7 +339,7 @@ describe("CenterEmphasisCarousel", () => {
     getCenterEmphasisCarousel.mockReturnValue(fourSlideCarousel());
     const { container } = render(<CenterEmphasisCarousel project={project} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Show slide: Services Page" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show slide 2 of 4: Services Page" }));
 
     for (const button of container.querySelectorAll('button[aria-label^="Show slide"]')) {
       expect((button as HTMLElement).style.zIndex).toBe("");
@@ -372,7 +375,7 @@ describe("CenterEmphasisCarousel", () => {
       getCenterEmphasisCarousel.mockReturnValue(fourSlideCarousel());
       render(<CenterEmphasisCarousel project={project} />);
 
-      for (const button of screen.getAllByRole("button", { name: /^Show slide:/ })) {
+      for (const button of screen.getAllByRole("button", { name: /^Show slide / })) {
         expect(button.className).toContain("pointer-events-none");
       }
     });
@@ -391,6 +394,7 @@ describe("CenterEmphasisCarousel", () => {
       fireEvent.click(catchers[2]);
 
       expect(screen.getByText("Slide 3 of 4: Pricing Page")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Show slide 3 of 4: Pricing Page" })).toHaveFocus();
     });
   });
 });
