@@ -25,7 +25,7 @@ type PageBuilderComponent = (props: {
 //   - Component receives `{ project, section, index }` (mirroring Gridsome's
 //     singleProject.vue `:section` / array index). A type that is always a
 //     singleton in real content may ignore `section`/`index` and self-locate
-//     via a `find<Type>Block()` helper in content.ts (how today's five mapped
+//     via a `find<Type>Block()` helper in content.ts (how today's six mapped
 //     types work). A multi-instance type (pbTriplet, pbImageText, pbFeatured)
 //     must read its data from the passed `section` instead of find-first,
 //     since find-first would only surface the first occurrence.
