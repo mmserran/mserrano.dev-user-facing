@@ -71,14 +71,14 @@ describe("PageBuilder", () => {
   it("skips block types without a ported component", () => {
     const project = projectWithPageBuilder([
       { type: "pbHeader" },
-      { type: "pbCarouselCenterEmphasis" },
+      { type: "pbNotYetPorted" },
       { type: "pbCarouselTechnology" },
     ]);
     render(<PageBuilder project={project} />);
 
     expect(screen.getByTestId("pbHeader")).toBeInTheDocument();
     expect(screen.getByTestId("pbCarouselTechnology")).toBeInTheDocument();
-    expect(screen.queryByTestId("pbCarouselCenterEmphasis")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pbNotYetPorted")).not.toBeInTheDocument();
   });
 
   it("dispatches a pbFeatured block to Featured", () => {
