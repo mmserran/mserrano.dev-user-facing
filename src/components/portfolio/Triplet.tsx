@@ -25,7 +25,7 @@ export default function Triplet({ section, project }: { section: PageBuilderSect
 
   return (
     <section aria-label={view.title || "Technology"} className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-      {view.title && <SectionDivider>{view.title}</SectionDivider>}
+      <SectionDivider title={view.title} />
 
       {view.content && (
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-white/70">{view.content}</p>

@@ -18,9 +18,7 @@ export default function RelatedProjects({ project }: { project: Project }) {
       aria-labelledby="related-projects-heading"
       className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
-      <SectionDivider>
-        <span id="related-projects-heading">{related.title}</span>
-      </SectionDivider>
+      <SectionDivider id="related-projects-heading" title={related.title} />
 
       <div className="mt-8">
         <Carousel ariaLabel={`${related.title} projects`}>

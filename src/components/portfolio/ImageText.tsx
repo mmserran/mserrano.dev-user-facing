@@ -32,7 +32,7 @@ export default function ImageText({ section }: { section: PageBuilderSection }) 
       aria-label={view.title || undefined}
       className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
-      {view.title && <SectionDivider>{view.title}</SectionDivider>}
+      <SectionDivider title={view.title} />
 
       <div className="mt-10 flex flex-col gap-10 lg:gap-[60px]">
         {view.items.map((item) => (
