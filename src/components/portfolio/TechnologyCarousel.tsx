@@ -17,11 +17,9 @@ export default function TechnologyCarousel({ project }: { project: Project }) {
   return (
     <section
       aria-labelledby="technology-carousel-heading"
-      className="mx-auto w-full max-w-[768px] px-5 pb-16 sm:pb-24 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
+      className="mx-auto w-full max-w-[768px] px-5 md:max-w-[1024px] md:px-[60px] xl:max-w-[1440px] xl:px-[100px]"
     >
-      <SectionDivider>
-        <span id="technology-carousel-heading">{title}</span>
-      </SectionDivider>
+      <SectionDivider id="technology-carousel-heading" title={title} />
 
       <div className="mt-8">
         <Carousel ariaLabel={`${title} technologies`} edgeFade>

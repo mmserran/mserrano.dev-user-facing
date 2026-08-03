@@ -45,6 +45,19 @@ describe("Parallax", () => {
     expect(container.querySelector("blockquote")).not.toBeInTheDocument();
   });
 
+  it("renders a bare, unlabeled divider rule for the backend's '---' title, instead of skipping it", () => {
+    const { container } = render(<Parallax section={section} />);
+
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    expect(container.querySelector('[aria-hidden="true"].flex.items-center')).toBeInTheDocument();
+  });
+
+  it("renders a labeled divider heading for a real (non-'---') title", () => {
+    render(<Parallax section={{ ...section, title: "Redesign" }} />);
+
+    expect(screen.getByRole("heading", { level: 3, name: "Redesign" })).toBeInTheDocument();
+  });
+
   it("continues drifting toward its scroll position across animation frames", () => {
     const { container } = render(<Parallax section={section} />);
     const stage = container.querySelector("section > div") as HTMLDivElement;

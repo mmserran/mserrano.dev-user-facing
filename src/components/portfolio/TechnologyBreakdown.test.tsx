@@ -8,7 +8,12 @@ describe("TechnologyBreakdown", () => {
     const project = getProjectBySlug("mserrano-dev") as Project;
     render(<TechnologyBreakdown project={project} />);
 
-    expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 2, name: "Technology breakdown" });
+    expect(heading).toBeInTheDocument();
+    // The block's own title is "---" (a bare-rule divider, not a label) -
+    // SectionDivider renders it as a decorative, unlabeled rule rather than
+    // duplicating the sr-only heading's text.
+    expect(heading.nextElementSibling).toHaveAttribute("aria-hidden", "true");
     const graph = screen.getByRole("img", { name: `Technology usage breakdown for ${project.general.title}` });
     expect(graph).toBeInTheDocument();
     expect(graph.querySelector("title")).not.toBeInTheDocument();

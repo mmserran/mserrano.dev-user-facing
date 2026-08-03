@@ -274,6 +274,7 @@ export interface TechnologyLegendSection {
 }
 
 export interface TechnologyBreakdown {
+  title: string;
   graph: TechnologyGraphSlice[];
   legend: TechnologyLegendSection[];
 }
@@ -480,7 +481,7 @@ export function getTechnologyBreakdown(project: Project): TechnologyBreakdown | 
     return { title, entries };
   });
 
-  return { graph, legend };
+  return { title: block.title, graph, legend };
 }
 
 function findRelatedPostsBlock(pagebuilder: string): RelatedPostsBlock | undefined {

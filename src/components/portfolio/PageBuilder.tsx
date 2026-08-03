@@ -32,8 +32,10 @@ type PageBuilderComponent = (props: {
 //     must read its data from the passed `section` instead of find-first,
 //     since find-first would only surface the first occurrence.
 //   - Renders null when its block is absent or resolves to empty content.
-//   - Owns its own title chrome (SectionDivider, or deliberately suppressed
-//     per pbDivider.vue's rules) - the dispatcher inserts no dividers itself.
+//   - Owns its own title chrome via SectionDivider (pass raw `title`; that
+//     component owns the three-way branch and vertical rhythm), or omits it
+//     when the block has no divider (e.g. pbHeader). Keep the section wrapper
+//     margin-/padding-free vertically - the dispatcher inserts no dividers.
 //   - Test it standalone against real content.json fixtures; PageBuilder's
 //     own tests only need touching to assert a type's position in the array.
 //
