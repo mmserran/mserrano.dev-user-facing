@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   filterProjects,
   formatRoundedDate,
+  getCenterEmphasisCarousel,
   getFeaturedSectionView,
   getHeaderLinks,
   getImageTextSectionView,
@@ -333,6 +334,63 @@ describe("content lib", () => {
       const project = getProjectBySlug("mserrano-dev") as Project;
 
       expect(getMobileMosaic(project)).toEqual({ title: "Mobile", screenshots: [] });
+    });
+  });
+
+  describe("getCenterEmphasisCarousel", () => {
+    it("returns the block's title and each slide's screenshot, falling back to slide_mobile when unset", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const carousel = getCenterEmphasisCarousel(project);
+
+      expect(carousel.title).toBe("A Complete Website");
+      expect(carousel.slides.map((slide) => slide.title)).toEqual([
+        "Home Page",
+        "Services Page",
+        "Pricing Page",
+        "Contact Page",
+      ]);
+      expect(carousel.slides.every((slide) => slide.filename !== "")).toBe(true);
+    });
+
+    it("carries the block's rich-text content through unchanged", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const carousel = getCenterEmphasisCarousel(project);
+
+      expect(carousel.content).toContain("<a href=");
+    });
+
+    it("skips a slide with neither a desktop nor mobile screenshot instead of returning a blank filename", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withEmptySlide: Project = {
+        ...project,
+        pagebuilder: JSON.stringify([
+          {
+            type: "pbCarouselCenterEmphasis",
+            title: "A Complete Website",
+            content: "",
+            list_slide: [
+              { type: "slideDesktop", title: "Empty", slide_desktop: "", offset: "" },
+              { type: "slideDesktop", title: "Home Page", slide_desktop: "screencapture-cygnusmgmt-desktop.jpg", offset: "" },
+            ],
+          },
+        ]),
+      };
+
+      expect(getCenterEmphasisCarousel(withEmptySlide).slides.map((slide) => slide.title)).toEqual(["Home Page"]);
+    });
+
+    it("returns an empty result when the project has no center-emphasis-carousel block", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const withoutBlock: Project = { ...project, pagebuilder: "[]" };
+
+      expect(getCenterEmphasisCarousel(withoutBlock)).toEqual({ title: "", content: "", slides: [] });
+    });
+
+    it("returns an empty result when pagebuilder fails to parse", () => {
+      const project = getProjectBySlug("cygnus-management-llc") as Project;
+      const malformed: Project = { ...project, pagebuilder: "not json" };
+
+      expect(getCenterEmphasisCarousel(malformed)).toEqual({ title: "", content: "", slides: [] });
     });
   });
 

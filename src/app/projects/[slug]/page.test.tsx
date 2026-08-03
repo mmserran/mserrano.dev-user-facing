@@ -47,6 +47,23 @@ vi.mock("@/components/portfolio/MobileMosaic", () => ({
   },
 }));
 
+// CenterEmphasisCarousel renders every slide's real 3D coverflow styling
+// (mask-image gradients, calc()-based custom properties, a duplicated
+// click-catcher layer) for the same reason as the three above - its own
+// rendering/composition logic is covered by CenterEmphasisCarousel.test.tsx,
+// and jsdom's CSS matching is slow enough on that much arbitrary-value
+// Tailwind that rendering it unmocked here made this suite's own tests
+// flaky under load (a stderr "[csstree-match] BREAK after 15000
+// iterations" warning, then an outright timeout) even though it's never
+// slow in a real browser.
+const centerEmphasisCarouselSpy = vi.fn();
+vi.mock("@/components/portfolio/CenterEmphasisCarousel", () => ({
+  default: (props: { project: { slug: string } }) => {
+    centerEmphasisCarouselSpy(props);
+    return <div data-testid="center-emphasis-carousel" />;
+  },
+}));
+
 describe("ProjectPage", () => {
   it("generates static params for all project slugs", async () => {
     const params = await generateStaticParams();
@@ -69,35 +86,49 @@ describe("ProjectPage", () => {
     expect(meta.title).toBe("Project Not Found | Mark Serrano");
   });
 
-  it("renders project details, Back to Portfolio link, and EndcapShell", async () => {
-    const pageComponent = await ProjectPage({
-      params: Promise.resolve({ slug: "cygnus-management-llc" }),
-    });
-    render(pageComponent);
+  // 10s, not vitest's 5s default: this still renders a genuinely large real
+  // Server Component tree (ProjectHeader, TechnologyBreakdown's SVG chart,
+  // two Triplet blocks, CenterEmphasisCarousel and friends mocked above
+  // notwithstanding) that's landed close enough to the default under a
+  // resource-contended full-suite run to be worth the headroom, even though
+  // it's never actually slow standalone or in a real browser.
+  it(
+    "renders project details, Back to Portfolio link, and EndcapShell",
+    async () => {
+      const pageComponent = await ProjectPage({
+        params: Promise.resolve({ slug: "cygnus-management-llc" }),
+      });
+      render(pageComponent);
 
-    expect(
-      screen.getByRole("heading", { level: 1, name: "Cygnus Management, LLC" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Developer, Designer/)).toBeInTheDocument();
-    expect(screen.getByText(/My uncle needed a website/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { level: 1, name: "Cygnus Management, LLC" }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Developer, Designer/)).toBeInTheDocument();
+      expect(screen.getByText(/My uncle needed a website/)).toBeInTheDocument();
+      expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
 
-    const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
-    expect(backLink).toHaveAttribute("href", "/projects");
-    expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
-    expect(screen.getByTestId("related-projects")).toBeInTheDocument();
-    expect(relatedProjectsSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
-    );
-    expect(screen.getByTestId("technology-carousel")).toBeInTheDocument();
-    expect(technologyCarouselSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
-    );
-    expect(screen.getByTestId("mobile-mosaic")).toBeInTheDocument();
-    expect(mobileMosaicSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
-    );
-  });
+      const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
+      expect(backLink).toHaveAttribute("href", "/projects");
+      expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
+      expect(screen.getByTestId("related-projects")).toBeInTheDocument();
+      expect(relatedProjectsSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+      expect(screen.getByTestId("technology-carousel")).toBeInTheDocument();
+      expect(technologyCarouselSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+      expect(screen.getByTestId("mobile-mosaic")).toBeInTheDocument();
+      expect(mobileMosaicSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+      expect(screen.getByTestId("center-emphasis-carousel")).toBeInTheDocument();
+      expect(centerEmphasisCarouselSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+    },
+    10000,
+  );
 
   it("calls notFound for invalid slug", async () => {
     await ProjectPage({

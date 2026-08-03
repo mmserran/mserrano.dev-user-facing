@@ -23,6 +23,9 @@ vi.mock("./TechnologyCarousel", () => ({
 vi.mock("./MobileMosaic", () => ({
   default: () => <div data-testid="pbMobileMozaic" />,
 }));
+vi.mock("./CenterEmphasisCarousel", () => ({
+  default: () => <div data-testid="pbCarouselCenterEmphasis" />,
+}));
 vi.mock("./RelatedProjects", () => ({
   default: () => <div data-testid="pbCarouselRelatedPosts" />,
 }));
@@ -56,6 +59,7 @@ describe("PageBuilder", () => {
       "pbGraphBreakdown",
       "pbTriplet",
       "pbCarouselTechnology",
+      "pbCarouselCenterEmphasis",
       "pbMobileMozaic",
       "pbCarouselRelatedPosts",
     ]);
