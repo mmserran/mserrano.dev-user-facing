@@ -483,7 +483,7 @@ function CarouselSlide({
       aria-hidden={!isVisible}
       aria-current={isActive}
       aria-label={`Show slide ${index + 1} of ${total}: ${slide.title}`}
-      className={`${className} text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue`}
+      className={`${className} text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-blue`}
     >
       {content}
     </button>
