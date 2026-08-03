@@ -8,6 +8,7 @@ import CenterEmphasisCarousel from "./CenterEmphasisCarousel";
 import Featured from "./Featured";
 import ImageText from "./ImageText";
 import MobileMosaic from "./MobileMosaic";
+import Parallax from "./Parallax";
 import ProjectHeader from "./ProjectHeader";
 import RelatedProjects from "./RelatedProjects";
 import TechnologyBreakdown from "./TechnologyBreakdown";
@@ -26,7 +27,8 @@ type PageBuilderComponent = (props: {
 //     singleProject.vue `:section` / array index). A type that is always a
 //     singleton in real content may ignore `section`/`index` and self-locate
 //     via a `find<Type>Block()` helper in content.ts (how today's six mapped
-//     types work). A multi-instance type (pbTriplet, pbImageText, pbFeatured)
+//     types work). A multi-instance type (pbTriplet, pbImageText, pbFeatured,
+//     pbCarouselCenterEmphasis, pbParallax)
 //     must read its data from the passed `section` instead of find-first,
 //     since find-first would only surface the first occurrence.
 //   - Renders null when its block is absent or resolves to empty content.
@@ -35,9 +37,6 @@ type PageBuilderComponent = (props: {
 //   - Test it standalone against real content.json fixtures; PageBuilder's
 //     own tests only need touching to assert a type's position in the array.
 //
-// Block types without a ported component yet (pbParallax) are simply absent
-// here and get skipped below; each is a future one-component-at-a-time
-// addition per AGENTS.md.
 const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
   pbHeader: ProjectHeader as PageBuilderComponent,
   pbGraphBreakdown: TechnologyBreakdown as PageBuilderComponent,
@@ -48,6 +47,7 @@ const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
   pbImageText: ImageText as PageBuilderComponent,
   pbFeatured: Featured as PageBuilderComponent,
   pbCarouselCenterEmphasis: CenterEmphasisCarousel as PageBuilderComponent,
+  pbParallax: Parallax as PageBuilderComponent,
 };
 
 // Ports singleProject.vue's `<component :is="section.type">`: walks the

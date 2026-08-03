@@ -32,6 +32,9 @@ vi.mock("./RelatedProjects", () => ({
 vi.mock("./Featured", () => ({
   default: () => <div data-testid="pbFeatured" />,
 }));
+vi.mock("./Parallax", () => ({
+  default: () => <div data-testid="pbParallax" />,
+}));
 const tripletSpy = vi.fn();
 vi.mock("./Triplet", () => ({
   default: (props: { project: Project; section: PageBuilderSection; index: number }) => {
@@ -68,14 +71,14 @@ describe("PageBuilder", () => {
   it("skips block types without a ported component", () => {
     const project = projectWithPageBuilder([
       { type: "pbHeader" },
-      { type: "pbParallax" },
+      { type: "pbNotYetPorted" },
       { type: "pbCarouselTechnology" },
     ]);
     render(<PageBuilder project={project} />);
 
     expect(screen.getByTestId("pbHeader")).toBeInTheDocument();
     expect(screen.getByTestId("pbCarouselTechnology")).toBeInTheDocument();
-    expect(screen.queryByTestId("pbParallax")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pbNotYetPorted")).not.toBeInTheDocument();
   });
 
   it("dispatches a pbFeatured block to Featured", () => {
@@ -83,6 +86,16 @@ describe("PageBuilder", () => {
     render(<PageBuilder project={project} />);
 
     expect(screen.getByTestId("pbFeatured")).toBeInTheDocument();
+  });
+
+  it("dispatches a pbParallax block to Parallax", () => {
+    const project = projectWithPageBuilder([
+      { type: "pbHeader" },
+      { type: "pbParallax" },
+    ]);
+    render(<PageBuilder project={project} />);
+
+    expect(screen.getByTestId("pbParallax")).toBeInTheDocument();
   });
 
   it("dispatches a repeated pbTriplet block once per occurrence with its own section and index", () => {
