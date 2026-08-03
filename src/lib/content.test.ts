@@ -3,6 +3,7 @@ import {
   filterProjects,
   formatRoundedDate,
   getHeaderLinks,
+  getImageTextSectionView,
   getMediaUrl,
   getMediaVariants,
   getMobileMosaic,
@@ -22,6 +23,10 @@ import {
 
 function getTripletBlocks(project: Project): PageBuilderSection[] {
   return getPageBuilderSections(project).filter((section) => section.type === "pbTriplet");
+}
+
+function getImageTextBlocks(project: Project): PageBuilderSection[] {
+  return getPageBuilderSections(project).filter((section) => section.type === "pbImageText");
 }
 
 describe("content lib", () => {
@@ -482,6 +487,89 @@ describe("content lib", () => {
 
       expect(getTripletSectionView({ type: "pbTriplet" }, project).items).toEqual([]);
       expect(getTripletSectionView({ type: "pbTriplet", list_triplet: "not an array" }, project).items).toEqual([]);
+    });
+  });
+
+  describe("getImageTextSectionView", () => {
+    it("resolves each item's title, media, and useLeftside from a project's first pbImageText block", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const [initialWebsiteBlock] = getImageTextBlocks(project);
+
+      const view = getImageTextSectionView(initialWebsiteBlock);
+
+      expect(view.title).toBe("Initial Website");
+      expect(view.items.map((item) => item.title)).toEqual([
+        "A good website",
+        "I took project ownership",
+        "When I first came onboard",
+      ]);
+
+      const [screenshot, video1, video2] = view.items;
+      expect(screenshot.useLeftside).toBe(false);
+      expect(screenshot.media).toEqual({
+        filename: "screencapture-hospitalitypulse-desktop-before-redesign.jpg",
+        format: "image",
+        isScreenshot: true,
+        usePlayer: false,
+      });
+
+      expect(video1.useLeftside).toBe(true);
+      expect(video1.media).toEqual({
+        filename: "animation-hospitalitypulse-oldFadeInEffect.mp4",
+        format: "video",
+        isScreenshot: false,
+        usePlayer: true,
+      });
+
+      expect(video2.useLeftside).toBe(false);
+      expect(video2.media.format).toBe("video");
+    });
+
+    it("parses each item's plain-text content into a single text segment", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const [initialWebsiteBlock] = getImageTextBlocks(project);
+
+      const view = getImageTextSectionView(initialWebsiteBlock);
+
+      expect(view.items[0].content).toEqual([
+        { type: "text", text: "The initial website was a simple single-page application up until early 2015." },
+      ]);
+    });
+
+    it("returns an empty content array for an item with no caption", () => {
+      const project = getProjectBySlug("hospitalitypulse-inc") as Project;
+      const [, highlightsBlock] = getImageTextBlocks(project);
+
+      const view = getImageTextSectionView(highlightsBlock);
+
+      expect(view.title).toBe("Highlights");
+      expect(view.items.every((item) => item.content.length === 0)).toBe(true);
+    });
+
+    it("splits an item's content around an embedded <a href> into text/link segments", () => {
+      const project = getProjectBySlug("pulsebooker-consumer-version") as Project;
+      const [pressReleasesBlock] = getImageTextBlocks(project);
+
+      const view = getImageTextSectionView(pressReleasesBlock);
+      const [hotelOnline] = view.items;
+
+      expect(hotelOnline.content).toEqual([
+        { type: "text", text: "Featured on " },
+        {
+          type: "link",
+          text: "hotel-online.com",
+          href: "https://www.hotel-online.com/press_releases/release/hospitalitypulse-unveils-powerful-technology-for-selling-room-features/",
+        },
+        { type: "text", text: "." },
+      ]);
+    });
+
+    it("returns no items for a malformed or empty section", () => {
+      expect(getImageTextSectionView({ type: "pbImageText" }).items).toEqual([]);
+      expect(getImageTextSectionView({ type: "pbImageText", list_image_text: "not an array" }).items).toEqual([]);
+      expect(getImageTextSectionView({ type: "pbImageText", list_image_text: [{ front_image: "x.jpg" }] }).items).toEqual(
+        [],
+      );
     });
   });
 });

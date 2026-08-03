@@ -793,10 +793,9 @@ function isTripletItem(value: unknown): value is TripletItem {
 }
 
 // Ports pbTriplet.vue + pbTripletItemTechnology.vue + pbTripletItemGraph.vue.
-// Unlike the other page-builder blocks above, pbTriplet can appear more than
-// once per project (e.g. "Technology" then "Usage vs Similar"), so this reads
-// its data from the PageBuilder-dispatched section rather than finding the
-// first matching block itself.
+// Can appear more than once per project (e.g. "Technology" then "Usage vs
+// Similar"); per PageBuilder's multi-instance contract this reads the
+// dispatched section rather than find-first.
 export function getTripletSectionView(section: PageBuilderSection, project: Project): TripletSectionView {
   const title = typeof section.title === "string" ? section.title : "";
   const rawContentValue = typeof section.content === "string" ? section.content : "";
@@ -869,6 +868,124 @@ export function getMobileMosaic(project: Project): MobileMosaic {
   }
 
   return { title: block.title, screenshots: project.screenshot.mobile };
+}
+
+export type ImageTextMediaFormat = "image" | "video" | "";
+
+export interface ImageTextMedia {
+  filename: string;
+  format: ImageTextMediaFormat;
+  isScreenshot: boolean;
+  usePlayer: boolean;
+}
+
+export interface ImageTextTextSegment {
+  type: "text";
+  text: string;
+}
+
+export interface ImageTextLinkSegment {
+  type: "link";
+  text: string;
+  href: string;
+}
+
+export type ImageTextContentSegment = ImageTextTextSegment | ImageTextLinkSegment;
+
+export interface ImageTextItemView {
+  key: string;
+  title: string;
+  content: ImageTextContentSegment[];
+  useLeftside: boolean;
+  media: ImageTextMedia;
+}
+
+export interface ImageTextSectionView {
+  title: string;
+  items: ImageTextItemView[];
+}
+
+interface ImageTextRawItem {
+  title: string;
+  front_image: string;
+  content?: unknown;
+  use_leftside?: unknown;
+  front_is_screenshot?: unknown;
+  front_use_player?: unknown;
+}
+
+function isImageTextRawItem(value: unknown): value is ImageTextRawItem {
+  return isRecord(value) && typeof value.title === "string" && typeof value.front_image === "string";
+}
+
+// baseText.vue's v-html passthrough lets a pbImageText item's content embed
+// raw markup, but every occurrence across content.json's actual data (the
+// two press-release captions) is a single plain `<a href>...</a>` - so this
+// parses just that one shortcode-like case into text/link segments instead of
+// porting baseText's general shortcode engine.
+const IMAGE_TEXT_LINK_PATTERN = /<a\s+[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+
+function parseImageTextContent(raw: string): ImageTextContentSegment[] {
+  const segments: ImageTextContentSegment[] = [];
+  let lastIndex = 0;
+
+  for (const match of raw.matchAll(IMAGE_TEXT_LINK_PATTERN)) {
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      segments.push({ type: "text", text: raw.slice(lastIndex, index) });
+    }
+    segments.push({ type: "link", text: match[2], href: match[1] });
+    lastIndex = index + match[0].length;
+  }
+  if (lastIndex < raw.length) {
+    segments.push({ type: "text", text: raw.slice(lastIndex) });
+  }
+
+  return segments;
+}
+
+// Ports snippetMedia.vue's detect_type: a front_image ending in "mp4" is a
+// video, everything else (including an empty filename) falls back to image
+// handling - "" specifically means "no media to render".
+function getImageTextMediaFormat(filename: string): ImageTextMediaFormat {
+  if (!filename) {
+    return "";
+  }
+  return filename.toLowerCase().includes(".mp4") ? "video" : "image";
+}
+
+// Ports pbImageText.vue: a titled list of alternating image/text rows (an
+// image-with-device-frame or a video, paired with a title/caption). Can
+// appear more than once per project ("Initial Website", then "Highlights"
+// on hospitalitypulse-inc); per PageBuilder's multi-instance contract this
+// reads the dispatched section instead of find-first.
+export function getImageTextSectionView(section: PageBuilderSection): ImageTextSectionView {
+  const title = typeof section.title === "string" ? section.title : "";
+  const rawItems = Array.isArray(section.list_image_text) ? section.list_image_text : [];
+
+  const items: ImageTextItemView[] = rawItems.flatMap((raw, index): ImageTextItemView[] => {
+    if (!isImageTextRawItem(raw)) {
+      return [];
+    }
+
+    const filename = raw.front_image;
+    return [
+      {
+        key: `image-text-${index}`,
+        title: raw.title,
+        content: parseImageTextContent(typeof raw.content === "string" ? raw.content : ""),
+        useLeftside: raw.use_leftside === true,
+        media: {
+          filename,
+          format: getImageTextMediaFormat(filename),
+          isScreenshot: raw.front_is_screenshot === true,
+          usePlayer: raw.front_use_player === true,
+        },
+      },
+    ];
+  });
+
+  return { title, items };
 }
 
 export function getMediaUrl(filename: string): string {

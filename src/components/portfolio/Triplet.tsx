@@ -12,11 +12,10 @@ import TechLogo from "./TechLogo";
 // Mirrors the Gridsome frontend's pbTriplet.vue: a titled row of exactly
 // three items, each either a technology logo (pbTripletItemTechnology.vue)
 // or a proficiency breakdown (replacing pbTripletItemGraph.vue's Chart.js
-// usage-vs-similar-market bars - see getTripletSectionView for why). Unlike
-// the other page-builder components, pbTriplet can appear more than once per
-// project ("Technology", then "Usage vs Similar"), so per PageBuilder's
-// contract this reads its data from the dispatched section instead of
-// finding the first matching block itself.
+// usage-vs-similar-market bars - see getTripletSectionView for why). Can
+// appear more than once per project ("Technology", then "Usage vs Similar");
+// per PageBuilder's multi-instance contract this reads the dispatched
+// section instead of find-first.
 export default function Triplet({ section, project }: { section: PageBuilderSection; project: Project }) {
   const view = getTripletSectionView(section, project);
 

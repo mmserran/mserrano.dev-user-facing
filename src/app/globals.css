@@ -574,3 +574,25 @@
   mask-size: 200%;
   -webkit-mask-size: 200%;
 }
+
+/* Plyr control skin brand accents, carried over from baseVideo.vue
+   ($blue / #006bb6). Applied globally so the dynamic plyr.css import in
+   ImageTextVideo picks up the same blue range, overlaid play, hover/focus,
+   and checked-menu treatment as the live site. */
+.plyr--full-ui input[type="range"] {
+  color: var(--color-brand-blue) !important;
+}
+.plyr__control--overlaid {
+  background: color-mix(in srgb, var(--color-brand-blue) 80%, transparent) !important;
+}
+.plyr--video .plyr__control.plyr__tab-focus,
+.plyr--video .plyr__control:hover,
+.plyr--video .plyr__control[aria-expanded="true"] {
+  background: var(--color-brand-blue) !important;
+}
+.plyr__control.plyr__tab-focus {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-brand-blue) 50%, transparent) !important;
+}
+.plyr__menu__container .plyr__control[role="menuitemradio"][aria-checked="true"]::before {
+  background: var(--color-brand-blue) !important;
+}

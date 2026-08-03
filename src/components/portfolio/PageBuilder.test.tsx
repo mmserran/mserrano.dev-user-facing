@@ -61,14 +61,14 @@ describe("PageBuilder", () => {
   it("skips block types without a ported component", () => {
     const project = projectWithPageBuilder([
       { type: "pbHeader" },
-      { type: "pbImageText" },
+      { type: "pbFeatured" },
       { type: "pbCarouselTechnology" },
     ]);
     render(<PageBuilder project={project} />);
 
     expect(screen.getByTestId("pbHeader")).toBeInTheDocument();
     expect(screen.getByTestId("pbCarouselTechnology")).toBeInTheDocument();
-    expect(screen.queryByTestId("pbImageText")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pbFeatured")).not.toBeInTheDocument();
   });
 
   it("dispatches a repeated pbTriplet block once per occurrence with its own section and index", () => {
