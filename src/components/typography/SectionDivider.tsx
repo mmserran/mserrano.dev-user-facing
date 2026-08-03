@@ -4,14 +4,12 @@
 //   - a real string -> centered, uppercase heading flanked by horizontal
 //     rules (labeled).
 //   - the literal "---" -> the same rule, unbroken and unlabeled, as a bare
-//     section separator.
+//     section separator (TechnologyBreakdown's title is always this).
 //   - empty string -> no divider at all.
-// Centralized here so callers pass the raw `title` straight through instead
-// of each re-implementing the branch - every one of this component's five
-// callers handled the empty case (via `title && <SectionDivider>`) but none
-// handled "---", since no built block's data has hit it yet. Only the
-// centered variant is ported here; pbDivider also supports left/right-aligned
-// variants via `divider_position`, unused by any block built so far.
+// Callers pass the raw `title` straight through; this component owns the
+// branch. Only the centered variant is ported here; pbDivider also supports
+// left/right-aligned variants via `divider_position`, unused by any block
+// built so far.
 //
 // `id` lands on the heading itself so a caller can point a wrapping
 // <section>'s aria-labelledby straight at it. Unused for the unlabeled
@@ -21,7 +19,7 @@
 // carries the same `pbBlock` margin class as every content block it precedes,
 // and adjacent sibling margins collapse - so in practice the divider (not the
 // block) is what visually spaces one section from the next. Every page-builder
-// section's own wrapper is margin-free; my-8/my-12 here is what puts space
+// section's own wrapper is margin-free; my-8/sm:my-12 here is what puts space
 // both above a divider (against the previous block) and below it (against its
 // own block's content), keeping that spacing symmetric and centralized
 // instead of each block guessing its own top/bottom values.

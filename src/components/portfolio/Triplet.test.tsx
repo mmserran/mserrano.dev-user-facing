@@ -82,6 +82,34 @@ describe("Triplet", () => {
     expect(screen.queryByRole("link", { name: "Cloudinary" })).not.toBeInTheDocument();
   });
 
+  it("uses the shared page-builder width/padding scale and leaves vertical rhythm to SectionDivider", () => {
+    const view: TripletSectionView = {
+      title: "Notable Technologies",
+      content: "",
+      items: [
+        { type: "itemTechnology", key: "tech-0", technology: makeFilter({ slug: "django", title: "Django" }) },
+      ],
+    };
+    getTripletSectionView.mockReturnValue(view);
+
+    render(<Triplet section={section} project={project} />);
+
+    const wrapper = screen.getByRole("region", { name: "Notable Technologies" });
+    expect(wrapper).toHaveClass(
+      "max-w-[768px]",
+      "px-5",
+      "md:max-w-[1024px]",
+      "md:px-[60px]",
+      "xl:max-w-[1440px]",
+      "xl:px-[100px]",
+    );
+    expect(wrapper.className).not.toMatch(/\b(my|mt|mb|py|pt|pb)-/);
+    expect(screen.getByRole("heading", { level: 3, name: "Notable Technologies" })).toHaveClass(
+      "my-8",
+      "sm:my-12",
+    );
+  });
+
   it("renders resolved section content beneath the title", () => {
     const view: TripletSectionView = {
       title: "Usage vs Similar",
