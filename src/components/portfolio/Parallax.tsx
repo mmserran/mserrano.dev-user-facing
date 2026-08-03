@@ -89,6 +89,7 @@ export default function Parallax({
       window.removeEventListener("resize", updateScrollTarget);
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
       }
     };
   }, [scheduleDrift, view?.image]);
