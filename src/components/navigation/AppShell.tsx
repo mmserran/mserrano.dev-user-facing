@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import type { IconType } from "react-icons";
-import { MdDashboard, MdDescription, MdEmail, MdLink, MdMenu } from "react-icons/md";
+import { mdiEmailEdit } from "@mdi/js";
+import type { IconBaseProps, IconType } from "react-icons";
+import { MdAssignment, MdDashboard, MdLink, MdMenu } from "react-icons/md";
 import { HEADER_LINK_ICONS, type HeaderLink, type Project } from "@/lib/content";
 import StarField from "@/components/illustration/StarField";
 
@@ -24,9 +25,24 @@ function getIsDesktopServerSnapshot() {
   return false;
 }
 
+function EmailEditIcon(props: IconBaseProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="1em"
+      height="1em"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d={mdiEmailEdit} />
+    </svg>
+  );
+}
+
 const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
-  { href: "/contact/", label: "Contact", Icon: MdEmail },
-  { href: "/resume/", label: "Resume", Icon: MdDescription },
+  { href: "/contact/", label: "Contact", Icon: EmailEditIcon },
+  { href: "/resume/", label: "Resume", Icon: MdAssignment },
   { href: "/projects/", label: "Portfolio", Icon: MdDashboard },
 ];
 
@@ -142,23 +158,30 @@ export default function AppShell({
         </Link>
         <ul className="py-2">
           {SITE_LINKS.map(({ href, label, Icon }) => {
-            const isActive =
+            const isActiveSection =
               href === "/projects/"
                 ? activePath === "/projects" || activePath.startsWith("/projects/")
                 : activePath === href.replace(/\/+$/, "");
+            const isCurrentPage =
+              activePath === href.replace(/\/+$/, "");
             return (
               <li key={href}>
                 <Link
                   href={href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`relative mx-2 flex h-14 items-center justify-end gap-3 px-2 text-right leading-[1.2] transition-colors ${
-                    isActive
-                      ? "text-brand-blue font-semibold pr-8 after:absolute after:right-2.5 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
-                      : "text-black/80 hover:bg-black/5"
+                  aria-current={isCurrentPage ? "page" : undefined}
+                  className={`relative mx-2 flex h-14 items-center justify-end gap-3 pl-2 text-right leading-[1.2] transition-colors ${
+                    isActiveSection
+                      ? "pr-8 text-brand-blue font-semibold after:absolute after:right-4 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
+                      : "pr-4 text-black/80 hover:bg-black/5"
                   }`}
                 >
                   <span>{label}</span>
-                  <Icon aria-hidden="true" className="text-black/70" />
+                  <Icon
+                    aria-hidden="true"
+                    className={`shrink-0 text-[22px] text-black/55 ${
+                      isActiveSection ? "" : label === "Resume" ? "translate-x-[3px]" : "translate-x-0.5"
+                    }`}
+                  />
                 </Link>
                 {href === "/projects/" && isProjectDetailRoute && projects.length > 0 && (
                   <ul className="py-1 text-right" aria-label="Projects">
@@ -171,7 +194,7 @@ export default function AppShell({
                             aria-current={isProjectActive ? "page" : undefined}
                             className={`relative block py-1.5 pr-6 pl-2 text-xs leading-tight transition-colors ${
                               isProjectActive
-                                ? "text-brand-blue font-semibold pr-8 after:absolute after:right-0 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
+                                ? "text-brand-blue font-semibold pr-10 after:absolute after:right-6 after:top-1/2 after:h-5 after:w-1 after:-translate-y-1/2 after:bg-brand-yellow"
                                 : "text-black/80 hover:bg-black/5 hover:text-black"
                             }`}
                           >

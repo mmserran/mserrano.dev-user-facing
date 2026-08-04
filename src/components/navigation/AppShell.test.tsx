@@ -154,6 +154,13 @@ describe("AppShell", () => {
 
     const resumeSidebarLink = within(navDrawer).getByRole("link", { name: "Resume" });
     expect(resumeSidebarLink).not.toHaveAttribute("aria-current");
+
+    const contactIcon = within(navDrawer).getByRole("link", { name: "Contact" }).querySelector("svg");
+    expect(contactIcon?.className.baseVal).toContain("text-[22px]");
+    expect(contactIcon?.className.baseVal).toContain("text-black/55");
+
+    const resumeIcon = resumeSidebarLink.querySelector("svg");
+    expect(resumeIcon?.className.baseVal).toContain("translate-x-[3px]");
   });
 
   it("renders active project links in navigation drawer when on a project page", () => {
@@ -169,10 +176,13 @@ describe("AppShell", () => {
 
     const navDrawer = container.querySelector("#site-drawer") as HTMLElement;
     const portfolioLink = within(navDrawer).getByRole("link", { name: "Portfolio" });
-    expect(portfolioLink).toHaveAttribute("aria-current", "page");
+    expect(portfolioLink).not.toHaveAttribute("aria-current");
+    expect(portfolioLink.className).toContain("after:right-4");
+    expect(portfolioLink.className).toContain("pr-8");
 
     const projectLink = within(navDrawer).getByRole("link", { name: "Cygnus Management, LLC" });
     expect(projectLink).toHaveAttribute("href", "/projects/cygnus-management-llc");
     expect(projectLink).toHaveAttribute("aria-current", "page");
+    expect(projectLink.className).toContain("after:right-6");
   });
 });
