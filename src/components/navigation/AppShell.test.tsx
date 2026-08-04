@@ -61,6 +61,26 @@ describe("AppShell", () => {
     expect(linkedinLink).toHaveAttribute("target", "_blank");
   }, 15_000);
 
+  it("shows the full identity and keeps the drawer scrollable in short viewports", () => {
+    const { container } = render(
+      <AppShell headerLinks={mockHeaderLinks}>
+        <div>Content</div>
+      </AppShell>
+    );
+
+    const identity = screen.getByText("Mark Anthony Serrano");
+    const navDrawer = container.querySelector("#site-drawer");
+
+    expect(identity).toHaveClass("whitespace-nowrap", "text-[19px]");
+    expect(identity).not.toHaveClass("truncate");
+    expect(navDrawer).toHaveClass(
+      "h-[calc(100dvh-6.25rem)]",
+      "overflow-y-auto",
+      "overscroll-y-contain",
+      "pb-[max(1rem,env(safe-area-inset-bottom))]",
+    );
+  });
+
   it("toggles the navigation drawer on menu button click", () => {
     const { container } = render(
       <AppShell headerLinks={mockHeaderLinks}>

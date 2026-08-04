@@ -130,12 +130,14 @@ export default function AppShell({
         aria-label="Primary"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`shadow-nav-drawer bg-nav-sidebar fixed top-16 bottom-0 left-0 z-40 w-64 -translate-x-full overflow-y-auto transition-transform duration-200 motion-reduce:transition-none min-[1264px]:shadow-none ${
+        className={`shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 motion-reduce:transition-none min-[1264px]:shadow-none ${
           isOpen ? "translate-x-0" : ""
         }`}
       >
         <Link href="/" className="flex h-[97px] flex-col justify-center border-b border-black/10 px-4">
-          <span className="block truncate text-xl leading-6 font-medium text-black">Mark Anthony Serrano</span>
+          <span className="block whitespace-nowrap text-[19px] leading-6 font-medium text-black">
+            Mark Anthony Serrano
+          </span>
           <span className="block text-sm leading-[1.2] text-black/60">Software Engineer</span>
         </Link>
         <ul className="py-2">
