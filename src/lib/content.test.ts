@@ -443,7 +443,12 @@ describe("content lib", () => {
       const project = getProjectBySlug("cygnus-management-llc") as Project;
       const [, usageBlock] = getTripletBlocks(project);
 
-      const view = getTripletSectionView(usageBlock, project);
+      // Live CMS content may leave this field empty; exercise the shortcode
+      // path with an explicit payload so export drift does not hide resolver bugs.
+      const view = getTripletSectionView(
+        { ...usageBlock, content: '[canned msg="vs-similar"]' },
+        project,
+      );
 
       expect(view.title).toBe("Notable Technologies");
       expect(view.content).toBe("Striped bars represent similar technology used by my other projects.");
