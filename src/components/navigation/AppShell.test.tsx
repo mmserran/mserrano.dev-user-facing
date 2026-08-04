@@ -81,6 +81,38 @@ describe("AppShell", () => {
     );
   });
 
+  it("opens instantly with no transition on initial desktop-width mount, then animates on later toggles", async () => {
+    const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(min-width: 1264px)",
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.stubGlobal("matchMedia", matchMediaMock);
+
+    const { container } = render(
+      <AppShell headerLinks={mockHeaderLinks}>
+        <div>Content</div>
+      </AppShell>
+    );
+
+    const navDrawer = container.querySelector("#site-drawer");
+    const toggleButton = screen.getByRole("button", { name: /navigation/i });
+
+    // Desktop-width mount: drawer is open immediately, without the transition class.
+    expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+    expect(navDrawer).not.toHaveClass("transition-transform");
+
+    // Once mounted settles, the transition class returns for later toggles.
+    await vi.waitFor(() => expect(navDrawer).toHaveClass("transition-transform"));
+
+    fireEvent.click(toggleButton);
+    expect(toggleButton).toHaveAttribute("aria-expanded", "false");
+    expect(navDrawer).toHaveClass("transition-transform");
+
+    vi.unstubAllGlobals();
+  });
+
   it("toggles the navigation drawer on menu button click", () => {
     const { container } = render(
       <AppShell headerLinks={mockHeaderLinks}>
