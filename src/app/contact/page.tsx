@@ -31,16 +31,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <div className="flex justify-center px-4 pb-16">
-        <a
-          href="/resume/"
-          className="inline-flex min-h-12 min-w-56 items-center justify-center rounded-sm border border-slate-300 bg-white px-7 py-3 text-lg font-light text-slate-700 shadow-lg transition-[color,transform,box-shadow] hover:-translate-y-0.5 hover:text-brand-blue hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none"
-        >
-          View My Resume
-        </a>
-      </div>
-
-      <EndcapShell />
+      <EndcapShell cta={{ label: "View My Resume", href: "/resume/" }} />
     </main>
   );
 }

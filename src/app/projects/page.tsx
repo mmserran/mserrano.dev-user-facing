@@ -25,7 +25,7 @@ export default function ProjectsPage() {
         </Suspense>
       </section>
 
-      <EndcapShell />
+      <EndcapShell cta={{ label: "Contact Me", href: "/contact/" }} />
     </main>
   );
 }
