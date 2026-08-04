@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { mdiEmailEdit } from "@mdi/js";
 import type { IconBaseProps, IconType } from "react-icons";
 import { MdAssignment, MdDashboard, MdLink, MdMenu } from "react-icons/md";
@@ -23,6 +30,22 @@ function getIsDesktop() {
 
 function getIsDesktopServerSnapshot() {
   return false;
+}
+
+// Mirrors the drawer's CSS cascade: forced open/closed wins; otherwise the
+// min-[1264px] default.
+function getDrawerOpenState(manualOpen: boolean | null, isDesktop: boolean) {
+  if (manualOpen !== null) return manualOpen;
+  return isDesktop;
+}
+
+// Same cascade as the drawer transform classes, evaluated against live DOM +
+// matchMedia so a first toggle never flips the wrong way from a stale SSR snapshot.
+function getIsDrawerCascadeOpen(drawer: HTMLElement | null) {
+  const forced = drawer?.getAttribute("data-forced");
+  if (forced === "open") return true;
+  if (forced === "closed") return false;
+  return window.matchMedia(DESKTOP_BREAKPOINT).matches;
 }
 
 function EmailEditIcon(props: IconBaseProps) {
@@ -46,6 +69,15 @@ const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
   { href: "/projects/", label: "Portfolio", Icon: MdDashboard },
 ];
 
+// Visual open/closed cascade mirrored for pointer-events and visibility so the
+// drawer stays first-paint-safe for hit-testing and AT even when JS attrs lag.
+const DRAWER_VISUAL_CLASS =
+  "shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 motion-reduce:transition-none " +
+  "pointer-events-none invisible " +
+  "min-[1264px]:translate-x-0 min-[1264px]:shadow-none min-[1264px]:pointer-events-auto min-[1264px]:visible " +
+  "data-[forced=closed]:!-translate-x-full data-[forced=closed]:!pointer-events-none data-[forced=closed]:!invisible " +
+  "data-[forced=open]:!translate-x-0 data-[forced=open]:!pointer-events-auto data-[forced=open]:!visible";
+
 export default function AppShell({
   headerLinks,
   projects = [],
@@ -67,7 +99,14 @@ export default function AppShell({
   // (open on desktop, closed on mobile) until the user explicitly toggles it,
   // after which their choice sticks regardless of further resizing.
   const [manualOpen, setManualOpen] = useState<boolean | null>(null);
-  const isOpen = manualOpen ?? isDesktop;
+  // Server snapshot and first hydrated render always report isDesktop=false.
+  // Until the client layout pass runs, treat media-default a11y as open so a
+  // CSS-open desktop drawer is never inert / aria-hidden / labeled "Open".
+  // After layout, attributes track the real cascade (forced or matchMedia).
+  const [mediaReady, setMediaReady] = useState(false);
+  const isOpen = getDrawerOpenState(manualOpen, isDesktop);
+  const isInteractiveOpen =
+    manualOpen !== null ? manualOpen : mediaReady ? isDesktop : true;
   // Drives the CSS override below - undefined leaves the drawer's default,
   // media-query-only open/closed state (see className) alone so a desktop
   // visitor sees it open on the very first paint, with no JS/hydration wait.
@@ -79,8 +118,12 @@ export default function AppShell({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
+  useLayoutEffect(() => {
+    setMediaReady(true);
+  }, []);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isInteractiveOpen) return;
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -90,7 +133,11 @@ export default function AppShell({
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [isOpen]);
+  }, [isInteractiveOpen]);
+
+  function handleMenuToggle() {
+    setManualOpen(!getIsDrawerCascadeOpen(drawerRef.current));
+  }
 
   return (
     <>
@@ -105,10 +152,10 @@ export default function AppShell({
         <button
           ref={menuButtonRef}
           type="button"
-          aria-expanded={isOpen}
+          aria-expanded={isInteractiveOpen}
           aria-controls="site-drawer"
-          aria-label={isOpen ? "Close navigation" : "Open navigation"}
-          onClick={() => setManualOpen(!isOpen)}
+          aria-label={isInteractiveOpen ? "Close navigation" : "Open navigation"}
+          onClick={handleMenuToggle}
           className="flex size-12 items-center justify-center rounded-full text-2xl transition-colors hover:cursor-pointer hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
           <MdMenu aria-hidden="true" />
@@ -148,10 +195,10 @@ export default function AppShell({
         id="site-drawer"
         ref={drawerRef}
         aria-label="Primary"
-        aria-hidden={!isOpen}
-        inert={!isOpen}
+        aria-hidden={!isInteractiveOpen}
+        inert={!isInteractiveOpen}
         data-forced={forcedState}
-        className="shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 motion-reduce:transition-none min-[1264px]:translate-x-0 min-[1264px]:shadow-none data-[forced=closed]:!-translate-x-full data-[forced=open]:!translate-x-0"
+        className={DRAWER_VISUAL_CLASS}
       >
         <Link href="/" className="flex h-[97px] flex-col justify-center border-b border-black/10 px-4">
           <span className="block whitespace-nowrap text-[19px] leading-6 font-medium text-black">

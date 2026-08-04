@@ -104,13 +104,17 @@ describe("AppShell", () => {
     expect(navDrawer).not.toHaveAttribute("data-forced");
     expect(navDrawer).toHaveClass("min-[1264px]:translate-x-0", "transition-transform");
 
-    // JS aria state still catches up once hydration confirms the breakpoint.
+    // Interaction/a11y follows the same cascade: open on desktop, not inert.
     expect(toggleButton).toHaveAttribute("aria-expanded", "true");
+    expect(navDrawer).toHaveAttribute("aria-hidden", "false");
+    expect(navDrawer).not.toHaveAttribute("inert");
 
-    // A manual toggle sets an explicit forced override for the CSS to key off.
+    // First toggle derives next state from the media/data-forced cascade
+    // (closes when desktop-open), rather than a stale isDesktop=false snapshot.
     fireEvent.click(toggleButton);
     expect(toggleButton).toHaveAttribute("aria-expanded", "false");
     expect(navDrawer).toHaveAttribute("data-forced", "closed");
+    expect(navDrawer).toHaveAttribute("inert");
 
     vi.unstubAllGlobals();
   });
