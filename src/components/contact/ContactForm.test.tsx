@@ -44,14 +44,26 @@ describe("ContactForm", () => {
     expect(tooltip).toHaveTextContent(
       /allow your preferred webmail service to open email links/i,
     );
-    expect(tooltip).toHaveClass(
-      "fixed",
-      "max-h-[calc(100vh-2rem)]",
-      "w-[calc(100vw-2rem)]",
-      "max-w-80",
-    );
+    expect(tooltip).toHaveClass("fixed", "max-h-[calc(100vh-2rem)]");
     expect(tooltip).not.toHaveClass("sm:absolute");
   }, 10_000);
+
+  it("positions the help tooltip against its trigger when shown", async () => {
+    const user = userEvent.setup();
+    render(<ContactForm contactEmail="mark@example.com" />);
+
+    const trigger = screen.getByRole("button", {
+      name: "How to let webmail open email links",
+    });
+    const tooltip = document.getElementById("webmail-handler-help");
+    expect(tooltip?.style.left).toBe("");
+
+    await user.hover(trigger);
+
+    expect(tooltip?.style.left).not.toBe("");
+    expect(tooltip?.style.top).not.toBe("");
+    expect(tooltip?.style.width).not.toBe("");
+  });
 
   it("clears all entered values with the reset control", async () => {
     const user = userEvent.setup();
