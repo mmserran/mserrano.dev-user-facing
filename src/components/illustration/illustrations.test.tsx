@@ -1,4 +1,4 @@
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import lottie from "lottie-web/build/player/lottie_light";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AquariumTank1Penguins from "./AquariumTank1Penguins";
@@ -36,6 +36,14 @@ describe("Illustration Components", () => {
     const { container } = render(<EndcapShell fill />);
     expect(container.firstChild).toHaveClass("absolute", "inset-0");
     expect(container.firstChild).not.toHaveClass("h-[calc(33vw+33vh)]");
+  });
+
+  it("renders an accessible endcap CTA outside the decorative wrapper", () => {
+    render(<EndcapShell cta={{ label: "Contact Me", href: "/contact/" }} />);
+
+    const cta = screen.getByRole("link", { name: "Contact Me" });
+    expect(cta).toHaveAttribute("href", "/contact/");
+    expect(cta.closest("[aria-hidden='true']")).toBeNull();
   });
 
   it("renders deterministic star layers with reduced-motion fallbacks", () => {

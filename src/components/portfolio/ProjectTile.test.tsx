@@ -30,7 +30,7 @@ describe("ProjectTile", () => {
 
     const links = screen.getAllByRole("link");
     expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute("href", "/projects/test-project");
+    expect(links[0]).toHaveAttribute("href", "/projects/test-project/");
   });
 
   it("shows the title, rounded date, truncated description, and Learn More", () => {

@@ -219,7 +219,7 @@ describe("AppShell", () => {
     expect(portfolioLink.className).toContain("pr-8");
 
     const projectLink = within(navDrawer).getByRole("link", { name: "Cygnus Management, LLC" });
-    expect(projectLink).toHaveAttribute("href", "/projects/cygnus-management-llc");
+    expect(projectLink).toHaveAttribute("href", "/projects/cygnus-management-llc/");
     expect(projectLink).toHaveAttribute("aria-current", "page");
     expect(projectLink.className).toContain("after:right-6");
   });
