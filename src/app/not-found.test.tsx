@@ -3,7 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import NotFound, { metadata } from "./not-found";
 
 vi.mock("@/components/illustration/EndcapShell", () => ({
-  default: () => <div data-testid="endcap-shell" />,
+  default: ({ cta }: { cta?: { label: string; href: string } }) => (
+    <div data-testid="endcap-shell">
+      {cta && <a href={cta.href}>{cta.label}</a>}
+    </div>
+  ),
 }));
 
 describe("NotFound page", () => {

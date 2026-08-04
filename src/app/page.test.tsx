@@ -4,6 +4,7 @@ import Home, { metadata } from "./page";
 
 vi.mock("@/components/illustration/EndcapShell", () => ({
   default: () => <div data-testid="endcap-shell" />,
+  ENDCAP_CTA_LINK_CLASSES: "",
 }));
 
 describe("Home page", () => {

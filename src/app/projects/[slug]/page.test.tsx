@@ -8,7 +8,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/illustration/EndcapShell", () => ({
-  default: () => <div data-testid="endcap-shell" />,
+  default: ({ cta }: { cta?: { label: string; href: string } }) => (
+    <div data-testid="endcap-shell">
+      {cta && <a href={cta.href}>{cta.label}</a>}
+    </div>
+  ),
 }));
 
 // RelatedProjects renders every other project's real media-heavy ProjectTile;
@@ -108,7 +112,7 @@ describe("ProjectPage", () => {
       expect(screen.getByRole("heading", { level: 2, name: "Technology breakdown" })).toBeInTheDocument();
 
       const backLink = screen.getByRole("link", { name: "Back to Portfolio" });
-      expect(backLink).toHaveAttribute("href", "/projects");
+      expect(backLink).toHaveAttribute("href", "/projects/");
       expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
       expect(screen.getByTestId("related-projects")).toBeInTheDocument();
       expect(relatedProjectsSpy).toHaveBeenCalledWith(
