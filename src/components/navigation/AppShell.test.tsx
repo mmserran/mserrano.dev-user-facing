@@ -169,10 +169,12 @@ describe("AppShell", () => {
 
     const navDrawer = container.querySelector("#site-drawer") as HTMLElement;
     const portfolioLink = within(navDrawer).getByRole("link", { name: "Portfolio" });
-    expect(portfolioLink).toHaveAttribute("aria-current", "page");
+    expect(portfolioLink).not.toHaveAttribute("aria-current");
+    expect(portfolioLink.className).toContain("after:right-0");
 
     const projectLink = within(navDrawer).getByRole("link", { name: "Cygnus Management, LLC" });
     expect(projectLink).toHaveAttribute("href", "/projects/cygnus-management-llc");
     expect(projectLink).toHaveAttribute("aria-current", "page");
+    expect(projectLink.className).toContain("after:right-2");
   });
 });
