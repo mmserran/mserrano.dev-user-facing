@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { MdHelpOutline } from "react-icons/md";
 import { buildContactMailto, type ContactFields } from "./mailto";
 
@@ -12,6 +12,12 @@ const EMPTY_FIELDS: ContactFields = {
   message: "",
 };
 
+const TOOLTIP_VIEWPORT_MARGIN = 16;
+const TOOLTIP_MAX_WIDTH = 320;
+// The help image is 361x277; used to estimate tooltip height before it renders,
+// so the tooltip can flip above the trigger when there isn't room below.
+const TOOLTIP_IMAGE_ASPECT_RATIO = 277 / 361;
+
 const INPUT_CLASS =
   "w-full border-0 border-b border-black/40 bg-transparent px-0 pt-6 pb-2 text-base text-black outline-none transition-colors placeholder:text-transparent focus:border-brand-blue focus:ring-0 peer";
 const LABEL_CLASS =
@@ -19,9 +25,34 @@ const LABEL_CLASS =
 
 export default function ContactForm({ contactEmail }: { contactEmail: string }) {
   const [fields, setFields] = useState(EMPTY_FIELDS);
+  const helpButtonRef = useRef<HTMLButtonElement>(null);
+  const [tooltipStyle, setTooltipStyle] = useState<CSSProperties>();
 
   function updateField(field: keyof ContactFields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
+  }
+
+  function positionTooltip() {
+    const button = helpButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const width = Math.min(
+      TOOLTIP_MAX_WIDTH,
+      window.innerWidth - TOOLTIP_VIEWPORT_MARGIN * 2,
+    );
+    const left = Math.min(
+      Math.max(rect.left + rect.width / 2 - width / 2, TOOLTIP_VIEWPORT_MARGIN),
+      window.innerWidth - width - TOOLTIP_VIEWPORT_MARGIN,
+    );
+    const estimatedHeight = width * TOOLTIP_IMAGE_ASPECT_RATIO + 32;
+    const spaceBelow = window.innerHeight - rect.bottom - TOOLTIP_VIEWPORT_MARGIN;
+    const top =
+      spaceBelow >= estimatedHeight
+        ? rect.bottom + 8
+        : Math.max(rect.top - estimatedHeight - 8, TOOLTIP_VIEWPORT_MARGIN);
+
+    setTooltipStyle({ top, left, width });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -116,9 +147,12 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
         If no email app opens{" "}
         <span className="group relative inline-flex align-middle">
           <button
+            ref={helpButtonRef}
             type="button"
             aria-label="How to let webmail open email links"
             aria-describedby="webmail-handler-help"
+            onMouseEnter={positionTooltip}
+            onFocus={positionTooltip}
             className="inline-flex size-6 cursor-help items-center justify-center rounded-full text-lg text-brand-blue hover:bg-brand-blue/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
           >
             <MdHelpOutline aria-hidden="true" />
@@ -126,7 +160,8 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
           <span
             id="webmail-handler-help"
             role="tooltip"
-            className="invisible fixed bottom-4 left-1/2 z-[60] max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] max-w-80 -translate-x-1/2 overflow-auto rounded-lg border border-slate-300 bg-white p-2 opacity-0 shadow-2xl transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            style={tooltipStyle}
+            className="invisible fixed z-[60] w-[calc(100vw-2rem)] max-w-80 max-h-[calc(100vh-2rem)] overflow-auto rounded-lg border border-slate-300 bg-white p-2 opacity-0 shadow-2xl transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
           >
             <span className="sr-only">
               In your browser, allow your preferred webmail service to open email links.
