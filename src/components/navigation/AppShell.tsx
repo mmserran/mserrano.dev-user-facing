@@ -68,16 +68,10 @@ export default function AppShell({
   // after which their choice sticks regardless of further resizing.
   const [manualOpen, setManualOpen] = useState<boolean | null>(null);
   const isOpen = manualOpen ?? isDesktop;
-
-  // Stays false through the first paint (including the corrective re-render
-  // once useSyncExternalStore picks up the real breakpoint), so a desktop
-  // visitor's drawer appears already open with no slide-in. Flips true on
-  // the next animation frame so later toggles/resizes animate normally.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
+  // Drives the CSS override below - undefined leaves the drawer's default,
+  // media-query-only open/closed state (see className) alone so a desktop
+  // visitor sees it open on the very first paint, with no JS/hydration wait.
+  const forcedState = manualOpen === null ? undefined : manualOpen ? "open" : "closed";
 
   const pathname = usePathname();
   const activePath = pathname.replace(/\/+$/, "") || "/";
@@ -156,9 +150,8 @@ export default function AppShell({
         aria-label="Primary"
         aria-hidden={!isOpen}
         inert={!isOpen}
-        className={`shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] min-[1264px]:shadow-none ${
-          mounted ? "transition-transform duration-200 motion-reduce:transition-none" : ""
-        } ${isOpen ? "translate-x-0" : ""}`}
+        data-forced={forcedState}
+        className="shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 motion-reduce:transition-none min-[1264px]:translate-x-0 min-[1264px]:shadow-none data-[forced=closed]:!-translate-x-full data-[forced=open]:!translate-x-0"
       >
         <Link href="/" className="flex h-[97px] flex-col justify-center border-b border-black/10 px-4">
           <span className="block whitespace-nowrap text-[19px] leading-6 font-medium text-black">
@@ -223,9 +216,8 @@ export default function AppShell({
 
       <div
         id="main-content"
-        className={`relative isolate flex flex-1 flex-col bg-[radial-gradient(ellipse_at_bottom,#1b2735_0%,#090a0f_100%)] ${
-          mounted ? "transition-[padding] duration-200 motion-reduce:transition-none" : ""
-        } ${isOpen ? "min-[1264px]:pl-64" : ""}`}
+        data-forced={forcedState}
+        className="relative isolate flex flex-1 flex-col bg-[radial-gradient(ellipse_at_bottom,#1b2735_0%,#090a0f_100%)] transition-[padding] duration-200 motion-reduce:transition-none min-[1264px]:pl-64 data-[forced=closed]:min-[1264px]:!pl-0"
       >
         <StarField />
         {children}

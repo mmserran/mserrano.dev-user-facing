@@ -81,7 +81,7 @@ describe("AppShell", () => {
     );
   });
 
-  it("opens instantly with no transition on initial desktop-width mount, then animates on later toggles", async () => {
+  it("relies on CSS alone for the default open state on desktop, applying a forced override only after a manual toggle", () => {
     const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
       matches: query === "(min-width: 1264px)",
       media: query,
@@ -99,16 +99,18 @@ describe("AppShell", () => {
     const navDrawer = container.querySelector("#site-drawer");
     const toggleButton = screen.getByRole("button", { name: /navigation/i });
 
-    // Desktop-width mount: drawer is open immediately, without the transition class.
+    // No manual override yet: the drawer's default open/closed state is
+    // purely CSS-driven (min-[1264px]:translate-x-0), not gated by JS.
+    expect(navDrawer).not.toHaveAttribute("data-forced");
+    expect(navDrawer).toHaveClass("min-[1264px]:translate-x-0", "transition-transform");
+
+    // JS aria state still catches up once hydration confirms the breakpoint.
     expect(toggleButton).toHaveAttribute("aria-expanded", "true");
-    expect(navDrawer).not.toHaveClass("transition-transform");
 
-    // Once mounted settles, the transition class returns for later toggles.
-    await vi.waitFor(() => expect(navDrawer).toHaveClass("transition-transform"));
-
+    // A manual toggle sets an explicit forced override for the CSS to key off.
     fireEvent.click(toggleButton);
     expect(toggleButton).toHaveAttribute("aria-expanded", "false");
-    expect(navDrawer).toHaveClass("transition-transform");
+    expect(navDrawer).toHaveAttribute("data-forced", "closed");
 
     vi.unstubAllGlobals();
   });
