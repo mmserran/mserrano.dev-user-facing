@@ -161,7 +161,7 @@ export default function ContactForm({ contactEmail }: { contactEmail: string }) 
             id="webmail-handler-help"
             role="tooltip"
             style={tooltipStyle}
-            className="invisible fixed z-[60] max-h-[calc(100vh-2rem)] overflow-auto rounded-lg border border-slate-300 bg-white p-2 opacity-0 shadow-2xl transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            className="invisible fixed z-[60] w-[calc(100vw-2rem)] max-w-80 max-h-[calc(100vh-2rem)] overflow-auto rounded-lg border border-slate-300 bg-white p-2 opacity-0 shadow-2xl transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
           >
             <span className="sr-only">
               In your browser, allow your preferred webmail service to open email links.
