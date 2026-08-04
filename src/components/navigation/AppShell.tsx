@@ -118,7 +118,10 @@ export default function AppShell({
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
 
+  // Intentional one-shot flag: must run in layout so a11y attrs match the
+  // CSS/media cascade before first paint (not via a deferred store snapshot).
   useLayoutEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mediaReady one-shot before paint
     setMediaReady(true);
   }, []);
 
