@@ -38,6 +38,9 @@ test.describe("Portfolio Catalog & Project Details", () => {
   });
 
   test("project detail page preserves original slug URLs", async ({ page }) => {
+    // Four sequential detail navigations: default 30s is tight under parallel load.
+    test.setTimeout(60_000);
+
     // Test a sample of original project slugs from content.json
     const projectSlugs = [
       "mserrano-dev",
