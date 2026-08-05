@@ -66,15 +66,23 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
     });
 
     test("project tiles are keyboard navigable", async ({ page }) => {
+      // Under 4-worker load, client-side navigation after Enter can take >5s
+      // (trace showed URL flip just past the default toHaveURL timeout).
+      test.setTimeout(60_000);
+
       const projectTile = page.getByRole("link", {
         name: /My Portfolio Website/,
       });
 
+      await projectTile.scrollIntoViewIfNeeded();
       await projectTile.focus();
       await expect(projectTile).toBeFocused();
 
-      await page.keyboard.press("Enter");
-      await expect(page).toHaveURL(/\/projects\/mserrano-dev\/?$/);
+      // Prefer element-targeted press so the key isn't lost if focus races.
+      await projectTile.press("Enter");
+      await expect(page).toHaveURL(/\/projects\/mserrano-dev\/?$/, {
+        timeout: 15_000,
+      });
     });
   });
 
