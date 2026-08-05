@@ -109,15 +109,28 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
     });
 
     test("form fields are keyboard navigable", async ({ page }) => {
-      const textboxes = page.getByRole("textbox");
-      const count = await textboxes.count();
+      const nameInput = page.getByRole("textbox", { name: /your name/i });
+      const emailInput = page.getByRole("textbox", { name: /your e-mail/i });
+      const subjectInput = page.getByRole("textbox", { name: /^subject$/i });
+      const messageInput = page.getByRole("textbox", { name: /your message/i });
+      const submitButton = page.getByRole("button", {
+        name: "Open email draft",
+      });
 
-      expect(count).toBeGreaterThan(0);
+      await nameInput.focus();
+      await expect(nameInput).toBeFocused();
 
-      // Tab through form fields
-      const firstInput = textboxes.first();
-      await firstInput.focus();
-      await expect(firstInput).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(emailInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(subjectInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(messageInput).toBeFocused();
+
+      await page.keyboard.press("Tab");
+      await expect(submitButton).toBeFocused();
     });
 
     test("submit button is accessible and labeled", async ({ page }) => {

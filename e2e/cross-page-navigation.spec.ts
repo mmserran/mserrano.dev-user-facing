@@ -86,9 +86,20 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       await page.goto("/");
 
       const menuButton = page.getByRole("button", { name: /navigation/i });
-      await menuButton.click();
+      if ((await menuButton.getAttribute("aria-expanded")) === "false") {
+        await menuButton.click();
+      }
 
-      const contactLink = page.getByRole("link", { name: "Contact" });
+      const drawer = page.getByRole("navigation", {
+        name: "Primary",
+        includeHidden: true,
+      });
+      await expect(drawer).toHaveAttribute("aria-hidden", "false");
+
+      const contactLink = drawer.getByRole("link", {
+        name: "Contact",
+        exact: true,
+      });
       await contactLink.click();
 
       await expect(page).toHaveURL("/contact/");
