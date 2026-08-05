@@ -1,25 +1,29 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
+// This suite guards keyboard operability, landmark semantics, and alt-text
+// presence via targeted Playwright checks - real signal, but not a
+// substitute for a full WCAG 2.1 AA audit (no contrast, no assistive-tech
+// pass, no axe-core). Name it for what it actually verifies.
+test.describe("Accessibility - Keyboard, Semantics & Alt-Text Smoke", () => {
   test.describe("Landing Page", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/");
     });
 
     test("has proper heading hierarchy", async ({ page }) => {
-      // Check that there's at least one H1
-      const h1Count = await page.getByRole("heading", { level: 1 }).count();
-      expect(h1Count).toBeGreaterThan(0);
-    });
+      const headingLevels = await page
+        .locator("h1, h2, h3, h4, h5, h6")
+        .evaluateAll((headings) => headings.map((h) => Number(h.tagName.slice(1))));
 
-    test("all images have alt text", async ({ page }) => {
-      const images = page.locator("img");
-      const count = await images.count();
+      const h1Count = headingLevels.filter((level) => level === 1).length;
+      expect(h1Count, "page should have exactly one h1").toBe(1);
 
-      for (let i = 0; i < Math.min(5, count); i++) {
-        const img = images.nth(i);
-        const alt = await img.getAttribute("alt");
-        expect(alt !== null).toBe(true);
+      for (let i = 1; i < headingLevels.length; i++) {
+        const jump = headingLevels[i] - headingLevels[i - 1];
+        expect(
+          jump,
+          `heading order jumps from h${headingLevels[i - 1]} to h${headingLevels[i]} without an intermediate level`,
+        ).toBeLessThanOrEqual(1);
       }
     });
 
@@ -83,6 +87,21 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
       await expect(page).toHaveURL(/\/projects\/mserrano-dev\/?$/, {
         timeout: 15_000,
       });
+    });
+
+    test("all images have alt text", async ({ page }) => {
+      // The landing page renders no <img> elements at all (its hero is pure
+      // CSS/text), which made this a silent zero-count pass there. The
+      // catalog's tile images are real coverage for the alt-text contract.
+      const images = page.locator("img");
+      const count = await images.count();
+      expect(count, "expected the portfolio catalog to render at least one image").toBeGreaterThan(0);
+
+      for (let i = 0; i < Math.min(5, count); i++) {
+        const img = images.nth(i);
+        const alt = await img.getAttribute("alt");
+        expect(alt !== null).toBe(true);
+      }
     });
   });
 
