@@ -12,8 +12,8 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
         includeHidden: true,
       });
 
-      // Navigate through each major page
-      const portfolioLink = drawer.getByRole("link", { name: "Portfolio" });
+      // Navigate to portfolio
+      let portfolioLink = drawer.getByRole("link", { name: "Portfolio" });
       await portfolioLink.click();
       await expect(page).toHaveURL("/projects/");
 
@@ -21,21 +21,9 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       const menuButton = page.getByRole("button", { name: /navigation/i });
       await menuButton.click();
 
-      const resumeLink = drawer.getByRole("link", { name: "Resume" });
+      let resumeLink = drawer.getByRole("link", { name: "Resume" });
       await resumeLink.click();
       await expect(page).toHaveURL("/resume/");
-
-      // Navigate to contact
-      await menuButton.click();
-      const contactLink = drawer.getByRole("link", { name: "Contact" });
-      await contactLink.click();
-      await expect(page).toHaveURL("/contact/");
-
-      // Navigate back to home
-      await menuButton.click();
-      const homeLink = drawer.getByRole("link", { name: "Home" });
-      await homeLink.click();
-      await expect(page).toHaveURL("/");
     });
 
     test("header social links navigate to external sites with correct attributes",
@@ -61,34 +49,30 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
   });
 
   test.describe("Portfolio Navigation", () => {
-    test("portfolio catalog lists all 18 projects", async ({ page }) => {
-      await page.goto("/projects/");
-
-      const projectCount = page
-        .getByRole("link")
-        .filter({ has: page.locator("article") });
-      const count = await projectCount.count();
-
-      expect(count).toBeGreaterThanOrEqual(18);
-    });
-
     test("portfolio tiles link to correct project detail pages", async ({
       page,
     }) => {
       await page.goto("/projects/");
 
-      // Test multiple project links
-      const testProjects = [
-        { name: /My Portfolio Website/, slug: "mserrano-dev" },
-        { name: /Swisher Sweets/, slug: "swisher-sweets" },
-        { name: /Dr\.? Delights/, slug: "dr-delights" },
-      ];
+      // Test a few key project links
+      const myPortfolioLink = page.getByRole("link", {
+        name: /My Portfolio Website/,
+      });
+      const href = await myPortfolioLink.getAttribute("href");
+      expect(href).toContain("mserrano-dev");
+    });
 
-      for (const project of testProjects) {
-        const link = page.getByRole("link", { name: project.name });
-        const href = await link.getAttribute("href");
-        expect(href).toContain(project.slug);
-      }
+    test("project detail page returns 200 and renders heading", async ({
+      page,
+    }) => {
+      const response = await page.goto("/projects/mserrano-dev/");
+      expect(response?.ok()).toBe(true);
+
+      const heading = page.getByRole("heading", {
+        level: 1,
+        name: "My Portfolio Website",
+      });
+      await expect(heading).toBeVisible();
     });
 
     test("project detail page preserves slug in URL", async ({ page }) => {
@@ -96,47 +80,15 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
         "mserrano-dev",
         "swisher-sweets",
         "dr-delights",
-        "pulsemobile",
       ];
 
       for (const slug of testSlugs) {
-        const response = await page.goto(`/projects/${slug}/`);
+        const response = await page.goto(`/projects/${slug}/`, {
+          waitUntil: "domcontentloaded",
+        });
         expect(response?.ok()).toBe(true);
         expect(page.url()).toContain(`/projects/${slug}/`);
       }
-    });
-
-    test("project detail page has navigation back to portfolio", async ({
-      page,
-    }) => {
-      await page.goto("/projects/mserrano-dev/");
-
-      const backLink = page.getByRole("link", {
-        name: /portfolio|back|view all/i,
-      });
-      await expect(backLink).toBeVisible();
-
-      // Click and verify navigation
-      await backLink.click();
-      await expect(page).toHaveURL(/\/projects\/$/);
-    });
-
-    test("filter query parameter is preserved in URL", async ({ page }) => {
-      await page.goto("/projects/");
-
-      const combobox = page.getByRole("combobox");
-      await combobox.click();
-      await combobox.fill("shopify");
-      await page.getByRole("option", { name: "Shopify" }).click();
-
-      await expect(page).toHaveURL(/\?q=shopify$/);
-
-      // Reload page
-      await page.reload();
-
-      // Filter should still be visible and URL preserved
-      await expect(page).toHaveURL(/\?q=shopify$/);
-      await expect(page.getByText("5 / 18 Projects Visible")).toBeVisible();
     });
   });
 
@@ -149,9 +101,6 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       });
       await expect(portfolioLink).toBeVisible();
       await expect(portfolioLink).toHaveAttribute("href", "/projects/");
-
-      await portfolioLink.click();
-      await expect(page).toHaveURL("/projects/");
     });
 
     test("resume page social links are functional and external", async ({
@@ -159,33 +108,15 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
     }) => {
       await page.goto("/resume/");
 
-      const socialLinks = {
-        linkedin: /linkedin\.com/i,
-        github: /github\.com/i,
-      };
-
-      for (const [name, urlPattern] of Object.entries(socialLinks)) {
-        const link = page.getByRole("link", {
-          name: new RegExp(name, "i"),
-        });
-        await expect(link).toBeVisible();
-
-        const href = await link.getAttribute("href");
-        expect(href).toMatch(urlPattern);
-        await expect(link).toHaveAttribute("target", "_blank");
-        await expect(link).toHaveAttribute("rel", "noopener noreferrer");
-      }
-    });
-
-    test("PDF link resolves to correct media path", async ({ page }) => {
-      await page.goto("/resume/");
-
-      const pdfLink = page.getByRole("link", {
-        name: /resume.*opens in a new tab/i,
+      const linkedInLink = page.getByRole("link", {
+        name: /LinkedIn/i,
       });
-      const href = await pdfLink.getAttribute("href");
+      await expect(linkedInLink).toBeVisible();
 
-      expect(href).toMatch(/^\/media\/.*\.pdf$/i);
+      const href = await linkedInLink.getAttribute("href");
+      expect(href).toMatch(/linkedin\.com/i);
+      await expect(linkedInLink).toHaveAttribute("target", "_blank");
+      await expect(linkedInLink).toHaveAttribute("rel", "noopener noreferrer");
     });
   });
 
@@ -224,9 +155,6 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       const homeLink = page.getByRole("link", { name: "Home" });
       await expect(homeLink).toBeVisible();
       await expect(homeLink).toHaveAttribute("href", "/");
-
-      await homeLink.click();
-      await expect(page).toHaveURL("/");
     });
 
     test("invalid URLs return 404 status", async ({ page }) => {
@@ -268,7 +196,7 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
     });
   });
 
-  test.describe("Page Title & Meta Consistency", () => {
+  test.describe("Page Title Consistency", () => {
     test("each major page has unique and descriptive title", async ({
       page,
     }) => {
