@@ -184,6 +184,9 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
 
       await portfolioLink.focus();
       await expect(portfolioLink).toBeFocused();
+
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/\/projects\/?$/);
     });
   });
 

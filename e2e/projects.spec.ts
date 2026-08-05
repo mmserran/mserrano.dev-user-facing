@@ -95,12 +95,9 @@ test.describe("Portfolio Catalog & Project Details", () => {
   }) => {
     await page.goto("/projects/mserrano-dev/");
 
-    // Look for link in footer navigation that returns to portfolio
-    const backLink = page
-      .locator("footer, nav")
-      .getByRole("link", { name: /portfolio/i })
-      .first();
+    const backLink = page.getByRole("link", { name: "Back to Portfolio" });
     await expect(backLink).toBeVisible();
+    await expect(backLink).toHaveAttribute("href", "/projects/");
   });
 
   test.describe("mobile viewport", () => {
