@@ -66,14 +66,15 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
     });
 
     test("project tiles are keyboard navigable", async ({ page }) => {
-      const firstTile = page.getByRole("link").first();
+      const projectTile = page.getByRole("link", {
+        name: /My Portfolio Website/,
+      });
 
-      await firstTile.focus();
-      await expect(firstTile).toBeFocused();
+      await projectTile.focus();
+      await expect(projectTile).toBeFocused();
 
-      // Should be able to activate with Enter key
-      const href = await firstTile.getAttribute("href");
-      expect(href).toBeTruthy();
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL(/\/projects\/mserrano-dev\/?$/);
     });
   });
 
