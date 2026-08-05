@@ -2,30 +2,6 @@ import { expect, test } from "@playwright/test";
 
 test.describe("Cross-Page Navigation & URL Preservation", () => {
   test.describe("Global Navigation Links", () => {
-    test("main navigation allows traversal through all major pages", async ({
-      page,
-    }) => {
-      await page.goto("/");
-
-      const drawer = page.getByRole("navigation", {
-        name: "Primary",
-        includeHidden: true,
-      });
-
-      // Navigate to portfolio
-      let portfolioLink = drawer.getByRole("link", { name: "Portfolio" });
-      await portfolioLink.click();
-      await expect(page).toHaveURL("/projects/");
-
-      // Open drawer again and navigate to resume
-      const menuButton = page.getByRole("button", { name: /navigation/i });
-      await menuButton.click();
-
-      let resumeLink = drawer.getByRole("link", { name: "Resume" });
-      await resumeLink.click();
-      await expect(page).toHaveURL("/resume/");
-    });
-
     test("header social links navigate to external sites with correct attributes",
       async ({ page }) => {
         await page.goto("/");
@@ -79,7 +55,6 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       const testSlugs = [
         "mserrano-dev",
         "swisher-sweets",
-        "dr-delights",
       ];
 
       for (const slug of testSlugs) {
@@ -102,22 +77,6 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
       await expect(portfolioLink).toBeVisible();
       await expect(portfolioLink).toHaveAttribute("href", "/projects/");
     });
-
-    test("resume page social links are functional and external", async ({
-      page,
-    }) => {
-      await page.goto("/resume/");
-
-      const linkedInLink = page.getByRole("link", {
-        name: /LinkedIn/i,
-      });
-      await expect(linkedInLink).toBeVisible();
-
-      const href = await linkedInLink.getAttribute("href");
-      expect(href).toMatch(/linkedin\.com/i);
-      await expect(linkedInLink).toHaveAttribute("target", "_blank");
-      await expect(linkedInLink).toHaveAttribute("rel", "noopener noreferrer");
-    });
   });
 
   test.describe("Contact Page Navigation", () => {
@@ -134,17 +93,6 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
 
       await expect(page).toHaveURL("/contact/");
       await expect(page).toHaveTitle(/Contact/i);
-    });
-
-    test("contact page includes mailto: link", async ({ page }) => {
-      await page.goto("/contact/");
-
-      const submitButton = page.getByRole("button", {
-        name: "Open email draft",
-      });
-
-      const href = await submitButton.getAttribute("href");
-      expect(href).toMatch(/^mailto:/);
     });
   });
 

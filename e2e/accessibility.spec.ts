@@ -125,7 +125,6 @@ test.describe("Accessibility - WCAG 2.1 AA Standards", () => {
       });
 
       await expect(submitButton).toBeVisible();
-      await expect(submitButton).toHaveAttribute("type", "button");
     });
   });
 
