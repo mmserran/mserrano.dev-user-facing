@@ -170,21 +170,21 @@ Before considering a task complete:
 
 # Build & Deployment
 
-Restore build content locally:
+Restore build content before any production build (locally or in CI):
 
 ```bash
 make restore-media
 ```
 
-Restores `content.json`, `manifest.json`, and processed media assets.
+Restores `content.json`, `manifest.json`, and processed media assets into
+gitignored `content/` and `public/media/`. That restore needs a GitHub token that
+can download the private content-export release—Vercel's own build environment
+does not have it.
 
-Deploy:
-
-```bash
-vercel deploy --prebuilt
-```
-
-Built outside Vercel's Git integration—restored assets exist only in the local build environment.
+Do not enable or rely on Vercel Git integration for this project. Deploys run in
+GitHub Actions after restore via `vercel build` / `vercel deploy --prebuilt`
+(see `.github/workflows/deploy.yml` and the README "Deploy on Vercel" section for
+branch and domain mapping).
 
 ---
 
