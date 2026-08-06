@@ -185,9 +185,12 @@ does not have it. Restoring the default `content-latest` tag also records the
 resolved dated tag into `CONTENT_VERSION`.
 
 Do not enable or rely on Vercel Git integration for this project. Deploys run in
-GitHub Actions after restore via `vercel build` / `vercel deploy --prebuilt`
-(see `.github/workflows/deploy.yml` and the README "Deploy on Vercel" section for
-branch and domain mapping). `e2e.yml` runs the same content validation on every
+GitHub Actions after restore via `next build` + `scripts/assemble-vercel-output.mjs`
++ `vercel deploy --prebuilt` (see `.github/workflows/deploy.yml` and the README
+"Deploy on Vercel" section for branch and domain mapping). `vercel build`'s own
+Next.js integration doesn't copy this Next.js version's static-export output into
+`.vercel/output/static`, so the Build Output API v3 payload is hand-assembled
+directly from `out/` instead. `e2e.yml` runs the same content validation on every
 pull request.
 
 Production restores whatever tag is pinned in `CONTENT_VERSION`, independent of
