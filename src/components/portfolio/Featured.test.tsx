@@ -3,15 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 import type { FeaturedSectionView, PageBuilderSection } from "@/lib/content";
 import Featured from "./Featured";
 
-const { getFeaturedSectionView, getMediaVariants } = vi.hoisted(() => ({
+const { getFeaturedSectionView, getMediaVariants, getVideoPosterUrl } = vi.hoisted(() => ({
   getFeaturedSectionView: vi.fn(),
   getMediaVariants: vi.fn(),
+  getVideoPosterUrl: vi.fn(),
 }));
 
 vi.mock("@/lib/content", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/content")>()),
   getFeaturedSectionView,
   getMediaVariants,
+  getVideoPosterUrl,
 }));
 
 const { PlyrMock, destroyMock } = vi.hoisted(() => {
@@ -59,6 +61,7 @@ describe("Featured", () => {
   it("renders the section title, optional caption, and a muted, looping video sourced from the manifest URL", () => {
     getFeaturedSectionView.mockReturnValue(makeView({ content: "A demo recording." }));
     getMediaVariants.mockReturnValue([{ width: null, url: "/media/demo.mp4" }]);
+    getVideoPosterUrl.mockReturnValue("/media/demo-1600.webp");
 
     const { container } = render(<Featured section={section} />);
 
@@ -69,7 +72,18 @@ describe("Featured", () => {
     expect(video.muted).toBe(true);
     expect(video.loop).toBe(true);
     expect(video.autoplay).toBe(false);
+    expect(video.getAttribute("poster")).toBe("/media/demo-1600.webp");
     expect(container.querySelector('source[src="/media/demo.mp4"]')).not.toBeNull();
+  });
+
+  it("omits the poster attribute when no companion poster is available", () => {
+    getFeaturedSectionView.mockReturnValue(makeView());
+    getMediaVariants.mockReturnValue([{ width: null, url: "/media/demo.mp4" }]);
+    getVideoPosterUrl.mockReturnValue(undefined);
+
+    const { container } = render(<Featured section={section} />);
+
+    expect((container.querySelector("video") as HTMLVideoElement).hasAttribute("poster")).toBe(false);
   });
 
   it("omits the heading and caption when absent", () => {

@@ -8,6 +8,7 @@ import {
   getImageTextSectionView,
   getMediaUrl,
   getMediaVariants,
+  getVideoPosterUrl,
   getMobileMosaic,
   getPageBuilderSections,
   getProjectBySlug,
@@ -94,6 +95,22 @@ describe("content lib", () => {
     expect(getMediaVariants("")).toEqual([]);
     expect(getMediaVariants("   ")).toEqual([]);
     expect(getMediaVariants("does-not-exist.png")).toEqual([]);
+  });
+
+  it("getVideoPosterUrl resolves a known .mp4 to its largest same-stem .jpg poster variant", () => {
+    const poster = getVideoPosterUrl("pulsemobile_video.mp4");
+    expect(poster).toMatch(/^\/media\/pulsemobile_video-\d+\.webp$/);
+
+    // Largest width among the poster image's responsive variants.
+    const posterVariants = getMediaVariants("pulsemobile_video.jpg");
+    const largest = posterVariants.reduce((a, b) => ((b.width ?? 0) > (a.width ?? 0) ? b : a));
+    expect(poster).toBe(largest.url);
+  });
+
+  it("getVideoPosterUrl returns undefined for non-video or unknown filenames", () => {
+    expect(getVideoPosterUrl("WordPress.png")).toBeUndefined();
+    expect(getVideoPosterUrl("")).toBeUndefined();
+    expect(getVideoPosterUrl("does-not-exist.mp4")).toBeUndefined();
   });
 
   it("formatRoundedDate buckets months into Early/Mid/Late", () => {
