@@ -1,4 +1,4 @@
-.PHONY: restore-media promote-content
+.PHONY: restore-media promote-content sync
 
 SHELL := /usr/bin/env bash
 
@@ -68,6 +68,12 @@ promote-content:
 	fi; \
 	echo "Promoting $$tag to production..."; \
 	gh workflow run promote-content.yml -f tag="$$tag" -f description="$(DESCRIPTION)"
+
+# Manually triggers a staging deploy so a new content release (with no code
+# change involved) shows up on stage.mserrano.dev without waiting for the
+# next push to development. deploy.yml resolves content-latest itself.
+sync:
+	gh workflow run deploy.yml --ref development
 
 # Catches the extra command-line goal(s) that make promote-content "..."
 # produces (Make treats the quoted description as another target to build)
