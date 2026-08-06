@@ -53,10 +53,13 @@ export function usePrefersReducedMotion(): boolean {
   );
 }
 
-// Muted/looping background-style video layer. `playWhenActive=true` always
-// autoplays (the legacy "static video" cases); a defined value instead ties
-// playback to hover/touch so a paused frame 0 doubles as that layer's resting
-// poster (the legacy "blank static + hover video" case).
+// Muted/looping background-style video layer. Source and playback load only
+// while the element intersects the viewport (IntersectionObserver), so
+// offscreen Related Projects tiles do not fetch or decode video over the
+// featured player; leaving view pauses and reloads to drop the media buffer.
+// When visible and motion is allowed, `playWhenActive=true` autoplays (legacy
+// "static video"); otherwise playback follows hover/touch so a paused frame 0
+// doubles as that layer's resting poster ("blank static + hover video").
 function VideoLayer({
   filename,
   playWhenActive,
