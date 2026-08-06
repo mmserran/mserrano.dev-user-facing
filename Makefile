@@ -6,21 +6,45 @@ REPO := mmserran/mserrano.dev-web-services
 TAG ?= content-latest
 
 # The backend tags real, dated exports content-YYYYMMDD-HHMM and separately
-# republishes the content-latest alias to match the newest one, so the
-# newest dated tag is what content-latest currently points at. -L 20 gives
-# headroom past the handful of most-recent content exports we'd ever need,
-# since the release list is shared with interleaved uploads-backup releases.
-RESOLVE_LATEST_TAG = gh release list --repo $(REPO) -L 20 \
-	| grep -oE 'content-[0-9]{8}-[0-9]{4}' | sort -r | head -1
+# republishes the content-latest alias to match the newest one. Resolve by
+# scanning recent releases for dated tags, then verify the winner's UTC
+# calendar day matches content-latest's publishedAt. Enlarging -L alone
+# cannot guarantee the true newest tag when non-content releases dominate
+# the list; a stale match fails loud instead of pinning the wrong export.
+define RESOLVE_LATEST_TAG
+bash -ec '\
+	resolved=$$(gh release list --repo "$(REPO)" -L 20 \
+		| grep -oE "content-[0-9]{8}-[0-9]{4}" | sort -r | head -1); \
+	if [ -z "$$resolved" ]; then \
+		echo "No versioned content release found in $(REPO) (scanned last 20 releases)" >&2; \
+		exit 1; \
+	fi; \
+	published_at=$$(gh release view content-latest --repo "$(REPO)" --json publishedAt --jq .publishedAt); \
+	if [ -z "$$published_at" ]; then \
+		echo "Could not read publishedAt for content-latest in $(REPO)" >&2; \
+		exit 1; \
+	fi; \
+	latest_ymd=$$(date -u -d "$$published_at" +%Y%m%d); \
+	tag_ymd=$$(printf "%s\n" "$$resolved" | cut -d- -f2); \
+	if [ "$$tag_ymd" != "$$latest_ymd" ]; then \
+		echo "Resolved $$resolved (UTC date $$tag_ymd) does not match content-latest publishedAt $$published_at (UTC date $$latest_ymd)." >&2; \
+		echo "The top-20 release window likely missed a newer content export; refuse to pin a stale tag." >&2; \
+		exit 1; \
+	fi; \
+	printf "%s\n" "$$resolved"'
+endef
 
 # Lets `make promote-content "description text"` pass the description as a
 # plain quoted argument instead of `DESCRIPTION=`. Everything after the
-# target name is rejoined into DESCRIPTION; the trailing %: rule below stops
-# Make from trying (and failing) to build a file with that name. An explicit
-# `DESCRIPTION=...` on the command line still wins, since Make always
-# prioritizes command-line variable assignments over ones set in the file.
+# target name is rejoined into DESCRIPTION. .DEFAULT below is defined only
+# for this invocation so those extra goals no-op without a global catch-all
+# that would silence typos of real targets. An explicit `DESCRIPTION=...`
+# on the command line still wins, since Make always prioritizes
+# command-line variable assignments over ones set in the file.
 ifeq (promote-content,$(firstword $(MAKECMDGOALS)))
   DESCRIPTION := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  .DEFAULT:
+	@:
 endif
 
 # Fetches the latest Content export release from the backend repo and
@@ -46,10 +70,8 @@ restore-media:
 	echo "Content export unpacked: content/{content,manifest}.json, public/media/"; \
 	if [ "$(TAG)" = "content-latest" ]; then \
 		resolved="$$($(RESOLVE_LATEST_TAG))"; \
-		if [ -n "$$resolved" ]; then \
-			echo "$$resolved" > CONTENT_VERSION; \
-			echo "CONTENT_VERSION set to $$resolved (what content-latest currently points at)"; \
-		fi; \
+		echo "$$resolved" > CONTENT_VERSION; \
+		echo "CONTENT_VERSION set to $$resolved (what content-latest currently points at)"; \
 	fi; \
 	npm run validate-content
 
@@ -63,10 +85,6 @@ promote-content:
 		exit 1; \
 	fi; \
 	tag="$$($(RESOLVE_LATEST_TAG))"; \
-	if [ -z "$$tag" ]; then \
-		echo "No versioned content release found in $(REPO)" >&2; \
-		exit 1; \
-	fi; \
 	echo "Promoting $$tag to production..."; \
 	gh workflow run promote-content.yml -f tag="$$tag" -f description="$(DESCRIPTION)"
 
@@ -75,9 +93,3 @@ promote-content:
 # next push to development. deploy.yml resolves content-latest itself.
 sync:
 	gh workflow run deploy.yml --ref development
-
-# Catches the extra command-line goal(s) that make promote-content "..."
-# produces (Make treats the quoted description as another target to build)
-# and no-ops them instead of failing with "No rule to make target".
-%:
-	@:

@@ -36,11 +36,45 @@ jobs:
         run: |
           set -euo pipefail
           branch="promote-content/${{ inputs.tag }}"
+          tag="${{ inputs.tag }}"
+          description="${{ inputs.description }}"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch"
-          git commit -am "${{ inputs.description }}"
-          git push origin "$branch"
-          gh pr create --base main --head "$branch" \
-            --title "${{ inputs.description }}" \
-            --body "Promotes content export \`${{ inputs.tag }}\` to production."
+
+          main_pin="$(git show HEAD:CONTENT_VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+          if [ "$main_pin" = "$tag" ]; then
+            echo "main already pins $tag; nothing to promote."
+            existing_pr="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+            if [ -n "$existing_pr" ]; then
+              gh pr close "$existing_pr" --comment "Closed: main already pins \`$tag\`."
+            fi
+            exit 0
+          fi
+
+          # Reset bot branch onto current main so re-dispatch is idempotent.
+          git switch -C "$branch"
+          git add CONTENT_VERSION
+          if ! git diff --cached --quiet; then
+            git commit -m "$description"
+          fi
+          tip_pin="$(git show HEAD:CONTENT_VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+          if [ "$tip_pin" != "$tag" ]; then
+            echo "Failed to land CONTENT_VERSION=$tag on $branch (tip has '${tip_pin:-empty}')" >&2
+            exit 1
+          fi
+
+          # Bot-owned promote branches may already exist from a prior run;
+          # force updates the tip so re-dispatch retries cleanly.
+          git push -u --force origin "$branch"
+
+          existing_pr="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+          body="Promotes content export \`$tag\` to production."
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" --title "$description" --body "$body"
+            echo "Updated existing PR #$existing_pr for $tag"
+          else
+            gh pr create --base main --head "$branch" \
+              --title "$description" \
+              --body "$body"
+          fi
