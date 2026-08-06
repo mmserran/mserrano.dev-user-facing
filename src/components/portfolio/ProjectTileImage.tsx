@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { getMediaVariants } from "@/lib/content";
+import { getMediaVariants, getVideoPosterUrl } from "@/lib/content";
 
 const SIZES = "(min-width: 1440px) 33vw, (min-width: 794px) 50vw, 100vw";
 
@@ -73,6 +73,7 @@ function VideoLayer({
   const [isVisible, setIsVisible] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const [src] = getMediaVariants(filename);
+  const poster = getVideoPosterUrl(filename);
 
   useEffect(() => {
     const video = ref.current;
@@ -109,6 +110,7 @@ function VideoLayer({
       ref={ref}
       className={`${MEDIA_LAYER_BASE_CLASS} object-left-top ${className}`}
       src={isVisible ? src.url : undefined}
+      poster={poster}
       muted
       loop
       playsInline

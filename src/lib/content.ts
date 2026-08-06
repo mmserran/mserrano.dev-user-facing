@@ -139,6 +139,28 @@ export function getMediaVariants(filename: string): MediaVariant[] {
   }));
 }
 
+// Backend export pairs every .mp4 with a same-stem .jpg poster (e.g.
+// pulsemobile_video.mp4 -> pulsemobile_video.jpg) that gets the usual
+// responsive WebP processing. Returns the largest available variant URL for
+// use as an HTML video `poster` attribute, or undefined when the video
+// filename isn't an .mp4 or the poster isn't in the manifest yet.
+export function getVideoPosterUrl(videoFilename: string): string | undefined {
+  const trimmedFilename = videoFilename.trim();
+  if (!trimmedFilename.toLowerCase().endsWith(".mp4")) {
+    return undefined;
+  }
+
+  const posterFilename = `${trimmedFilename.slice(0, -4)}.jpg`;
+  const variants = getMediaVariants(posterFilename);
+  if (variants.length === 0) {
+    return undefined;
+  }
+
+  return variants.reduce((largest, variant) =>
+    (variant.width ?? 0) > (largest.width ?? 0) ? variant : largest,
+  ).url;
+}
+
 export function getHeaderLinks(): HeaderLink[] {
   return [...content["nav-header"]].sort((a, b) => a.sort - b.sort);
 }

@@ -72,6 +72,10 @@ describe("ImageTextVideo", () => {
     expect(video.loop).toBe(false);
     expect(video.autoplay).toBe(false);
     expect(container.querySelector(`source[src*="${KNOWN_FILENAME}"]`)).not.toBeNull();
+    // Same-stem .jpg poster shipped by the content export.
+    expect(video.getAttribute("poster")).toMatch(
+      /\/media\/animation-hospitalitypulse-oldFadeInEffect-\d+\.webp$/,
+    );
   });
 
   it("plays once as soon as it scrolls into the viewport, then stops observing", () => {

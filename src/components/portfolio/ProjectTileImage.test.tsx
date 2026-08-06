@@ -51,6 +51,8 @@ describe("ProjectTileImage", () => {
     const img = container.querySelector("img");
     expect(video).not.toBeNull();
     expect(img).not.toBeNull();
+    // Backend same-stem .jpg companion used as the HTML poster while loading.
+    expect(video?.getAttribute("poster")).toMatch(/\/media\/devops_video-\d+\.webp$/);
     expect(video).not.toHaveAttribute("src");
     expect(playSpy).not.toHaveBeenCalled();
 

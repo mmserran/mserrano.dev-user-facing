@@ -2,7 +2,12 @@
 
 import { useRef } from "react";
 import SectionDivider from "@/components/typography/SectionDivider";
-import { getFeaturedSectionView, getMediaVariants, type PageBuilderSection } from "@/lib/content";
+import {
+  getFeaturedSectionView,
+  getMediaVariants,
+  getVideoPosterUrl,
+  type PageBuilderSection,
+} from "@/lib/content";
 import usePlyrPlayer from "./usePlyrPlayer";
 
 // Ports pbFeatured.vue: a titled, centered archived-video recording (used by
@@ -13,6 +18,9 @@ import usePlyrPlayer from "./usePlyrPlayer";
 // overrides them the way pbImageText.vue hardcodes `:loop="false"`. Confirmed
 // against the live site: every real instance has is_autoplay false, so the
 // video sits paused behind Plyr's big-play-button overlay until clicked.
+// Poster comes from the backend's same-stem .jpg companion (see
+// getVideoPosterUrl), so the paused frame isn't a blank box before metadata
+// loads.
 export default function Featured({ section }: { section: PageBuilderSection }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const view = getFeaturedSectionView(section);
@@ -27,6 +35,8 @@ export default function Featured({ section }: { section: PageBuilderSection }) {
   if (!src) {
     return null;
   }
+
+  const poster = getVideoPosterUrl(view.filename);
 
   return (
     <section
@@ -52,6 +62,7 @@ export default function Featured({ section }: { section: PageBuilderSection }) {
           autoPlay={view.autoplay}
           playsInline
           preload="metadata"
+          poster={poster}
         >
           <source src={src.url} />
         </video>

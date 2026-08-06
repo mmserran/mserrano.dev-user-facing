@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { getMediaVariants, type ImageTextMedia } from "@/lib/content";
+import { getMediaVariants, getVideoPosterUrl, type ImageTextMedia } from "@/lib/content";
 import usePlyrPlayer from "./usePlyrPlayer";
 
 const VIEWPORT_PLAY_THRESHOLD = 0.5;
@@ -22,6 +22,7 @@ const VIEWPORT_PLAY_THRESHOLD = 0.5;
 // first frame (usePlayer and autoplay both false, e.g. "Form Validation") a
 // way to actually play. Still muted/non-looping either way; a Plyr-enhanced
 // clip's own controls remain available to pause/replay/seek afterward.
+// Poster uses the backend same-stem .jpg companion via getVideoPosterUrl.
 export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -47,6 +48,8 @@ export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
   const [src] = getMediaVariants(media.filename);
   if (!src) return null;
 
+  const poster = getVideoPosterUrl(media.filename);
+
   return (
     <video
       ref={videoRef}
@@ -55,6 +58,7 @@ export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
       loop={false}
       playsInline
       preload="metadata"
+      poster={poster}
     >
       <source src={src.url} />
     </video>
