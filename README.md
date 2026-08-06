@@ -90,7 +90,7 @@ and hands prebuilt output to Vercel. Every restore also runs `npm run
 validate-content`, which fails the build loudly if `content.json`'s shape doesn't
 match what `src/lib/content.ts` expects.
 
-`.github/workflows/deploy.yml` runs on push to:
+`.github/workflows/deploy.yml` deploys by branch (on push, or via `make sync` / `workflow_dispatch`):
 
 | Branch        | Content source          | Result                                          |
 | -------------- | ------------------------ | ------------------------------------------------ |
