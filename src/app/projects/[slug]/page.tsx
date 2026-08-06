@@ -30,6 +30,9 @@ export async function generateMetadata({
     description:
       project.general.content.trim() ||
       `View details for ${project.general.title}.`,
+    alternates: {
+      canonical: `/projects/${slug}/`,
+    },
   };
 }
 

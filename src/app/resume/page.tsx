@@ -8,6 +8,9 @@ import PageTitle from "@/components/typography/PageTitle";
 export const metadata: Metadata = {
   title: "Resume | Mark Serrano",
   description: "View or download Mark Serrano's resume.",
+  alternates: {
+    canonical: "/resume/",
+  },
 };
 
 const LINK_ARTWORK: Record<string, string> = {

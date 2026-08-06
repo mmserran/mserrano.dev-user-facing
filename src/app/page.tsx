@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Mark Anthony Serrano Portfolio Website",
   description:
     "Portfolio of Mark Anthony Serrano — software engineer specializing in WordPress and Shopify development.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function Home() {

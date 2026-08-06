@@ -20,12 +20,33 @@ const outDir = path.join(root, "out");
 const outputDir = path.join(root, ".vercel", "output");
 const staticDir = path.join(outputDir, "static");
 
+function toBuildOutputRoute({ source, destination, statusCode }) {
+  let captureIndex = 0;
+  const parameterIndexes = new Map();
+  const src = source.replace(/:([A-Za-z][A-Za-z0-9_]*)/g, (_match, name) => {
+    captureIndex += 1;
+    parameterIndexes.set(name, captureIndex);
+    return "([^/]+)";
+  });
+  const location = destination.replace(
+    /:([A-Za-z][A-Za-z0-9_]*)/g,
+    (_match, name) => `$${parameterIndexes.get(name)}`,
+  );
+
+  return {
+    src: `^${src}$`,
+    status: statusCode,
+    headers: { Location: location },
+  };
+}
+
 if (!existsSync(outDir)) {
   console.error(`${outDir} does not exist - run \`npm run build\` first.`);
   process.exit(1);
 }
 
 const { dependencies } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"));
+const { redirects = [] } = JSON.parse(readFileSync(path.join(root, "vercel.json"), "utf-8"));
 
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(staticDir, { recursive: true });
@@ -36,7 +57,11 @@ writeFileSync(
   JSON.stringify(
     {
       version: 3,
-      routes: [{ handle: "error" }, { src: "^(?!/api).*$", status: 404, dest: "/404.html" }],
+      routes: [
+        ...redirects.map(toBuildOutputRoute),
+        { handle: "error" },
+        { src: "^(?!/api).*$", status: 404, dest: "/404.html" },
+      ],
       framework: { slug: "nextjs", version: dependencies.next },
     },
     null,

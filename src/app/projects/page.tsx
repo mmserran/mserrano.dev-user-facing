@@ -8,6 +8,9 @@ import { getProjectFilters, getProjects } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Portfolio | Mark Serrano",
   description: "Browse Mark Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
+  alternates: {
+    canonical: "/projects/",
+  },
 };
 
 export default function ProjectsPage() {
