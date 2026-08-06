@@ -53,10 +53,13 @@ export function usePrefersReducedMotion(): boolean {
   );
 }
 
-// Muted/looping background-style video layer. `playWhenActive=true` always
-// autoplays (the legacy "static video" cases); a defined value instead ties
-// playback to hover/touch so a paused frame 0 doubles as that layer's resting
-// poster (the legacy "blank static + hover video" case).
+// Muted/looping background-style video layer. Source and playback load only
+// while the element intersects the viewport (IntersectionObserver), so
+// offscreen Related Projects tiles do not fetch or decode video over the
+// featured player; leaving view pauses and reloads to drop the media buffer.
+// When visible and motion is allowed, `playWhenActive=true` autoplays (legacy
+// "static video"); otherwise playback follows hover/touch so a paused frame 0
+// doubles as that layer's resting poster ("blank static + hover video").
 function VideoLayer({
   filename,
   playWhenActive,
@@ -67,14 +70,29 @@ function VideoLayer({
   className?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const [src] = getMediaVariants(filename);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    if (reducedMotion) {
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.01 },
+    );
+    observer.observe(video);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    if (!isVisible || reducedMotion) {
       video.pause();
+      if (!isVisible) video.load();
       return;
     }
     if (playWhenActive) {
@@ -82,7 +100,7 @@ function VideoLayer({
     } else {
       video.pause();
     }
-  }, [playWhenActive, reducedMotion]);
+  }, [isVisible, playWhenActive, reducedMotion]);
 
   if (!src) return null;
 
@@ -90,7 +108,7 @@ function VideoLayer({
     <video
       ref={ref}
       className={`${MEDIA_LAYER_BASE_CLASS} object-left-top ${className}`}
-      src={src.url}
+      src={isVisible ? src.url : undefined}
       muted
       loop
       playsInline
