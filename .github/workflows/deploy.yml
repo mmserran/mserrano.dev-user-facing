@@ -29,7 +29,12 @@ jobs:
         run: npm ci
 
       - name: Restore content and media
-        run: make restore-media
+        run: |
+          if [ "${{ env.VERCEL_ENV }}" = "production" ]; then
+            make restore-media TAG="$(cat CONTENT_VERSION)"
+          else
+            make restore-media
+          fi
         env:
           GH_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 

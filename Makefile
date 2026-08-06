@@ -3,7 +3,7 @@
 SHELL := /usr/bin/env bash
 
 REPO := mmserran/mserrano.dev-web-services
-TAG := content-latest
+TAG ?= content-latest
 
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
