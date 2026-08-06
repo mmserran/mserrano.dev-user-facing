@@ -1,9 +1,19 @@
-.PHONY: restore-media
+.PHONY: restore-media promote-content
 
 SHELL := /usr/bin/env bash
 
 REPO := mmserran/mserrano.dev-web-services
 TAG ?= content-latest
+
+# Lets `make promote-content "description text"` pass the description as a
+# plain quoted argument instead of `DESCRIPTION=`. Everything after the
+# target name is rejoined into DESCRIPTION; the trailing %: rule below stops
+# Make from trying (and failing) to build a file with that name. An explicit
+# `DESCRIPTION=...` on the command line still wins, since Make always
+# prioritizes command-line variable assignments over ones set in the file.
+ifeq (promote-content,$(firstword $(MAKECMDGOALS)))
+  DESCRIPTION := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+endif
 
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
@@ -26,3 +36,27 @@ restore-media:
 	mkdir -p public; \
 	mv "$$tmp/extracted/media" public/media; \
 	echo "Content export unpacked: content/{content,manifest}.json, public/media/"
+
+# Finds the newest versioned content export release (the backend tags them
+# content-YYYYMMDD-HHMM, distinct from the content-latest alias) and kicks
+# off promote-content.yml to open a PR pinning production to it.
+promote-content:
+	@set -euo pipefail; \
+	if [ -z "$(DESCRIPTION)" ]; then \
+		echo 'Usage: make promote-content "what changed"' >&2; \
+		exit 1; \
+	fi; \
+	tag="$$(gh release list --repo $(REPO) -L 100 \
+		| grep -oE 'content-[0-9]{8}-[0-9]{4}' | sort -r | head -1)"; \
+	if [ -z "$$tag" ]; then \
+		echo "No versioned content release found in $(REPO)" >&2; \
+		exit 1; \
+	fi; \
+	echo "Promoting $$tag to production..."; \
+	gh workflow run promote-content.yml -f tag="$$tag" -f description="$(DESCRIPTION)"
+
+# Catches the extra command-line goal(s) that make promote-content "..."
+# produces (Make treats the quoted description as another target to build)
+# and no-ops them instead of failing with "No rule to make target".
+%:
+	@:
