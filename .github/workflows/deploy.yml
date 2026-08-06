@@ -38,6 +38,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
 
+      - name: Validate content shape
+        run: npm run validate-content
+
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 

@@ -50,7 +50,8 @@ restore-media:
 			echo "$$resolved" > CONTENT_VERSION; \
 			echo "CONTENT_VERSION set to $$resolved (what content-latest currently points at)"; \
 		fi; \
-	fi
+	fi; \
+	npm run validate-content
 
 # Finds the newest versioned content export release (the backend tags them
 # content-YYYYMMDD-HHMM, distinct from the content-latest alias) and kicks
