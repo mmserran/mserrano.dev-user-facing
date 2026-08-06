@@ -7,8 +7,8 @@ import { getProjectFilters, getProjects } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Portfolio | Mark Anthony Serrano",
-  description: "Browse Mark Anthony Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
-
+  description:
+    "Browse Mark Anthony Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
 };
 
 export default function ProjectsPage() {

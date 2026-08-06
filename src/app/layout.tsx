@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://mserrano.dev"),
   title: "Mark Anthony Serrano",
   description: "Portfolio of Mark Anthony Serrano.",
-
 };
 
 export default function RootLayout({

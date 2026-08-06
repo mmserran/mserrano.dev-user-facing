@@ -5,9 +5,8 @@ export const dynamic = "force-static";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Mark Anthony Serrano",
-    short_name: "Mark Anthony Serrano",
+    short_name: "Mark Serrano",
     description: "Portfolio of Mark Anthony Serrano.",
-
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
