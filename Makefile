@@ -8,13 +8,17 @@ TAG ?= content-latest
 # The backend tags real, dated exports content-YYYYMMDD-HHMM and separately
 # republishes the content-latest alias to match the newest one. Resolve by
 # scanning recent releases for dated tags, then verify the winner's embedded
-# UTC timestamp (minute precision) matches content-latest's publishedAt.
+# UTC day/time is within a small window of content-latest's publishedAt.
+# Exact minute equality is wrong: the alias is republished after the dated
+# tag is cut, so publishedAt is often 1+ minutes later than the tag name.
 # Enlarging -L alone cannot guarantee the true newest tag when non-content
-# releases dominate the list; a stale match fails loud instead of pinning
-# the wrong export. ISO publishedAt is parsed with bash substrings so the
-# check is portable (no GNU date -d).
+# releases dominate the list; a stale match (different UTC day, or more
+# than MAX_SKEW_MINUTES away) fails loud instead of pinning the wrong
+# export. ISO publishedAt is parsed with bash substrings so the check is
+# portable (no GNU date -d).
 define RESOLVE_LATEST_TAG
 bash -ec '\
+	max_skew_minutes=15; \
 	resolved=$$(gh release list --repo "$(REPO)" -L 20 \
 		| grep -oE "content-[0-9]{8}-[0-9]{4}" | sort -r | head -1); \
 	if [ -z "$$resolved" ]; then \
@@ -30,14 +34,24 @@ bash -ec '\
 		echo "Unexpected publishedAt format for content-latest: $$published_at" >&2; \
 		exit 1; \
 	fi; \
-	latest_ts="$${published_at:0:4}$${published_at:5:2}$${published_at:8:2}$${published_at:11:2}$${published_at:14:2}"; \
+	latest_day="$${published_at:0:4}$${published_at:5:2}$${published_at:8:2}"; \
+	latest_mins=$$((10#$${published_at:11:2} * 60 + 10#$${published_at:14:2})); \
 	if [[ ! "$$resolved" =~ ^content-([0-9]{8})-([0-9]{4})$$ ]]; then \
 		echo "Unexpected resolved tag format: $$resolved" >&2; \
 		exit 1; \
 	fi; \
-	tag_ts="$${BASH_REMATCH[1]}$${BASH_REMATCH[2]}"; \
-	if [ "$$tag_ts" != "$$latest_ts" ]; then \
-		echo "Resolved $$resolved (UTC $$tag_ts) does not match content-latest publishedAt $$published_at (UTC $$latest_ts)." >&2; \
+	tag_day="$${BASH_REMATCH[1]}"; \
+	tag_hm="$${BASH_REMATCH[2]}"; \
+	tag_mins=$$((10#$${tag_hm:0:2} * 60 + 10#$${tag_hm:2:2})); \
+	if [ "$$tag_day" != "$$latest_day" ]; then \
+		echo "Resolved $$resolved (UTC day $$tag_day) does not match content-latest publishedAt $$published_at (UTC day $$latest_day)." >&2; \
+		echo "The top-20 release window likely missed a newer content export; refuse to pin a stale tag." >&2; \
+		exit 1; \
+	fi; \
+	skew=$$((latest_mins - tag_mins)); \
+	if [ "$$skew" -lt 0 ]; then skew=$$((-skew)); fi; \
+	if [ "$$skew" -gt "$$max_skew_minutes" ]; then \
+		echo "Resolved $$resolved is $${skew}m from content-latest publishedAt $$published_at (limit $${max_skew_minutes}m)." >&2; \
 		echo "The top-20 release window likely missed a newer content export; refuse to pin a stale tag." >&2; \
 		exit 1; \
 	fi; \
