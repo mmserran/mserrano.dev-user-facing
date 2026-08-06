@@ -27,9 +27,15 @@ if (!existsSync(outDir)) {
 
 const { dependencies } = JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"));
 
+const publicDir = path.join(root, "public");
+
 rmSync(outputDir, { recursive: true, force: true });
 mkdirSync(staticDir, { recursive: true });
+if (existsSync(publicDir)) {
+  cpSync(publicDir, outDir, { recursive: true, errorOnExist: false, overwrite: false });
+}
 cpSync(outDir, staticDir, { recursive: true });
+
 
 writeFileSync(
   path.join(outputDir, "config.json"),
