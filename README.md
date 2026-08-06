@@ -100,5 +100,5 @@ match what `src/lib/content.ts` expects.
 | Command                                | Action                                                                          |
 | --------------------------------------- | -------------------------------------------------------------------------------- |
 | `make restore-media`                   | Restore content/media locally; validates shape and updates `CONTENT_VERSION`   |
-| `make sync`                             | Manually trigger a `development` deploy so a new content release reaches staging without a code push |
+| `make sync`                             | Trigger a `development` staging deploy, watch the Actions run until it finishes, and print failed-step logs on error |
 | `make promote-content "description"`   | Open a PR bumping `CONTENT_VERSION` to promote a content-only release to production |
