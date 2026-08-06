@@ -1,49 +1,598 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+
+/* Registers the technology carousel's edge-fade opacities as genuinely
+   animatable numbers (CSS Properties and Values API). A plain custom
+   property, or swapping the whole mask-image gradient string, is "discrete"
+   to the browser - a transition on it holds the old value and snaps to the
+   new one partway through, not a crossfade. Typing it as <number> here is
+   what makes the two values actually glide between 0 and 1 instead of
+   flipping, which is what makes the fade read as the icons fading in place
+   rather than a wipe sliding across them. Unsupported browsers just keep
+   the untyped, non-animating fallback - Carousel.tsx's transition is a
+   strict enhancement either way. */
+@property --carousel-edge-fade-left-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@property --carousel-edge-fade-right-opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@theme {
+  /* Brand colors carried over from the Gridsome frontend's _base-styles.scss */
+  --color-brand-blue: #006bb6;
+  --color-brand-yellow: #ffc420;
+  --color-nav-sidebar: #f2f2f2;
+  --shadow-app-bar: 0 2px 4px -1px rgb(0 0 0 / 20%), 0 4px 5px rgb(0 0 0 / 14%), 0 1px 10px rgb(0 0 0 / 12%);
+  --shadow-nav-drawer: 0 8px 10px -5px rgb(0 0 0 / 20%), 0 16px 24px 2px rgb(0 0 0 / 14%), 0 6px 30px 5px rgb(0 0 0 / 12%);
+  --shadow-cta: 0 3px 1px -2px rgb(0 0 0 / 20%), 0 2px 2px rgb(0 0 0 / 14%), 0 1px 5px rgb(0 0 0 / 12%);
+
+  /* Night sky star field drift, carried over from decorPixelStars.vue */
+  --animate-star-drift-slow: star-drift 600s linear infinite;
+  --animate-star-drift-medium: star-drift 300s linear infinite;
+  --animate-star-drift-fast: star-drift 150s linear infinite;
+
+  /* Landing page name/tagline shine sweep, carried over from the "shine" mixin in _base-styles.scss */
+  --animate-shine: shine 5s infinite;
+
+  /* Endcap illustration, carried over from snippetEndcapMarkAnthonySerrano2020.vue */
+  --animate-sway-1: sway 5s alternate infinite;
+  --animate-sway-2-delayed: sway 7s alternate infinite 2s;
+  --animate-sway-3-delayed: sway 4s alternate infinite 4s;
+  --animate-turtle-swim: turtle-swim 40s ease-in-out infinite;
+
+  /* Endcap aquarium tank 1 (penguins) */
+  --animate-penguin-slow-descent: penguin-slow-descent 20s infinite linear;
+  --animate-penguin-fun: penguin-fun 20s infinite linear;
+  --animate-penguin-slow-poke: penguin-slow-poke 20s infinite linear;
+
+  /* Endcap aquarium tank 2 (pelagic conveyor) */
+  --animate-tank2-speed-ramp: tank2-speed-ramp 30s infinite linear;
+
+  /* Endcap aquarium tank 3 (rotating exhibit) */
+  --animate-bat-ray: bat-ray-behavior 30s infinite linear;
+  --animate-octopus-sink: octopus-sink 45s infinite linear;
+  --animate-jelly-diagonal: jelly-diagonal 50s 10s infinite linear;
+  --animate-jelly-upward: jelly-upward 40s infinite linear;
+  --animate-jelly-lazy: jelly-lazy 120s infinite linear;
+  --animate-yellow-tang: yellow-tang-behavior 20s infinite linear;
+  --animate-multicolor-cuttlefish: multicolor-shift 30s linear alternate-reverse infinite;
+  --animate-multicolor-comb-jelly: multicolor-shift 2s ease infinite;
+  --animate-multicolor-squid: multicolor-shift 15s ease-in-out infinite;
+
+  /* Endcap smoke effect */
+  --animate-smoke-rise-br: smoke-rise-br 10s linear;
+  --animate-smoke-rise-bl: smoke-rise-bl 10s linear 0.5s;
+  --animate-smoke-rise-tr: smoke-rise-tr 10s linear 1s;
+  --animate-smoke-rise-tl: smoke-rise-tl 10s linear 1.5s;
+
+  /* Santa Cruz lighthouse beacon: fixes svgIllustration.vue's animation-name
+     typo (animateRotor, which never matched its animateLight keyframes, so
+     the rotor never animated on the live site). Six equal 1.8s slots make
+     up the 10.8s rotation - SW, NW, a pause, NE, SE, a pause - the two
+     pauses landing where the beam would cross from the west-side bars to
+     the east-side ones and back, rather than jumping straight across. */
+  --animate-light-sw: animateLight 10.8s linear infinite;
+  --animate-light-nw: animateLight 10.8s linear infinite 1.8s;
+  --animate-light-ne: animateLight 10.8s linear infinite 5.4s;
+  --animate-light-se: animateLight 10.8s linear infinite 7.2s;
+
+  /* Project page header screenshot carousel: slow top-to-bottom pan inside
+     the browser-frame SVG, carried over from decorDeviceFrame.vue's
+     "animated" offset. Holds briefly at the top and bottom of the pan
+     (matching the source's 15%/90% keyframe stops) so the pause before the
+     carousel advances to the next slide reads as deliberate, not abrupt.
+     4s here is only the pre-measurement fallback (matches
+     BrowserDeviceFrame's MIN_PAN_SECONDS floor) - once the screenshot loads,
+     an inline animation-duration overrides this, scaled to the screenshot's
+     height so tall and short screenshots pan at roughly the same speed. */
+  --animate-project-screenshot-pan: project-screenshot-pan 4s cubic-bezier(0.7, 0.5, 1, 1) forwards;
+
+  /* Project page header screenshot carousel: crossfade between the outgoing
+     and incoming slide (frame + screenshot together) when the carousel
+     advances, carried over from snippetCarouselBrowser.vue's Vuetify
+     fade-transition on each v-carousel-item. Duration and easing copied
+     from Vuetify's actual .fade-transition-enter-active rule on the live
+     site (0.3s cubic-bezier(0.25, 0.8, 0.5, 1)), not guessed. */
+  --animate-carousel-fade-in: carousel-fade-in 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
+  --animate-carousel-fade-out: carousel-fade-out 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) forwards;
+
+  /* Mobile mosaic (pbMobileMozaic): the whole tilted stage rocks back and
+     forth forever, independent of the row-scroll animation below - carried
+     over from pbMobileMozaicActual.vue's .perspective rule verbatim. */
+  --animate-mosaic-roll: mosaic-roll 10s linear infinite alternate;
+
+  /* The three named pan curves from decorDeviceFrame.vue, ported 1:1
+     (including their delays). Duration here is only a pre-measurement
+     fallback - MobileDeviceFrame overrides it inline once the screenshot
+     loads, scaled to its natural height (same technique as
+     project-screenshot-pan/BrowserDeviceFrame). Fill-mode both matches
+     decorDeviceFrame.vue's .play rule so the 0% crop holds through the
+     delay; after the single iteration the end crop holds (forwards). */
+  --animate-mosaic-slow-scroll-from-top: mosaic-slow-scroll-from-top 4s linear 0.5s both;
+  --animate-mosaic-footer-scroll-up: mosaic-footer-scroll-up 4s linear 1.25s both;
+  --animate-mosaic-mid-scroll: mosaic-mid-scroll 4s linear both;
+}
+
+@keyframes technology-star-twirl {
+  0% {
+    transform: translateY(-50%) rotate(45deg) rotateY(0deg);
+  }
+  70%,
+  100% {
+    transform: translateY(-50%) rotate(45deg) rotateY(540deg);
   }
 }
 
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+@keyframes star-drift {
+  from {
+    transform: translateY(0);
   }
+  to {
+    transform: translateY(-300vh);
+  }
+}
+
+@keyframes sway {
+  0% {
+    transform: translateX(0vw);
+  }
+  100% {
+    transform: translateX(1vw);
+  }
+}
+
+@keyframes turtle-swim {
+  0% {
+    left: 62%;
+    transform: scaleX(1);
+  }
+  50% {
+    left: 42%;
+    transform: scaleX(1);
+  }
+  51% {
+    transform: scaleX(-1);
+  }
+  100% {
+    left: 62%;
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes penguin-slow-descent {
+  0% {
+    top: -1.1vw;
+    left: 3vw;
+  }
+  40% {
+    top: 3vw;
+    left: 0vw;
+  }
+  100% {
+    top: 3vw;
+    left: 0vw;
+  }
+}
+
+@keyframes penguin-fun {
+  0% {
+    top: -1vw;
+    left: 4vw;
+  }
+  4% {
+    top: 0.75vw;
+    left: 3.5vw;
+  }
+  5% {
+    top: 0.7vw;
+    left: 3.4vw;
+  }
+  30% {
+    top: 3vw;
+    left: 2vw;
+  }
+  40% {
+    top: -1vw;
+    left: -2vw;
+  }
+  100% {
+    top: -1vw;
+    left: -2vw;
+  }
+}
+
+@keyframes penguin-slow-poke {
+  0% {
+    top: 0.5vw;
+    left: 6vw;
+  }
+  100% {
+    top: 1.5vw;
+    left: -1vw;
+  }
+}
+
+@keyframes tank2-speed-ramp {
+  0% {
+    left: -37vw;
+  }
+  60% {
+    left: -31.5vw;
+  }
+  80% {
+    left: -20.5vw;
+  }
+  89% {
+    left: -1.5vw;
+  }
+  90% {
+    left: -1vw;
+  }
+  100% {
+    left: 5vw;
+  }
+}
+
+@keyframes bat-ray-behavior {
+  0% {
+    top: 0.5vw;
+    left: 6vw;
+    transform: scaleX(1);
+  }
+  35% {
+    top: 0.5vw;
+    left: -2vw;
+    transform: scaleX(1);
+  }
+  50% {
+    top: 2vw;
+    left: -2vw;
+    transform: scaleX(-1);
+  }
+  85% {
+    top: 2vw;
+    left: 6vw;
+    transform: scaleX(-1);
+  }
+  100% {
+    top: 2vw;
+    left: 6vw;
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes octopus-sink {
+  0% {
+    top: 3vw;
+    left: 2.8vw;
+  }
+  2% {
+    top: 1.25vw;
+    left: 3.5vw;
+  }
+  25% {
+    top: 2.25vw;
+    left: 3.75vw;
+  }
+  27% {
+    top: 0.85vw;
+    left: 3vw;
+  }
+  50% {
+    top: 1.85vw;
+    left: 3vw;
+  }
+  52% {
+    top: 0.25vw;
+    left: 3.25vw;
+  }
+  75% {
+    top: 1.25vw;
+    left: 3.5vw;
+  }
+  77% {
+    top: -1vw;
+    left: 2vw;
+  }
+  90% {
+    top: -0.25vw;
+    left: -1vw;
+  }
+  100% {
+    top: -0.25vw;
+    left: -1vw;
+  }
+}
+
+@keyframes jelly-diagonal {
+  0% {
+    left: 5vw;
+    top: 3vw;
+  }
+  100% {
+    left: -2vw;
+    top: -1vw;
+  }
+}
+
+@keyframes jelly-upward {
+  0% {
+    top: 3vw;
+    left: 3vw;
+  }
+  100% {
+    top: -1vw;
+    left: 3.5vw;
+  }
+}
+
+/* opacity is intentionally unset at 0%/100%: it falls back to the
+   element's own base opacity (0.5) there, so the cycle reads as
+   0.5 -> 0 -> 1 -> 0 -> 1 -> 0.5, a lazy flicker rather than a clean fade. */
+@keyframes jelly-lazy {
+  0% {
+    top: 3vw;
+    left: 4vw;
+  }
+  20%,
+  50% {
+    opacity: 0;
+  }
+  30%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    top: -1vw;
+    left: 3.5vw;
+  }
+}
+
+@keyframes yellow-tang-behavior {
+  0% {
+    top: 0.6vw;
+    left: -2vw;
+    transform: scaleX(1);
+  }
+  15% {
+    top: 0.6vw;
+    left: 6vw;
+    transform: scaleX(1);
+  }
+  22% {
+    top: 1.75vw;
+    left: 6vw;
+    transform: scaleX(-1);
+  }
+  37% {
+    top: 1.75vw;
+    left: -2vw;
+    transform: scaleX(-1);
+  }
+  100% {
+    top: 1.75vw;
+    left: -2vw;
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes multicolor-shift {
+  0% {
+    background-position: 0% 62%;
+  }
+  50% {
+    background-position: 100% 37%;
+  }
+  100% {
+    background-position: 0% 62%;
+  }
+}
+
+@keyframes smoke-rise-br {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  70% {
+    opacity: 0;
+  }
+  80% {
+    transform: translateY(-50px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+@keyframes smoke-rise-bl {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  70% {
+    opacity: 0;
+  }
+  80% {
+    transform: translateY(-75px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-75px);
+  }
+}
+
+@keyframes smoke-rise-tr {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  70% {
+    opacity: 0;
+  }
+  80% {
+    transform: translateY(-85px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-85px);
+  }
+}
+
+@keyframes smoke-rise-tl {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  70% {
+    opacity: 0;
+  }
+  80% {
+    transform: translateY(-110px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-110px);
+  }
+}
+
+@keyframes animateLight {
+  0%,
+  16%,
+  100% {
+    opacity: 0.01;
+  }
+
+  2%,
+  14% {
+    opacity: 1;
+  }
+}
+
+@keyframes shine {
+  from {
+    mask-position: 150%;
+    -webkit-mask-position: 150%;
+  }
+  to {
+    mask-position: -50%;
+    -webkit-mask-position: -50%;
+  }
+}
+
+@keyframes project-screenshot-pan {
+  0% {
+    object-position: 0% 0%;
+  }
+  15% {
+    object-position: 0% 0%;
+  }
+  90% {
+    object-position: 0% 100%;
+  }
+  100% {
+    object-position: 0% 100%;
+  }
+}
+
+@keyframes carousel-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes carousel-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes mosaic-roll {
+  0% {
+    transform: perspective(1000px) rotateX(20deg) translate(0, 0) rotate3d(0, 1, 0.2, 20deg);
+  }
+  100% {
+    transform: perspective(1000px) rotateX(40deg) rotate3d(-1, 1, 0.5, -20deg);
+  }
+}
+
+@keyframes mosaic-slow-scroll-from-top {
+  0%,
+  8% {
+    object-position: 0 0%;
+  }
+  14% {
+    object-position: 0 20%;
+  }
+  80%,
+  100% {
+    object-position: 0 50%;
+  }
+}
+
+@keyframes mosaic-footer-scroll-up {
+  0%,
+  8% {
+    object-position: 0 100%;
+  }
+  12% {
+    object-position: 0 80%;
+  }
+  100% {
+    object-position: 0 70%;
+  }
+}
+
+@keyframes mosaic-mid-scroll {
+  0%,
+  8% {
+    object-position: 0 30%;
+  }
+  14% {
+    object-position: 0 50%;
+  }
+  80%,
+  100% {
+    object-position: 0 100%;
+  }
+}
+
+.shine-text {
+  mask-image: linear-gradient(-62deg, rgb(0 0 0 / 85%) 25%, #000 62%, rgb(0 0 0 / 85%) 75%);
+  -webkit-mask-image: linear-gradient(-62deg, rgb(0 0 0 / 85%) 25%, #000 62%, rgb(0 0 0 / 85%) 75%);
+  mask-size: 200%;
+  -webkit-mask-size: 200%;
+}
+
+/* Plyr control skin brand accents, carried over from baseVideo.vue
+   ($blue / #006bb6). Applied globally so the dynamic plyr.css import in
+   ImageTextVideo picks up the same blue range, overlaid play, hover/focus,
+   and checked-menu treatment as the live site. */
+.plyr--full-ui input[type="range"] {
+  color: var(--color-brand-blue) !important;
+}
+.plyr__control--overlaid {
+  background: color-mix(in srgb, var(--color-brand-blue) 80%, transparent) !important;
+}
+.plyr--video .plyr__control.plyr__tab-focus,
+.plyr--video .plyr__control:hover,
+.plyr--video .plyr__control[aria-expanded="true"] {
+  background: var(--color-brand-blue) !important;
+}
+.plyr__control.plyr__tab-focus {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-brand-blue) 50%, transparent) !important;
+}
+.plyr__menu__container .plyr__control[role="menuitemradio"][aria-checked="true"]::before {
+  background: var(--color-brand-blue) !important;
 }

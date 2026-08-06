@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
 
 # next.js
 /.next/
@@ -36,6 +38,14 @@ yarn-error.log*
 # vercel
 .vercel
 
+# content export (fetched via `make restore-media`)
+/content/
+/public/media/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Agent-generated browser artifacts
+artifacts/
+.playwright-cli/

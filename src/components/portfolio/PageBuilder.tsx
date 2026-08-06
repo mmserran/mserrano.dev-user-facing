@@ -1,0 +1,79 @@
+import type { ReactNode } from "react";
+import {
+  getPageBuilderSections,
+  type PageBuilderSection,
+  type Project,
+} from "@/lib/content";
+import CenterEmphasisCarousel from "./CenterEmphasisCarousel";
+import Featured from "./Featured";
+import ImageText from "./ImageText";
+import MobileMosaic from "./MobileMosaic";
+import Parallax from "./Parallax";
+import ProjectHeader from "./ProjectHeader";
+import RelatedProjects from "./RelatedProjects";
+import TechnologyBreakdown from "./TechnologyBreakdown";
+import TechnologyCarousel from "./TechnologyCarousel";
+import Triplet from "./Triplet";
+
+type PageBuilderComponent = (props: {
+  project: Project;
+  section: PageBuilderSection;
+  index: number;
+}) => ReactNode;
+
+// Maps a pagebuilder block's `type` to the component that renders it.
+// Contract for a new entry:
+//   - Component receives `{ project, section, index }` (mirroring Gridsome's
+//     singleProject.vue `:section` / array index). A type that is always a
+//     singleton in real content may ignore `section`/`index` and self-locate
+//     via a `find<Type>Block()` helper in content.ts (how today's six mapped
+//     types work). A multi-instance type (pbTriplet, pbImageText, pbFeatured,
+//     pbCarouselCenterEmphasis, pbParallax)
+//     must read its data from the passed `section` instead of find-first,
+//     since find-first would only surface the first occurrence.
+//   - Renders null when its block is absent or resolves to empty content.
+//   - Owns its own title chrome via SectionDivider (pass raw `title`; that
+//     component owns the three-way branch and vertical rhythm), or omits it
+//     when the block has no divider (e.g. pbHeader). Keep the section wrapper
+//     margin-/padding-free vertically - the dispatcher inserts no dividers.
+//   - Test it standalone against real content.json fixtures; PageBuilder's
+//     own tests only need touching to assert a type's position in the array.
+//
+const PAGE_BUILDER_COMPONENTS: Record<string, PageBuilderComponent> = {
+  pbHeader: ProjectHeader as PageBuilderComponent,
+  pbGraphBreakdown: TechnologyBreakdown as PageBuilderComponent,
+  pbCarouselTechnology: TechnologyCarousel as PageBuilderComponent,
+  pbMobileMozaic: MobileMosaic as PageBuilderComponent,
+  pbCarouselRelatedPosts: RelatedProjects as PageBuilderComponent,
+  pbTriplet: Triplet as PageBuilderComponent,
+  pbImageText: ImageText as PageBuilderComponent,
+  pbFeatured: Featured as PageBuilderComponent,
+  pbCarouselCenterEmphasis: CenterEmphasisCarousel as PageBuilderComponent,
+  pbParallax: Parallax as PageBuilderComponent,
+};
+
+// Ports singleProject.vue's `<component :is="section.type">`: walks the
+// project's pagebuilder array in its own order and renders the matching
+// component once per occurrence (no dedup-by-type).
+export default function PageBuilder({ project }: { project: Project }) {
+  const sections = getPageBuilderSections(project);
+
+  return (
+    <>
+      {sections.map((section, index) => {
+        const Component = PAGE_BUILDER_COMPONENTS[section.type];
+        if (!Component) {
+          return null;
+        }
+        return (
+          <Component
+            key={`${project.slug}-${section.type}-${index}`}
+            project={project}
+            section={section}
+            index={index}
+          />
+        );
+      })}
+    </>
+  );
+}
