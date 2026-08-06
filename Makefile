@@ -5,6 +5,14 @@ SHELL := /usr/bin/env bash
 REPO := mmserran/mserrano.dev-web-services
 TAG ?= content-latest
 
+# The backend tags real, dated exports content-YYYYMMDD-HHMM and separately
+# republishes the content-latest alias to match the newest one, so the
+# newest dated tag is what content-latest currently points at. -L 20 gives
+# headroom past the handful of most-recent content exports we'd ever need,
+# since the release list is shared with interleaved uploads-backup releases.
+RESOLVE_LATEST_TAG = gh release list --repo $(REPO) -L 20 \
+	| grep -oE 'content-[0-9]{8}-[0-9]{4}' | sort -r | head -1
+
 # Lets `make promote-content "description text"` pass the description as a
 # plain quoted argument instead of `DESCRIPTION=`. Everything after the
 # target name is rejoined into DESCRIPTION; the trailing %: rule below stops
@@ -35,7 +43,14 @@ restore-media:
 	echo "Installing media assets..."; \
 	mkdir -p public; \
 	mv "$$tmp/extracted/media" public/media; \
-	echo "Content export unpacked: content/{content,manifest}.json, public/media/"
+	echo "Content export unpacked: content/{content,manifest}.json, public/media/"; \
+	if [ "$(TAG)" = "content-latest" ]; then \
+		resolved="$$($(RESOLVE_LATEST_TAG))"; \
+		if [ -n "$$resolved" ]; then \
+			echo "$$resolved" > CONTENT_VERSION; \
+			echo "CONTENT_VERSION set to $$resolved (what content-latest currently points at)"; \
+		fi; \
+	fi
 
 # Finds the newest versioned content export release (the backend tags them
 # content-YYYYMMDD-HHMM, distinct from the content-latest alias) and kicks
@@ -46,8 +61,7 @@ promote-content:
 		echo 'Usage: make promote-content "what changed"' >&2; \
 		exit 1; \
 	fi; \
-	tag="$$(gh release list --repo $(REPO) -L 100 \
-		| grep -oE 'content-[0-9]{8}-[0-9]{4}' | sort -r | head -1)"; \
+	tag="$$($(RESOLVE_LATEST_TAG))"; \
 	if [ -z "$$tag" ]; then \
 		echo "No versioned content release found in $(REPO)" >&2; \
 		exit 1; \

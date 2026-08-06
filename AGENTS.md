@@ -186,6 +186,13 @@ GitHub Actions after restore via `vercel build` / `vercel deploy --prebuilt`
 (see `.github/workflows/deploy.yml` and the README "Deploy on Vercel" section for
 branch and domain mapping).
 
+Production restores whatever tag is pinned in `CONTENT_VERSION`, independent of
+`development`'s always-latest content; promote a content-only change with
+`make promote-content "description"`. If a change depends on a new
+`content.json` shape, don't use `make promote-content`—hand-edit
+`CONTENT_VERSION` inside the same code PR so the matching code and content tag
+land in `main` together.
+
 ---
 
 # Definition of Done
