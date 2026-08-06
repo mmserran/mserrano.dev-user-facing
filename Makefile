@@ -7,10 +7,12 @@ TAG ?= content-latest
 
 # The backend tags real, dated exports content-YYYYMMDD-HHMM and separately
 # republishes the content-latest alias to match the newest one. Resolve by
-# scanning recent releases for dated tags, then verify the winner's UTC
-# calendar day matches content-latest's publishedAt. Enlarging -L alone
-# cannot guarantee the true newest tag when non-content releases dominate
-# the list; a stale match fails loud instead of pinning the wrong export.
+# scanning recent releases for dated tags, then verify the winner's embedded
+# UTC timestamp (minute precision) matches content-latest's publishedAt.
+# Enlarging -L alone cannot guarantee the true newest tag when non-content
+# releases dominate the list; a stale match fails loud instead of pinning
+# the wrong export. ISO publishedAt is parsed with bash substrings so the
+# check is portable (no GNU date -d).
 define RESOLVE_LATEST_TAG
 bash -ec '\
 	resolved=$$(gh release list --repo "$(REPO)" -L 20 \
@@ -24,10 +26,18 @@ bash -ec '\
 		echo "Could not read publishedAt for content-latest in $(REPO)" >&2; \
 		exit 1; \
 	fi; \
-	latest_ymd=$$(date -u -d "$$published_at" +%Y%m%d); \
-	tag_ymd=$$(printf "%s\n" "$$resolved" | cut -d- -f2); \
-	if [ "$$tag_ymd" != "$$latest_ymd" ]; then \
-		echo "Resolved $$resolved (UTC date $$tag_ymd) does not match content-latest publishedAt $$published_at (UTC date $$latest_ymd)." >&2; \
+	if [[ ! "$$published_at" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2} ]]; then \
+		echo "Unexpected publishedAt format for content-latest: $$published_at" >&2; \
+		exit 1; \
+	fi; \
+	latest_ts="$${published_at:0:4}$${published_at:5:2}$${published_at:8:2}$${published_at:11:2}$${published_at:14:2}"; \
+	if [[ ! "$$resolved" =~ ^content-([0-9]{8})-([0-9]{4})$$ ]]; then \
+		echo "Unexpected resolved tag format: $$resolved" >&2; \
+		exit 1; \
+	fi; \
+	tag_ts="$${BASH_REMATCH[1]}$${BASH_REMATCH[2]}"; \
+	if [ "$$tag_ts" != "$$latest_ts" ]; then \
+		echo "Resolved $$resolved (UTC $$tag_ts) does not match content-latest publishedAt $$published_at (UTC $$latest_ts)." >&2; \
 		echo "The top-20 release window likely missed a newer content export; refuse to pin a stale tag." >&2; \
 		exit 1; \
 	fi; \
