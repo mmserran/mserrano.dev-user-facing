@@ -115,5 +115,35 @@ promote-content:
 # Manually triggers a staging deploy so a new content release (with no code
 # change involved) shows up on stage.mserrano.dev without waiting for the
 # next push to development. deploy.yml resolves content-latest itself.
+#
+# `gh workflow run` only fires the event and returns immediately, so on its
+# own this target gives no signal the deploy actually happened. Instead we
+# resolve the dispatched run's ID, stream its progress with `gh run watch`,
+# and on failure dump the failed step's logs inline so the cause (content
+# validation, build, Vercel deploy, GitHub Actions infra, ...) is visible
+# without a manual `gh run view` round-trip.
 sync:
-	gh workflow run deploy.yml --ref development
+	@set -euo pipefail; \
+	echo "Triggering staging deploy (deploy.yml on development)..."; \
+	gh workflow run deploy.yml --ref development; \
+	echo "Waiting for the run to register on GitHub..."; \
+	run_id=""; \
+	for attempt in $$(seq 1 10); do \
+		sleep 2; \
+		run_id="$$(gh run list --workflow=deploy.yml --branch development -L 1 --json databaseId,event \
+			--jq 'if .[0].event == "workflow_dispatch" then .[0].databaseId else empty end')"; \
+		if [ -n "$$run_id" ]; then break; fi; \
+	done; \
+	if [ -z "$$run_id" ]; then \
+		echo "Could not find the dispatched run after 20s; check manually: gh run list --workflow=deploy.yml --branch development" >&2; \
+		exit 1; \
+	fi; \
+	url="https://github.com/$$(gh repo view --json nameWithOwner --jq .nameWithOwner)/actions/runs/$$run_id"; \
+	echo "Watching run $$run_id: $$url"; \
+	if ! gh run watch "$$run_id" --exit-status; then \
+		echo "Deploy failed - logs for the failed step(s):" >&2; \
+		gh run view "$$run_id" --log-failed || true; \
+		echo "Full run: $$url" >&2; \
+		exit 1; \
+	fi; \
+	echo "Staging deploy succeeded: $$url"
