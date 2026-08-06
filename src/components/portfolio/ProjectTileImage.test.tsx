@@ -85,9 +85,14 @@ describe("ProjectTileImage", () => {
       dispatchEvent: vi.fn(),
     }));
     const pauseSpy = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.resolve());
 
     render(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="" />);
     setAllVideosVisible(true);
+    expect(playSpy).toHaveBeenCalled();
+
+    pauseSpy.mockClear();
+    expect(pauseSpy).not.toHaveBeenCalled();
 
     act(() => {
       reducedMotion = true;
