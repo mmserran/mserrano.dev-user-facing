@@ -177,21 +177,26 @@ make restore-media
 ```
 
 Restores `content.json`, `manifest.json`, and processed media assets into
-gitignored `content/` and `public/media/`. That restore needs a GitHub token that
-can download the private content-export release—Vercel's own build environment
-does not have it.
+gitignored `content/` and `public/media/`, then runs `npm run validate-content`
+and fails loudly if the restored `content.json`'s shape doesn't match what
+`src/lib/content.ts` expects. That restore needs a GitHub token that can
+download the private content-export release—Vercel's own build environment
+does not have it. Restoring the default `content-latest` tag also records the
+resolved dated tag into `CONTENT_VERSION`.
 
 Do not enable or rely on Vercel Git integration for this project. Deploys run in
 GitHub Actions after restore via `vercel build` / `vercel deploy --prebuilt`
 (see `.github/workflows/deploy.yml` and the README "Deploy on Vercel" section for
-branch and domain mapping).
+branch and domain mapping). `e2e.yml` runs the same content validation on every
+pull request.
 
 Production restores whatever tag is pinned in `CONTENT_VERSION`, independent of
 `development`'s always-latest content; promote a content-only change with
 `make promote-content "description"`. If a change depends on a new
 `content.json` shape, don't use `make promote-content`—hand-edit
 `CONTENT_VERSION` inside the same code PR so the matching code and content tag
-land in `main` together.
+land in `main` together. `make sync` manually triggers a staging deploy when a
+new content release should reach `stage.mserrano.dev` without a code push.
 
 ---
 
