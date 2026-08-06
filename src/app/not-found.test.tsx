@@ -12,7 +12,7 @@ vi.mock("@/components/illustration/EndcapShell", () => ({
 
 describe("NotFound page", () => {
   it("exports metadata with 404 title", () => {
-    expect(metadata.title).toBe("404 | Mark Serrano");
+    expect(metadata.title).toBe("404 | Mark Anthony Serrano");
   });
 
   it("renders 404 page title, Home link, and EndcapShell", () => {

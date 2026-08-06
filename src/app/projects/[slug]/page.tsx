@@ -21,12 +21,12 @@ export async function generateMetadata({
 
   if (!project) {
     return {
-      title: "Project Not Found | Mark Serrano",
+      title: "Project Not Found | Mark Anthony Serrano",
     };
   }
 
   return {
-    title: `${project.general.title} | Mark Serrano`,
+    title: `${project.general.title} | Mark Anthony Serrano`,
     description:
       project.general.content.trim() ||
       `View details for ${project.general.title}.`,

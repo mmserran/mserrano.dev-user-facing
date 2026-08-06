@@ -79,7 +79,7 @@ describe("ProjectPage", () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ slug: "cygnus-management-llc" }),
     });
-    expect(meta.title).toBe("Cygnus Management, LLC | Mark Serrano");
+    expect(meta.title).toBe("Cygnus Management, LLC | Mark Anthony Serrano");
     expect(meta.description).toContain("My uncle needed a website");
   });
 
@@ -87,7 +87,7 @@ describe("ProjectPage", () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ slug: "non-existent-slug" }),
     });
-    expect(meta.title).toBe("Project Not Found | Mark Serrano");
+    expect(meta.title).toBe("Project Not Found | Mark Anthony Serrano");
   });
 
   // 10s, not vitest's 5s default: this still renders a genuinely large real

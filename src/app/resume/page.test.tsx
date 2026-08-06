@@ -12,7 +12,7 @@ vi.mock("@/components/illustration/EndcapShell", () => ({
 
 describe("ResumePage", () => {
   it("exports resume metadata", () => {
-    expect(metadata.title).toBe("Resume | Mark Serrano");
+    expect(metadata.title).toBe("Resume | Mark Anthony Serrano");
   });
 
   it("renders page title, fallback text, and portfolio link", () => {
