@@ -83,6 +83,15 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Deploys are not driven by Vercel's native Git integration. Content and media under
+`content/` and `public/media/` are gitignored and restored only via
+`make restore-media` (private release download), so GitHub Actions builds the site
+and hands prebuilt output to Vercel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.github/workflows/deploy.yml` runs on push to:
+
+- `development` — preview build, `vercel deploy --prebuilt`, alias `stage.mserrano.dev`
+- `main` — production build/deploy (`--prod`), which aliases to `mserrano.dev`
+
+Local verification still uses `make restore-media` then a normal Next.js build or
+`vercel build` / `vercel deploy --prebuilt` when needed.
