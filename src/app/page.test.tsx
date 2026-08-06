@@ -10,6 +10,7 @@ vi.mock("@/components/illustration/EndcapShell", () => ({
 describe("Home page", () => {
   it("exports portfolio metadata", () => {
     expect(metadata.title).toBe("Mark Anthony Serrano Portfolio Website");
+    expect(metadata.alternates).toEqual({ canonical: "/" });
   });
 
   it("renders developer name, title, CTA links, and EndcapShell", () => {

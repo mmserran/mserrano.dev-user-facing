@@ -9,9 +9,14 @@
 // exported pages into .vercel/output/static, only the untouched public/
 // assets pass through unmodified, so every route 404s once deployed. Since
 // `output: "export"` already produces a complete, self-contained static
-// site with nothing Vercel-specific needed to serve it, hand-assembling the
-// Build Output API directly sidesteps that gap and keeps working regardless
-// of which Next.js version is in use.
+// site, hand-assembling the Build Output API directly sidesteps that gap
+// and keeps working regardless of which Next.js version is in use.
+//
+// `vercel deploy --prebuilt` serves only `.vercel/output`, so platform
+// config in vercel.json is not applied automatically. This script maps
+// vercel.json redirects into Build Output API routes (before the 404
+// handler) so SEO redirects (for example bare path → trailing slash)
+// ship with every prebuilt deploy.
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
