@@ -185,10 +185,11 @@ does not have it. Restoring the default `content-latest` tag also records the
 resolved dated tag into `CONTENT_VERSION`.
 
 Do not enable or rely on Vercel Git integration for this project. Deploys run in
-GitHub Actions after restore via `vercel build` / `vercel deploy --prebuilt`
-(see `.github/workflows/deploy.yml` and the README "Deploy on Vercel" section for
-branch and domain mapping). `e2e.yml` runs the same content validation on every
-pull request.
+GitHub Actions after restore via `next build` + `scripts/assemble-vercel-output.mjs`
++ `vercel deploy --prebuilt` (see `.github/workflows/deploy.yml` and the README
+"Deploy on Vercel" section for branch and domain mapping). Do not use `vercel build`;
+hand-assemble from `out/` instead (see the script header for why). `e2e.yml` runs the
+same content validation on every pull request.
 
 Production restores whatever tag is pinned in `CONTENT_VERSION`, independent of
 `development`'s always-latest content; promote a content-only change with
