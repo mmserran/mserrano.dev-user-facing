@@ -130,6 +130,16 @@ describe("ProjectPage", () => {
       expect(centerEmphasisCarouselSpy).toHaveBeenCalledWith(
         expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
       );
+
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      expect(jsonLd).not.toBeNull();
+      expect(JSON.parse(jsonLd!.textContent ?? "")).toEqual(
+        expect.objectContaining({
+          "@type": "CreativeWork",
+          name: "Cygnus Management, LLC",
+          url: "https://mserrano.dev/projects/cygnus-management-llc/",
+        }),
+      );
     },
     10000,
   );
