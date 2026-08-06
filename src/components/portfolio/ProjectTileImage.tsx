@@ -67,14 +67,29 @@ function VideoLayer({
   className?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const reducedMotion = usePrefersReducedMotion();
   const [src] = getMediaVariants(filename);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    if (reducedMotion) {
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.01 },
+    );
+    observer.observe(video);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    if (!isVisible || reducedMotion) {
       video.pause();
+      if (!isVisible) video.load();
       return;
     }
     if (playWhenActive) {
@@ -82,7 +97,7 @@ function VideoLayer({
     } else {
       video.pause();
     }
-  }, [playWhenActive, reducedMotion]);
+  }, [isVisible, playWhenActive, reducedMotion]);
 
   if (!src) return null;
 
@@ -90,7 +105,7 @@ function VideoLayer({
     <video
       ref={ref}
       className={`${MEDIA_LAYER_BASE_CLASS} object-left-top ${className}`}
-      src={src.url}
+      src={isVisible ? src.url : undefined}
       muted
       loop
       playsInline

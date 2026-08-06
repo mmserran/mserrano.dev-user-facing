@@ -2,13 +2,38 @@ import { act, fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectTileImage from "./ProjectTileImage";
 
+let intersectionCallbacks: IntersectionObserverCallback[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: IntersectionObserverCallback) {
+    intersectionCallbacks.push(callback);
+  }
+
+  observe = vi.fn();
+  disconnect = vi.fn();
+}
+
+function setAllVideosVisible(isIntersecting: boolean) {
+  act(() => {
+    intersectionCallbacks.forEach((callback) =>
+      callback(
+        [{ isIntersecting } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      ),
+    );
+  });
+}
+
 describe("ProjectTileImage", () => {
   // jsdom doesn't implement media playback; vitest's restoreMocks:true
   // resets spies before every test, so this has to run per-test rather than
   // once at module scope.
   beforeEach(() => {
+    intersectionCallbacks = [];
+    vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
     vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.resolve());
     vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
   });
 
   it("renders only the static image when there is no hover media", () => {
@@ -26,9 +51,15 @@ describe("ProjectTileImage", () => {
     const img = container.querySelector("img");
     expect(video).not.toBeNull();
     expect(img).not.toBeNull();
+    expect(video).not.toHaveAttribute("src");
+    expect(playSpy).not.toHaveBeenCalled();
+
+    setAllVideosVisible(true);
+
     // The static slot always autoplays (legacy `:play-on-condition="true"`),
     // independent of whether hover has faded it out of view.
     expect(playSpy).toHaveBeenCalled();
+    expect(video?.getAttribute("src")).toContain("devops_video");
     expect(video?.className).toContain("opacity-100");
 
     const wrapper = container.firstElementChild as HTMLElement;
@@ -56,7 +87,7 @@ describe("ProjectTileImage", () => {
     const pauseSpy = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
 
     render(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="" />);
-    expect(pauseSpy).not.toHaveBeenCalled();
+    setAllVideosVisible(true);
 
     act(() => {
       reducedMotion = true;
@@ -74,6 +105,11 @@ describe("ProjectTileImage", () => {
     const videos = container.querySelectorAll("video");
     expect(videos).toHaveLength(2);
     const [hoverVideo, staticVideo] = videos;
+    expect(staticVideo).not.toHaveAttribute("src");
+    expect(hoverVideo).not.toHaveAttribute("src");
+
+    setAllVideosVisible(true);
+
     expect(staticVideo.getAttribute("src")).toContain("devops_video");
     expect(hoverVideo.getAttribute("src")).toContain("pulsemobile_video");
     expect(staticVideo.className).toContain("opacity-100");
@@ -88,6 +124,24 @@ describe("ProjectTileImage", () => {
 
     expect(container.querySelectorAll("video")).toHaveLength(1);
     expect(container.querySelectorAll("img")).toHaveLength(0);
+  });
+
+  it("pauses and unloads a video when it leaves the visible carousel area", () => {
+    const pauseSpy = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    const loadSpy = vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});
+    const { container } = render(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="" />);
+    const video = container.querySelector("video");
+
+    setAllVideosVisible(true);
+    expect(video?.getAttribute("src")).toContain("devops_video");
+
+    pauseSpy.mockClear();
+    loadSpy.mockClear();
+    setAllVideosVisible(false);
+
+    expect(video).not.toHaveAttribute("src");
+    expect(pauseSpy).toHaveBeenCalled();
+    expect(loadSpy).toHaveBeenCalled();
   });
 
   it("renders nothing (an empty placeholder) when both slots are blank", () => {
