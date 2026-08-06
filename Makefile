@@ -125,13 +125,15 @@ promote-content:
 sync:
 	@set -euo pipefail; \
 	echo "Triggering staging deploy (deploy.yml on development)..."; \
+	baseline_id="$$(gh run list --workflow=deploy.yml --branch development -L 20 --json databaseId \
+		--jq 'map(.databaseId) | max // 0')"; \
 	gh workflow run deploy.yml --ref development; \
 	echo "Waiting for the run to register on GitHub..."; \
 	run_id=""; \
 	for attempt in $$(seq 1 10); do \
 		sleep 2; \
-		run_id="$$(gh run list --workflow=deploy.yml --branch development -L 1 --json databaseId,event \
-			--jq 'if .[0].event == "workflow_dispatch" then .[0].databaseId else empty end')"; \
+		run_id="$$(gh run list --workflow=deploy.yml --branch development -L 20 --json databaseId,event \
+			--jq "[.[] | select(.event == \"workflow_dispatch\" and .databaseId > $$baseline_id)] | first | .databaseId // empty")"; \
 		if [ -n "$$run_id" ]; then break; fi; \
 	done; \
 	if [ -z "$$run_id" ]; then \
