@@ -125,19 +125,19 @@ promote-content:
 sync:
 	@set -euo pipefail; \
 	echo "Triggering staging deploy (deploy.yml on development)..."; \
-	baseline_id="$$(gh run list --workflow=deploy.yml --branch development -L 20 --json databaseId \
-		--jq 'map(.databaseId) | max // 0')"; \
+	baseline_id="$$(gh run list --workflow=deploy.yml -L 20 --json databaseId,headBranch \
+		--jq '[.[] | select(.headBranch == "development")] | map(.databaseId) | max // 0')"; \
 	gh workflow run deploy.yml --ref development; \
 	echo "Waiting for the run to register on GitHub..."; \
 	run_id=""; \
 	for attempt in $$(seq 1 10); do \
 		sleep 2; \
-		run_id="$$(gh run list --workflow=deploy.yml --branch development -L 20 --json databaseId,event \
-			--jq "[.[] | select(.event == \"workflow_dispatch\" and .databaseId > $$baseline_id)] | first | .databaseId // empty")"; \
+		run_id="$$(gh run list --workflow=deploy.yml -L 20 --json databaseId,event,headBranch \
+			--jq "[.[] | select(.event == \"workflow_dispatch\" and .headBranch == \"development\" and .databaseId > $$baseline_id)] | first | .databaseId // empty")"; \
 		if [ -n "$$run_id" ]; then break; fi; \
 	done; \
 	if [ -z "$$run_id" ]; then \
-		echo "Could not find the dispatched run after 20s; check manually: gh run list --workflow=deploy.yml --branch development" >&2; \
+		echo "Could not find the dispatched run after 20s; check manually: gh run list --workflow=deploy.yml" >&2; \
 		exit 1; \
 	fi; \
 	url="https://github.com/$$(gh repo view --json nameWithOwner --jq .nameWithOwner)/actions/runs/$$run_id"; \
