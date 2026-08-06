@@ -86,12 +86,19 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 Deploys are not driven by Vercel's native Git integration. Content and media under
 `content/` and `public/media/` are gitignored and restored only via
 `make restore-media` (private release download), so GitHub Actions builds the site
-and hands prebuilt output to Vercel.
+and hands prebuilt output to Vercel. Every restore also runs `npm run
+validate-content`, which fails the build loudly if `content.json`'s shape doesn't
+match what `src/lib/content.ts` expects.
 
-`.github/workflows/deploy.yml` runs on push to:
+`.github/workflows/deploy.yml` deploys by branch (on push, or via `make sync` / `workflow_dispatch`):
 
-- `development` — preview build, `vercel deploy --prebuilt`, alias `stage.mserrano.dev`
-- `main` — production build/deploy (`--prod`), which aliases to `mserrano.dev`
+| Branch        | Content source          | Result                                          |
+| -------------- | ------------------------ | ------------------------------------------------ |
+| `development` | `content-latest`         | preview build, aliased to `stage.mserrano.dev`    |
+| `main`        | pinned `CONTENT_VERSION` | production build (`--prod`), aliased to `mserrano.dev` |
 
-Local verification still uses `make restore-media` then a normal Next.js build or
-`vercel build` / `vercel deploy --prebuilt` when needed.
+| Command                                | Action                                                                          |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| `make restore-media`                   | Restore content/media locally; validates shape and updates `CONTENT_VERSION`   |
+| `make sync`                             | Manually trigger a `development` deploy so a new content release reaches staging without a code push |
+| `make promote-content "description"`   | Open a PR bumping `CONTENT_VERSION` to promote a content-only release to production |

@@ -1,0 +1,80 @@
+name: Promote Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Content export release tag to promote to production (e.g. content-2026-08-06)"
+        required: true
+      description:
+        description: "What changed, in a few words (becomes the PR title and production commit message)"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Verify release exists
+        run: gh release view "${{ inputs.tag }}" --repo mmserran/mserrano.dev-web-services
+        env:
+          GH_TOKEN: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - name: Bump pinned content version
+        run: echo "${{ inputs.tag }}" > CONTENT_VERSION
+
+      - name: Open promotion PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          branch="promote-content/${{ inputs.tag }}"
+          tag="${{ inputs.tag }}"
+          description="${{ inputs.description }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          main_pin="$(git show HEAD:CONTENT_VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+          if [ "$main_pin" = "$tag" ]; then
+            echo "main already pins $tag; nothing to promote."
+            existing_pr="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+            if [ -n "$existing_pr" ]; then
+              gh pr close "$existing_pr" --comment "Closed: main already pins \`$tag\`."
+            fi
+            exit 0
+          fi
+
+          # Reset bot branch onto current main so re-dispatch is idempotent.
+          git switch -C "$branch"
+          git add CONTENT_VERSION
+          if ! git diff --cached --quiet; then
+            git commit -m "$description"
+          fi
+          tip_pin="$(git show HEAD:CONTENT_VERSION 2>/dev/null | tr -d '[:space:]' || true)"
+          if [ "$tip_pin" != "$tag" ]; then
+            echo "Failed to land CONTENT_VERSION=$tag on $branch (tip has '${tip_pin:-empty}')" >&2
+            exit 1
+          fi
+
+          # Bot-owned promote branches may already exist from a prior run;
+          # force updates the tip so re-dispatch retries cleanly.
+          git push -u --force origin "$branch"
+
+          existing_pr="$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')"
+          body="Promotes content export \`$tag\` to production."
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" --title "$description" --body "$body"
+            echo "Updated existing PR #$existing_pr for $tag"
+          else
+            gh pr create --base main --head "$branch" \
+              --title "$description" \
+              --body "$body"
+          fi

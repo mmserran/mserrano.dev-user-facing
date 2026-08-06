@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "validate-content": "node scripts/validate-content.mjs",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:e2e": "playwright test",
@@ -46,6 +47,7 @@
     "serve": "^14.2.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "zod": "^4.4.3"
   }
 }
