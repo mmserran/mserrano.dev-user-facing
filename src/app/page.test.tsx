@@ -14,7 +14,7 @@ describe("Home page", () => {
   });
 
   it("renders developer name, title, CTA links, and EndcapShell", () => {
-    render(<Home />);
+    const { container } = render(<Home />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Mark Anthony Serrano" })
@@ -30,5 +30,14 @@ describe("Home page", () => {
     expect(portfolioLink).toHaveAttribute("href", "/projects/");
 
     expect(screen.getByTestId("endcap-shell")).toBeInTheDocument();
+
+    const jsonLd = container.querySelector('script[type="application/ld+json"]');
+    expect(jsonLd).not.toBeNull();
+    expect(JSON.parse(jsonLd!.textContent ?? "")).toEqual(
+      expect.objectContaining({
+        "@type": "Person",
+        name: "Mark Anthony Serrano",
+      }),
+    );
   });
 });

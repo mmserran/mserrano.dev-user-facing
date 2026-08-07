@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import EndcapShell from "@/components/illustration/EndcapShell";
+import JsonLd from "@/components/JsonLd";
 import PageBuilder from "@/components/portfolio/PageBuilder";
 import { getProjectBySlug, getProjects } from "@/lib/content";
+import { getCreativeWorkJsonLd } from "@/lib/json-ld";
 
 export async function generateStaticParams() {
   const projects = getProjects();
@@ -51,6 +53,7 @@ export default async function ProjectPage({
 
   return (
     <main className="min-h-[calc(100dvh-4rem)] text-white">
+      <JsonLd data={getCreativeWorkJsonLd(project)} />
       <PageBuilder project={project} />
 
       <EndcapShell cta={{ label: "Back to Portfolio", href: "/projects/" }} />
