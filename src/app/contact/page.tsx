@@ -7,6 +7,9 @@ import { getContactEmail } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Contact | Mark Anthony Serrano",
   description: "Get in touch with Mark Anthony Serrano.",
+  alternates: {
+    canonical: "/contact/",
+  },
 };
 
 export default function ContactPage() {

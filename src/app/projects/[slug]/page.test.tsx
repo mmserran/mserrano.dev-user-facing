@@ -81,6 +81,9 @@ describe("ProjectPage", () => {
     });
     expect(meta.title).toBe("Cygnus Management, LLC | Mark Anthony Serrano");
     expect(meta.description).toContain("My uncle needed a website");
+    expect(meta.alternates).toEqual({
+      canonical: "/projects/cygnus-management-llc/",
+    });
   });
 
   it("generates fallback metadata for invalid project", async () => {
@@ -129,6 +132,16 @@ describe("ProjectPage", () => {
       expect(screen.getByTestId("center-emphasis-carousel")).toBeInTheDocument();
       expect(centerEmphasisCarouselSpy).toHaveBeenCalledWith(
         expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      expect(jsonLd).not.toBeNull();
+      expect(JSON.parse(jsonLd!.textContent ?? "")).toEqual(
+        expect.objectContaining({
+          "@type": "CreativeWork",
+          name: "Cygnus Management, LLC",
+          url: "https://mserrano.dev/projects/cygnus-management-llc/",
+        }),
       );
     },
     10000,

@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Portfolio | Mark Anthony Serrano",
   description:
     "Browse Mark Anthony Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
+  alternates: {
+    canonical: "/projects/",
+  },
 };
 
 export default function ProjectsPage() {

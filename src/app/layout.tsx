@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import JsonLd from "@/components/JsonLd";
 import AppShell from "@/components/navigation/AppShell";
 import Footer from "@/components/navigation/Footer";
 import { getHeaderLinks, getProjects } from "@/lib/content";
+import { getSiteJsonLd } from "@/lib/json-ld";
 import "./globals.css";
 
 // Matches the Gridsome frontend's site-wide font (`$font-reading` in
@@ -35,10 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en-US" className="h-full">
       <body
         className={`flex min-h-full flex-col overflow-x-hidden antialiased ${montserrat.className}`}
       >
+        <JsonLd data={getSiteJsonLd()} />
         <AppShell headerLinks={getHeaderLinks()} projects={getProjects()}>
           {children}
         </AppShell>

@@ -3,16 +3,22 @@ import Link from "next/link";
 import EndcapShell, {
   ENDCAP_CTA_LINK_CLASSES,
 } from "@/components/illustration/EndcapShell";
+import JsonLd from "@/components/JsonLd";
+import { getPersonJsonLd } from "@/lib/json-ld";
 
 export const metadata: Metadata = {
   title: "Mark Anthony Serrano Portfolio Website",
   description:
     "Portfolio of Mark Anthony Serrano — software engineer specializing in WordPress and Shopify development.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function Home() {
   return (
     <main className="relative flex flex-1">
+      <JsonLd data={getPersonJsonLd()} />
       <EndcapShell fill />
 
       <div className="relative z-10 flex flex-1 items-center justify-center px-[5vmin] py-[10vmin]">
