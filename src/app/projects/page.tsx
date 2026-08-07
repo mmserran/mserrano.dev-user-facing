@@ -6,8 +6,9 @@ import PageTitle from "@/components/typography/PageTitle";
 import { getProjectFilters, getProjects } from "@/lib/content";
 
 export const metadata: Metadata = {
-  title: "Portfolio | Mark Serrano",
-  description: "Browse Mark Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
+  title: "Portfolio | Mark Anthony Serrano",
+  description:
+    "Browse Mark Anthony Serrano's portfolio of WordPress and Shopify projects, filterable by technology.",
   alternates: {
     canonical: "/projects/",
   },

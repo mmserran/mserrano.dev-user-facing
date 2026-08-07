@@ -7,7 +7,7 @@ test.describe("Portfolio Catalog & Project Details", () => {
     const response = await page.goto("/projects/");
 
     expect(response?.ok()).toBe(true);
-    await expect(page).toHaveTitle("Portfolio | Mark Serrano");
+    await expect(page).toHaveTitle("Portfolio | Mark Anthony Serrano");
     await expect(
       page.getByRole("heading", { name: "Portfolio", level: 1 }),
     ).toBeVisible();

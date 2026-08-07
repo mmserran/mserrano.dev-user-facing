@@ -4,7 +4,7 @@ import manifest from "./manifest";
 describe("manifest", () => {
   it("returns the expected web application manifest metadata", () => {
     const result = manifest();
-    expect(result.name).toBe("Mark Serrano");
+    expect(result.name).toBe("Mark Anthony Serrano");
     expect(result.short_name).toBe("Mark Serrano");
     expect(result.start_url).toBe("/");
     expect(result.display).toBe("standalone");

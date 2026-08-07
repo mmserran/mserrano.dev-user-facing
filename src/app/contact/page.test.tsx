@@ -18,7 +18,7 @@ vi.mock("@/components/contact/ContactForm", () => ({
 
 describe("ContactPage", () => {
   it("exports contact metadata", () => {
-    expect(metadata.title).toBe("Contact | Mark Serrano");
+    expect(metadata.title).toBe("Contact | Mark Anthony Serrano");
     expect(metadata.alternates).toEqual({ canonical: "/contact/" });
   });
 

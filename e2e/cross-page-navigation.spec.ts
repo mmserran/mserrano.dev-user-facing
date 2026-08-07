@@ -161,9 +161,9 @@ test.describe("Cross-Page Navigation & URL Preservation", () => {
     }) => {
       const pages = [
         { path: "/", title: "Mark Anthony Serrano Portfolio Website" },
-        { path: "/projects/", title: "Portfolio | Mark Serrano" },
-        { path: "/resume/", title: "Resume | Mark Serrano" },
-        { path: "/contact/", title: "Contact | Mark Serrano" },
+        { path: "/projects/", title: "Portfolio | Mark Anthony Serrano" },
+        { path: "/resume/", title: "Resume | Mark Anthony Serrano" },
+        { path: "/contact/", title: "Contact | Mark Anthony Serrano" },
       ];
 
       for (const page_info of pages) {
