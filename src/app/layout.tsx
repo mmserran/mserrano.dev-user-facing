@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 import JsonLd from "@/components/JsonLd";
 import AppShell from "@/components/navigation/AppShell";
@@ -49,6 +50,7 @@ export default function RootLayout({
           {children}
         </AppShell>
         <Footer />
+        <Analytics />
       </body>
       {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
