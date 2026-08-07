@@ -16,7 +16,8 @@ vi.mock("@/components/portfolio/ProjectCatalog", () => ({
 
 describe("ProjectsPage", () => {
   it("exports portfolio metadata", () => {
-    expect(metadata.title).toBe("Portfolio | Mark Serrano");
+    expect(metadata.title).toBe("Portfolio | Mark Anthony Serrano");
+    expect(metadata.alternates).toEqual({ canonical: "/projects/" });
   });
 
   it("renders page title, catalog, and contact endcap CTA", () => {

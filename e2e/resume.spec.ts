@@ -6,7 +6,7 @@ test.describe("Resume Page", () => {
   });
 
   test("has correct page title and heading", async ({ page }) => {
-    await expect(page).toHaveTitle("Resume | Mark Serrano");
+    await expect(page).toHaveTitle("Resume | Mark Anthony Serrano");
 
     const pageHeading = page.getByRole("heading", {
       level: 1,

@@ -9,7 +9,7 @@ test.describe("Contact Page", () => {
     const response = await page.goto("/contact/");
 
     expect(response?.ok()).toBe(true);
-    await expect(page).toHaveTitle("Contact | Mark Serrano");
+    await expect(page).toHaveTitle("Contact | Mark Anthony Serrano");
     await expect(
       page.getByRole("heading", { name: "Contact", level: 1 }),
     ).toBeVisible();

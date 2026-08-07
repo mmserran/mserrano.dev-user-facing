@@ -79,15 +79,18 @@ describe("ProjectPage", () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ slug: "cygnus-management-llc" }),
     });
-    expect(meta.title).toBe("Cygnus Management, LLC | Mark Serrano");
+    expect(meta.title).toBe("Cygnus Management, LLC | Mark Anthony Serrano");
     expect(meta.description).toContain("My uncle needed a website");
+    expect(meta.alternates).toEqual({
+      canonical: "/projects/cygnus-management-llc/",
+    });
   });
 
   it("generates fallback metadata for invalid project", async () => {
     const meta = await generateMetadata({
       params: Promise.resolve({ slug: "non-existent-slug" }),
     });
-    expect(meta.title).toBe("Project Not Found | Mark Serrano");
+    expect(meta.title).toBe("Project Not Found | Mark Anthony Serrano");
   });
 
   // 10s, not vitest's 5s default: this still renders a genuinely large real
@@ -129,6 +132,16 @@ describe("ProjectPage", () => {
       expect(screen.getByTestId("center-emphasis-carousel")).toBeInTheDocument();
       expect(centerEmphasisCarouselSpy).toHaveBeenCalledWith(
         expect.objectContaining({ project: expect.objectContaining({ slug: "cygnus-management-llc" }) }),
+      );
+
+      const jsonLd = document.querySelector('script[type="application/ld+json"]');
+      expect(jsonLd).not.toBeNull();
+      expect(JSON.parse(jsonLd!.textContent ?? "")).toEqual(
+        expect.objectContaining({
+          "@type": "CreativeWork",
+          name: "Cygnus Management, LLC",
+          url: "https://mserrano.dev/projects/cygnus-management-llc/",
+        }),
       );
     },
     10000,

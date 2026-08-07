@@ -69,7 +69,7 @@ Examples:
   ./scripts/browser open http://localhost:3000
   ./scripts/browser snapshot
   ./scripts/browser click e12
-  ./scripts/browser fill e18 "Mark Serrano"
+  ./scripts/browser fill e18 "Mark Anthony Serrano"
   ./scripts/browser screenshot homepage --full-page
   ./scripts/browser console warning
   ./scripts/browser close

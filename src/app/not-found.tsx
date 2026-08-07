@@ -3,7 +3,7 @@ import EndcapShell from "@/components/illustration/EndcapShell";
 import PageTitle from "@/components/typography/PageTitle";
 
 export const metadata: Metadata = {
-  title: "404 | Mark Serrano",
+  title: "404 | Mark Anthony Serrano",
 };
 
 export default function NotFound() {

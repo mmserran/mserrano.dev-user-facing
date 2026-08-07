@@ -72,7 +72,8 @@ Implement only the requested scope.
 This is an SEO-sensitive migration.
 
 * Preserve every existing URL and portfolio slug. Original slugs are confirmed present in `content.json`'s project entries—use them as-is; do not regenerate or reformat.
-* Any unavoidable URL changes require redirects in `vercel.json` (not `next.config.ts`) because the site uses `output: "export"`.
+* Canonical public URLs use a trailing slash (`next.config.ts` `trailingSlash: true`), matching the prior Gridsome site. Keep new routes, links, and `metadata.alternates.canonical` values on that form.
+* Redirects belong in `vercel.json` (not `next.config.ts`) because the site uses `output: "export"`. That includes bare-path → trailing-slash 301s. `scripts/assemble-vercel-output.mjs` embeds those redirects into the prebuilt Build Output routes (see the script header)—`vercel.json` alone is not applied when deploying with `--prebuilt`.
 
 ## Data
 
