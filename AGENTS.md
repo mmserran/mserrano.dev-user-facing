@@ -205,6 +205,17 @@ inside the same code PR so the matching code and content tag land in `main`
 together. `make sync` manually triggers a staging deploy when a new content
 release should reach `stage.mserrano.dev` without a code push.
 
+All PRs into `main` are squash-merged. Squashing never records `development`'s
+tip as a parent of `main`, so `main` and `development` keep sharing only their
+original common ancestor—every later `development`→`main` PR would otherwise
+re-list the same already-merged commits and files, growing without bound.
+`.github/workflows/sync-main-to-development.yml` prevents that: on every push
+to `main` it merges `main` back into `development` (a real merge commit, not a
+rewrite) and pushes. That merge is expected to be a no-op diff—it exists only
+to reset the shared ancestor—so future sync PRs start clean. PR creation and
+the squash-merge into `main` itself stay manual; only this merge-back step is
+automated.
+
 ---
 
 # Definition of Done

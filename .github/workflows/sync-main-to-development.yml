@@ -1,0 +1,40 @@
+name: Sync main back into development
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency: sync-main-to-development
+
+jobs:
+  merge-back:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Merge main into development
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin main
+          if git merge-base --is-ancestor origin/main HEAD; then
+            echo "development already contains main's tip; nothing to do."
+            exit 0
+          fi
+
+          # main is squash-merged only (see AGENTS.md), so main and development
+          # share no recent common ancestor. This merge is expected to apply
+          # cleanly with an empty diff—it exists to record main's tip as a
+          # parent of development, resetting the shared ancestor so future
+          # development->main compares don't replay already-merged commits.
+          git merge --no-edit origin/main
+          git push origin development
