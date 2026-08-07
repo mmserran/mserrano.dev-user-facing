@@ -81,6 +81,9 @@ describe("ProjectPage", () => {
     });
     expect(meta.title).toBe("Cygnus Management, LLC | Mark Serrano");
     expect(meta.description).toContain("My uncle needed a website");
+    expect(meta.alternates).toEqual({
+      canonical: "/projects/cygnus-management-llc/",
+    });
   });
 
   it("generates fallback metadata for invalid project", async () => {
