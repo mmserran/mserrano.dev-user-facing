@@ -47,6 +47,12 @@ jobs:
       - name: Pull Vercel project settings
         run: vercel pull --yes --environment=${{ env.VERCEL_ENV }} --token=${{ secrets.VERCEL_TOKEN }}
 
+      # Static export bakes NEXT_PUBLIC_* at build time; Vercel env vars are not
+      # available to plain `npm run build` unless pulled first. (`vercel build`
+      # would do this automatically, but deploys use hand-assembled `out/`.)
+      - name: Pull environment variables
+        run: vercel env pull .env.local --yes --environment=${{ env.VERCEL_ENV }} --token=${{ secrets.VERCEL_TOKEN }}
+
       - name: Build
         run: npm run build
 

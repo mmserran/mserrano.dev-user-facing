@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/next";
 import localFont from "next/font/local";
 import JsonLd from "@/components/JsonLd";
 import AppShell from "@/components/navigation/AppShell";
@@ -6,6 +8,8 @@ import Footer from "@/components/navigation/Footer";
 import { getHeaderLinks, getProjects } from "@/lib/content";
 import { getSiteJsonLd } from "@/lib/json-ld";
 import "./globals.css";
+
+const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 // Matches the Gridsome frontend's site-wide font (`$font-reading` in
 // _base-styles.scss), loaded there via @font-face. Self-hosted directly
@@ -46,7 +50,9 @@ export default function RootLayout({
           {children}
         </AppShell>
         <Footer />
+        <Analytics />
       </body>
+      {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
     </html>
   );
 }

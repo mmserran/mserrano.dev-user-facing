@@ -3,16 +3,26 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies, link this directory to the Vercel project, and pull
+environment variables into a local (gitignored) `.env.local`:
 
 ```bash
+npm ci
+vercel link
+vercel env pull
+```
+
+Project env vars (for example `NEXT_PUBLIC_GA_MEASUREMENT_ID`) live on the
+Vercel project—not committed to the repo. `vercel env pull` is the source of
+truth for local setup; it rewrites `.env.local` and also writes a short-lived
+`VERCEL_OIDC_TOKEN` for Vercel service auth. Re-run pull after ~12 hours if
+that token expires, or whenever project env vars change.
+
+Restore content and media, then run the development server:
+
+```bash
+make restore-media
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
