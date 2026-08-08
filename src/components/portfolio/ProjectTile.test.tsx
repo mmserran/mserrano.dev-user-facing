@@ -56,4 +56,22 @@ describe("ProjectTile", () => {
     fireEvent.mouseLeave(card);
     expect(staticImg.className).toContain("opacity-100");
   });
+
+  it("keeps the hover swap after a touch ends while the cursor is still over the card", () => {
+    render(<ProjectTile project={project} />);
+
+    const images = screen.getAllByRole("presentation", { hidden: true });
+    const staticImg = images.find((img) => img.getAttribute("src")?.includes("WordPress")) as HTMLElement;
+    const card = screen.getByRole("link");
+
+    fireEvent.mouseEnter(card);
+    expect(staticImg.className).toContain("opacity-0");
+
+    fireEvent.touchStart(card);
+    fireEvent.touchEnd(card);
+    expect(staticImg.className).toContain("opacity-0");
+
+    fireEvent.mouseLeave(card);
+    expect(staticImg.className).toContain("opacity-100");
+  });
 });
