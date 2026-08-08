@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { MediaPlayer, MediaProvider, type MediaPlayerInstance } from "@vidstack/react";
 import { DefaultVideoLayout, defaultLayoutIcons } from "@vidstack/react/player/layouts/default";
 import "@vidstack/react/player/styles/default/theme.css";
@@ -41,7 +41,7 @@ export default function EnhancedVideoPlayer({
 }: EnhancedVideoPlayerProps) {
   const playerRef = useRef<MediaPlayerInstance>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     onPlayerChange?.(playerRef.current);
     return () => onPlayerChange?.(null);
   }, [onPlayerChange]);

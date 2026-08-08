@@ -34,16 +34,29 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
 ) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<MediaPlayerInstance | null>(null);
+  const pendingPlayRef = useRef(false);
 
   // EnhancedVideoPlayer reports its instance via this callback rather than a
   // forwarded ref: next/dynamic's Loadable wrapper claims `ref` for its own
   // retry() handle and never forwards it to the lazily-loaded component.
   const handlePlayerChange = useCallback((instance: MediaPlayerInstance | null) => {
     playerRef.current = instance;
+    if (instance && pendingPlayRef.current) {
+      pendingPlayRef.current = false;
+      void Promise.resolve(instance.play()).catch(() => {});
+    }
   }, []);
 
   useImperativeHandle(ref, () => ({
-    play: () => (usePlayer ? playerRef.current?.play() : videoRef.current?.play()),
+    play: () => {
+      if (!usePlayer) {
+        return videoRef.current?.play();
+      }
+      if (playerRef.current) {
+        return playerRef.current.play();
+      }
+      pendingPlayRef.current = true;
+    },
   }));
 
   if (usePlayer) {
