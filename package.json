@@ -24,9 +24,9 @@
     "@mdi/js": "^7.4.47",
     "@next/third-parties": "^16.3.0",
     "@vercel/analytics": "^2.0.1",
+    "@vidstack/react": "^1.15.6",
     "lottie-web": "^5.13.0",
     "next": "16.3.0",
-    "plyr": "^3.8.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-icons": "^5.7.0"

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import SectionDivider from "@/components/typography/SectionDivider";
 import {
   getFeaturedSectionView,
@@ -8,7 +7,7 @@ import {
   getVideoPosterUrl,
   type PageBuilderSection,
 } from "@/lib/content";
-import usePlyrPlayer from "./usePlyrPlayer";
+import VideoPlayer from "./VideoPlayer";
 
 // Ports pbFeatured.vue: a titled, centered archived-video recording (used by
 // e.g. pulsemobile's "Archived Video", pulsebooker-consumer-version's
@@ -17,15 +16,12 @@ import usePlyrPlayer from "./usePlyrPlayer";
 // `is_autoplay` flag both carry through unmodified, since nothing here
 // overrides them the way pbImageText.vue hardcodes `:loop="false"`. Confirmed
 // against the live site: every real instance has is_autoplay false, so the
-// video sits paused behind Plyr's big-play-button overlay until clicked.
-// Poster comes from the backend's same-stem .jpg companion (see
+// video sits paused behind the player's big-play-button overlay until
+// clicked. Poster comes from the backend's same-stem .jpg companion (see
 // getVideoPosterUrl), so the paused frame isn't a blank box before metadata
 // loads.
 export default function Featured({ section }: { section: PageBuilderSection }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const view = getFeaturedSectionView(section);
-
-  usePlyrPlayer(videoRef, view?.usePlayer ?? false);
 
   if (!view) {
     return null;
@@ -54,18 +50,16 @@ export default function Featured({ section }: { section: PageBuilderSection }) {
       )}
 
       <div className="mx-auto mt-10 w-full max-w-[800px]">
-        <video
-          ref={videoRef}
-          className="mx-auto h-auto max-h-[450px] w-full object-cover"
+        <VideoPlayer
+          src={src.url}
+          poster={poster}
+          usePlayer={view.usePlayer}
           muted
           loop
           autoPlay={view.autoplay}
-          playsInline
-          preload="metadata"
-          poster={poster}
-        >
-          <source src={src.url} />
-        </video>
+          title={view.title && view.title !== "---" ? view.title : undefined}
+          className="mx-auto h-auto max-h-[450px] w-full object-cover"
+        />
       </div>
     </section>
   );
