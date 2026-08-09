@@ -227,7 +227,12 @@ if [ -n "$existing_pr" ]; then
 	pr_number="$existing_pr"
 	action="Updated"
 else
-	IFS=$'\t' read -r pr_number url < <(gh api "repos/$repo_slug/pulls" -X POST -f title="$title" -f body="$body" -f head="$HEAD_BRANCH" -f base="$BASE_BRANCH" --jq '[.number, .html_url] | @tsv')
+	tsv="$(gh api "repos/$repo_slug/pulls" -X POST -f title="$title" -f body="$body" -f head="$HEAD_BRANCH" -f base="$BASE_BRANCH" --jq '[.number, .html_url] | @tsv')"
+	IFS=$'\t' read -r pr_number url <<<"$tsv"
+	if [ -z "$pr_number" ] || [ -z "$url" ]; then
+		echo "error: create PR response missing number or url" >&2
+		exit 1
+	fi
 	action="Opened"
 fi
 
