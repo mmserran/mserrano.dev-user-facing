@@ -1,4 +1,4 @@
-.PHONY: restore-media promote-content sync deploy-prod clean-repo
+.PHONY: restore-media promote-content sync deploy-prod clean-repo help
 
 SHELL := /usr/bin/env bash
 
@@ -83,7 +83,7 @@ endif
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
 # before so removed/renamed assets don't linger.
-restore-media:
+restore-media: ## Restore content/media locally; validates shape and updates CONTENT_VERSION
 	@set -euo pipefail; \
 	tmp="$$(mktemp -d)"; \
 	trap 'rm -rf "$$tmp"' EXIT; \
@@ -118,7 +118,7 @@ restore-media:
 # inline. On success we look up the PR the workflow opens (or its no-op
 # close, if main already pinned the tag) so the target's own output states
 # the outcome instead of leaving that to a follow-up `gh pr list`.
-promote-content:
+promote-content: ## Open a PR bumping production's pinned CONTENT_VERSION (usage: make promote-content "description")
 	@set -euo pipefail; \
 	if [ -z "$(DESCRIPTION)" ]; then \
 		echo 'Usage: make promote-content "what changed"' >&2; \
@@ -168,7 +168,7 @@ promote-content:
 # and on failure dump the failed step's logs inline so the cause (content
 # validation, build, Vercel deploy, GitHub Actions infra, ...) is visible
 # without a manual `gh run view` round-trip.
-sync:
+sync: ## Trigger a development staging deploy and watch it to completion
 	@set -euo pipefail; \
 	echo "Triggering staging deploy (deploy.yml on development)..."; \
 	baseline_id="$$(gh run list --workflow=deploy.yml -L 20 --json databaseId,headBranch \
@@ -202,7 +202,7 @@ sync:
 # merge commit, not squash) stays a manual, reviewed step. `make deploy-prod
 # "title text"` (or `TITLE=...`) overrides the auto-generated title; see
 # scripts/open-sync-pr.sh.
-deploy-prod:
+deploy-prod: ## Open or refresh the development->main sync PR (usage: make deploy-prod ["title"])
 	@if [ -n "$(TITLE)" ]; then \
 		./scripts/open-sync-pr.sh --title "$(TITLE)"; \
 	else \
@@ -223,7 +223,7 @@ deploy-prod:
 # still refuse worktree-checked-out branches. Remote cleanup uses post-
 # fetch origin/* tracking refs (no live ls-remote) so a missing remote
 # simply skips, while real push failures still report.
-clean-repo:
+clean-repo: ## Delete local (and matching origin) branches already merged into development or main
 	@set -uo pipefail; \
 	tmp_err="$$(mktemp)"; \
 	trap 'rm -f "$$tmp_err"' EXIT; \
@@ -256,3 +256,9 @@ clean-repo:
 			fi; \
 		fi; \
 	done
+
+# Lists targets with their one-line "## " descriptions above, so the summary
+# stays next to the code it describes instead of drifting out of sync with a
+# separately maintained list. Sorted alphabetically; run with `make help`.
+help: ## Show available targets and what they do
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
