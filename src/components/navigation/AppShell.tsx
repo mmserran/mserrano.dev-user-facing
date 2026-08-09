@@ -85,10 +85,10 @@ const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
 // the standalone `translate` property, not `transform`, so it has to be
 // listed explicitly.
 const DRAWER_VISUAL_CLASS =
-  "shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-[transform,translate,scale,rotate] duration-200 motion-reduce:transition-none " +
+  "shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-[transform,translate,scale,rotate] duration-200 motion-reduce:!transition-none " +
   "pointer-events-none invisible " +
   "min-[1264px]:translate-x-0 min-[1264px]:shadow-none min-[1264px]:pointer-events-auto min-[1264px]:visible " +
-  "data-[forced=closed]:!-translate-x-full data-[forced=closed]:!pointer-events-none data-[forced=closed]:!invisible data-[forced=closed]:!transition-[transform,translate,scale,rotate,visibility] " +
+  "data-[forced=closed]:!-translate-x-full data-[forced=closed]:!pointer-events-none data-[forced=closed]:!invisible data-[forced=closed]:transition-[transform,translate,scale,rotate,visibility] " +
   "data-[forced=open]:!translate-x-0 data-[forced=open]:!pointer-events-auto data-[forced=open]:!visible";
 
 export default function AppShell({
