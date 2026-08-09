@@ -15,9 +15,23 @@
 set -euo pipefail
 
 dry_run=false
-if [ "${1:-}" = "--dry-run" ]; then
-	dry_run=true
-fi
+title_override=""
+while [ $# -gt 0 ]; do
+	case "$1" in
+	--dry-run)
+		dry_run=true
+		shift
+		;;
+	--title)
+		title_override="${2:?--title requires a value}"
+		shift 2
+		;;
+	*)
+		echo "Unknown argument: $1" >&2
+		exit 2
+		;;
+	esac
+done
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -105,23 +119,70 @@ $(printf '%s\n' "${body_items[@]}")${content_note}
 - [ ] CI checks pass
 - [ ] Squash-merge into \`main\` (per AGENTS.md); \`sync-main-to-development.yml\` will then merge main back into development automatically"
 
-# Title: name the PRs directly when there are few enough to stay readable,
-# otherwise name the first and count the rest.
-if [ "$pr_count" -le 3 ]; then
-	titles=()
-	for num in "${pr_list[@]}"; do
-		titles+=("${pr_titles[$num]}")
-	done
-	joined="$(
-		IFS=', '
-		echo "${titles[*]}"
-	)"
-	title="Sync main: ${joined}"
+# Mechanical fallback: name the PRs directly when there are few enough to
+# stay readable, otherwise name the first and count the rest. Used when no
+# --title is given and the LLM title attempt below is unavailable or fails.
+fallback_title() {
+	local title
+	if [ "$pr_count" -le 3 ]; then
+		local titles=()
+		for num in "${pr_list[@]}"; do
+			titles+=("${pr_titles[$num]}")
+		done
+		local joined
+		joined="$(
+			IFS=', '
+			echo "${titles[*]}"
+		)"
+		title="Sync main: ${joined}"
+	else
+		title="Sync main: ${pr_titles[${pr_list[0]}]} and $((pr_count - 1)) more"
+	fi
+	if [ "${#title}" -gt 72 ]; then
+		title="Sync main: ${pr_count} PRs from development"
+	fi
+	printf '%s' "$title"
+}
+
+# Asks a local Claude Code session to name the concrete themes across the PR
+# list (e.g. "SEO, analytics, portfolio improvements") instead of just
+# concatenating PR titles. Only the title goes through the LLM; the PR body
+# above is the exact, mechanical PR list, so nothing substantive depends on
+# the model getting it right. Prints nothing and returns non-zero if the
+# `claude` CLI is missing, the call fails or times out, or the output looks
+# unusable — callers must fall back to fallback_title in that case.
+llm_title() {
+	command -v claude >/dev/null 2>&1 || return 1
+
+	local prompt="You write concise, descriptive git PR titles for a 'sync development into main' PR. Given the list of PR titles below (already merged into development), write ONE line, <=72 characters, starting with 'Sync main: ', naming the concrete themes (not just listing PR titles verbatim, not generic like 'various updates'). Output only the title, nothing else.
+
+$(printf '%s\n' "${body_items[@]}")"
+
+	local result
+	result="$(timeout 45 claude -p --model haiku --output-format text "$prompt" </dev/null 2>/dev/null)" || return 1
+
+	# Collapse to a single line, then trim surrounding whitespace and, in case
+	# the model wraps its answer, one layer of straight quotes.
+	result="$(printf '%s' "$result" | tr '\n' ' ')"
+	result="${result#"${result%%[![:space:]]*}"}"
+	result="${result%"${result##*[![:space:]]}"}"
+	result="${result%\"}"
+	result="${result#\"}"
+	result="${result%\'}"
+	result="${result#\'}"
+
+	if [ -z "$result" ] || [ "${#result}" -gt 100 ]; then
+		return 1
+	fi
+	printf '%s' "$result"
+}
+
+if [ -n "$title_override" ]; then
+	title="$title_override"
+elif generated="$(llm_title)"; then
+	title="$generated"
 else
-	title="Sync main: ${pr_titles[${pr_list[0]}]} and $((pr_count - 1)) more"
-fi
-if [ "${#title}" -gt 72 ]; then
-	title="Sync main: ${pr_count} PRs from development"
+	title="$(fallback_title)"
 fi
 
 if [ "$dry_run" = true ]; then
