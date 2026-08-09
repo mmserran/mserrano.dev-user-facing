@@ -1,18 +1,44 @@
 import { render, waitFor } from "@testing-library/react";
+import { useEffect, useRef } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ImageTextMedia } from "@/lib/content";
 import ImageTextVideo from "./ImageTextVideo";
 
-const { PlyrMock, destroyMock } = vi.hoisted(() => {
-  const destroyMock = vi.fn();
-  function PlyrMock() {
-    return { destroy: destroyMock };
-  }
-  return { PlyrMock: vi.fn(PlyrMock), destroyMock };
-});
+// EnhancedVideoPlayer wraps the real @vidstack/react MediaPlayer; mocked here
+// (loaded via VideoPlayer's next/dynamic import) with a plain <video> so
+// assertions on rendered attributes stay identical to the pre-Vidstack
+// native-video tests, while still proving VideoPlayer only mounts it when
+// usePlayer is true.
+const { EnhancedVideoPlayerMock } = vi.hoisted(() => ({
+  EnhancedVideoPlayerMock: vi.fn(),
+}));
 
-vi.mock("plyr", () => ({ default: PlyrMock }));
-vi.mock("plyr/dist/plyr.css", () => ({}));
+vi.mock("./EnhancedVideoPlayer", () => ({
+  default: function EnhancedVideoPlayerStub(props: {
+    onPlayerChange?: (player: HTMLVideoElement | null) => void;
+    src: string;
+    poster?: string;
+    muted?: boolean;
+    loop?: boolean;
+    autoPlay?: boolean;
+    className?: string;
+  }) {
+    EnhancedVideoPlayerMock(props);
+    const { onPlayerChange, src, poster, muted, loop, autoPlay, className } = props;
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+      onPlayerChange?.(videoRef.current);
+      return () => onPlayerChange?.(null);
+    }, [onPlayerChange]);
+
+    return (
+      <video ref={videoRef} className={className} muted={muted} loop={loop} autoPlay={autoPlay} poster={poster}>
+        <source src={src} />
+      </video>
+    );
+  },
+}));
 
 // jsdom doesn't implement IntersectionObserver - this fake captures the
 // callback the component registers so tests can fire it manually, mirroring
@@ -97,21 +123,29 @@ describe("ImageTextVideo", () => {
     expect(playSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("does not initialize Plyr when usePlayer is false", async () => {
-    render(<ImageTextVideo media={makeMedia({ usePlayer: false })} />);
+  it("renders a plain native video with no controls library when usePlayer is false", () => {
+    const { container } = render(<ImageTextVideo media={makeMedia({ usePlayer: false })} />);
 
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(PlyrMock).not.toHaveBeenCalled();
+    expect(EnhancedVideoPlayerMock).not.toHaveBeenCalled();
+    expect(container.querySelector("video")).not.toBeNull();
   });
 
-  it("initializes Plyr against the video element when usePlayer is true, and destroys it on unmount", async () => {
-    const { container, unmount } = render(<ImageTextVideo media={makeMedia({ usePlayer: true })} />);
+  it("mounts the enhanced player against the video when usePlayer is true", async () => {
+    render(<ImageTextVideo media={makeMedia({ usePlayer: true })} />);
 
-    await waitFor(() => expect(PlyrMock).toHaveBeenCalledTimes(1));
-    const video = container.querySelector("video");
-    expect(PlyrMock).toHaveBeenCalledWith(video);
+    await waitFor(() => expect(EnhancedVideoPlayerMock).toHaveBeenCalledTimes(1));
+    expect(EnhancedVideoPlayerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ src: expect.stringContaining(KNOWN_FILENAME) }),
+    );
+  });
 
-    unmount();
-    expect(destroyMock).toHaveBeenCalledTimes(1);
+  it("plays the enhanced player once scrolled into view when usePlayer is true", async () => {
+    const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    render(<ImageTextVideo media={makeMedia({ usePlayer: true })} />);
+
+    await waitFor(() => expect(EnhancedVideoPlayerMock).toHaveBeenCalledTimes(1));
+
+    fireIntersection(true);
+    await waitFor(() => expect(playSpy).toHaveBeenCalledTimes(1));
   });
 });

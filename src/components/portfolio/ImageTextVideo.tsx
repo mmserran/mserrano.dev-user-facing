@@ -2,16 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import { getMediaVariants, getVideoPosterUrl, type ImageTextMedia } from "@/lib/content";
-import usePlyrPlayer from "./usePlyrPlayer";
+import VideoPlayer, { type VideoPlayerHandle } from "./VideoPlayer";
 
 const VIEWPORT_PLAY_THRESHOLD = 0.5;
 
 // Ports baseVideo.vue: always muted (autoplay only works unmuted-blocked
 // otherwise) and never looping - pbImageText.vue hardcodes `:loop="false"`
 // regardless of the item's own data. `usePlayer` mirrors baseVideo.vue's own
-// conditional: only then does it initialize Plyr for a consistent,
-// cross-browser control skin (blue accents, settings/PIP/fullscreen) - a
-// video without it renders with no native `controls` attribute either.
+// conditional: only then does it initialize the enhanced player for a
+// consistent, cross-browser control skin (blue accents,
+// settings/PIP/fullscreen) - a video without it renders with no native
+// `controls` attribute either.
 //
 // Deliberate deviation from the Vue source: baseVideo.vue plays a clip
 // immediately on mount whenever `front_is_autoplay` is set, regardless of
@@ -20,27 +21,27 @@ const VIEWPORT_PLAY_THRESHOLD = 0.5;
 // IntersectionObserver triggers a single `.play()`, then disconnects) -
 // this also gives the clips that were previously silently frozen on their
 // first frame (usePlayer and autoplay both false, e.g. "Form Validation") a
-// way to actually play. Still muted/non-looping either way; a Plyr-enhanced
-// clip's own controls remain available to pause/replay/seek afterward.
-// Poster uses the backend same-stem .jpg companion via getVideoPosterUrl.
+// way to actually play. Still muted/non-looping either way; an
+// enhanced-player clip's own controls remain available to pause/replay/seek
+// afterward. Poster uses the backend same-stem .jpg companion via
+// getVideoPosterUrl.
 export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  usePlyrPlayer(videoRef, media.usePlayer);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<VideoPlayerHandle>(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        video.play()?.catch(() => {});
+        Promise.resolve(playerRef.current?.play()).catch(() => {});
         observer.disconnect();
       },
       { threshold: VIEWPORT_PLAY_THRESHOLD },
     );
-    observer.observe(video);
+    observer.observe(container);
 
     return () => observer.disconnect();
   }, []);
@@ -51,16 +52,16 @@ export default function ImageTextVideo({ media }: { media: ImageTextMedia }) {
   const poster = getVideoPosterUrl(media.filename);
 
   return (
-    <video
-      ref={videoRef}
-      className="mx-auto h-auto max-h-[450px] w-full object-cover"
-      muted
-      loop={false}
-      playsInline
-      preload="metadata"
-      poster={poster}
-    >
-      <source src={src.url} />
-    </video>
+    <div ref={containerRef}>
+      <VideoPlayer
+        ref={playerRef}
+        src={src.url}
+        poster={poster}
+        usePlayer={media.usePlayer}
+        muted
+        loop={false}
+        className="mx-auto h-auto max-h-[450px] w-full object-cover"
+      />
+    </div>
   );
 }
