@@ -3,15 +3,14 @@
 # Opens (or refreshes) the development->main sync PR, with a body generated
 # from the PRs that have landed on development since main's last sync.
 #
-# development advances via real PR merge commits (first-parent history).
-# main advances only via squash-merge (see AGENTS.md), so those development
-# merge SHAs are never ancestors of main. After each squash,
-# sync-main-to-development.yml merges main back into development; from that
-# merge forward, origin/main is an ancestor of every first-parent commit.
-# Pre-sync development merges do not have origin/main as an ancestor, so
-# walking development's first-parent while that relation holds is the correct
-# "since last sync" boundary. `origin/main..origin/development` is not safe:
-# exclusivity is commit-SHA reachability and re-lists already-synced PRs.
+# development and main both advance via real merge commits (see AGENTS.md;
+# sync PRs into main are no longer squashed). Once that is enforced on GitHub,
+# origin/main..origin/development --first-parent is the correct "since last
+# sync" range. The is-ancestor first-parent walk below is the squash-era
+# workaround and is kept until the branch-protection merge-method switch
+# lands: under real merges + main→development fast-forward it also yields
+# origin/main's tip, so a "Merge pull request #N" sync commit is re-listed
+# once; switch the walk to that range form when squash is fully off.
 set -euo pipefail
 
 dry_run=false
@@ -128,11 +127,7 @@ fi
 body="## Summary
 Syncs \`main\` with everything currently on \`development\` (${pr_count} PR${plural} merged since the last sync):
 
-$(printf '%s\n' "${pr_links[@]}")${content_note}
-
-## Test plan
-- [ ] CI checks pass
-- [ ] Squash-merge into \`main\` (per AGENTS.md); \`sync-main-to-development.yml\` will then merge main back into development automatically"
+$(printf '%s\n' "${pr_links[@]}")${content_note}"
 
 # Mechanical fallback: name the PRs directly when there are few enough to
 # stay readable, otherwise name the first and count the rest. Used when no

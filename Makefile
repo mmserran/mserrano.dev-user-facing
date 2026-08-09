@@ -198,9 +198,10 @@ sync:
 
 # Opens (or refreshes) the development->main sync PR with a body summarizing
 # the PRs merged into development since main's last sync. Does not merge the
-# PR: per AGENTS.md, PR creation is automatable but the squash-merge into
-# main stays a manual, reviewed step. `make deploy-prod "title text"` (or
-# `TITLE=...`) overrides the auto-generated title; see scripts/open-sync-pr.sh.
+# PR: per AGENTS.md, PR creation is automatable but merging into main (a real
+# merge commit, not squash) stays a manual, reviewed step. `make deploy-prod
+# "title text"` (or `TITLE=...`) overrides the auto-generated title; see
+# scripts/open-sync-pr.sh.
 deploy-prod:
 	@if [ -n "$(TITLE)" ]; then \
 		./scripts/open-sync-pr.sh --title "$(TITLE)"; \
