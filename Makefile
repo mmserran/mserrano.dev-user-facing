@@ -60,15 +60,14 @@ endef
 
 # Lets `make promote-content "description text"` pass the description as a
 # plain quoted argument instead of `DESCRIPTION=`. Everything after the
-# target name is rejoined into DESCRIPTION. .DEFAULT below is defined only
-# for this invocation so those extra goals no-op without a global catch-all
-# that would silence typos of real targets. An explicit `DESCRIPTION=...`
-# on the command line still wins, since Make always prioritizes
-# command-line variable assignments over ones set in the file.
+# target name is rejoined into DESCRIPTION. Sets SWALLOW_EXTRA_GOAL so the
+# single .DEFAULT recipe below (shared with the real-typo fallback) knows to
+# no-op these trailing words instead of reporting them as an unknown target.
+# An explicit `DESCRIPTION=...` on the command line still wins, since Make
+# always prioritizes command-line variable assignments over ones set here.
 ifeq (promote-content,$(firstword $(MAKECMDGOALS)))
   DESCRIPTION := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  .DEFAULT:
-	@:
+  SWALLOW_EXTRA_GOAL := 1
 endif
 
 # Same trick as above, for `make deploy-prod "title text"`. TITLE is
@@ -76,9 +75,22 @@ endif
 # an LLM-generated, then mechanical, title when none is given.
 ifeq (deploy-prod,$(firstword $(MAKECMDGOALS)))
   TITLE := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  .DEFAULT:
-	@:
+  SWALLOW_EXTRA_GOAL := 1
 endif
+
+# Catches any goal that matched no rule: either a genuine typo of a target
+# name, or a trailing description/title word swallowed per the two blocks
+# above (SWALLOW_EXTRA_GOAL set). Only one .DEFAULT recipe can exist - Make
+# keeps the last definition and warns on any earlier one - so both cases are
+# handled here instead of splitting .DEFAULT across those blocks. A real typo
+# reports the bad goal and falls through to `help`; a swallowed word no-ops
+# silently so `make promote-content "fix typo"` doesn't also dump help after
+# every normal invocation.
+.DEFAULT:
+	@if [ -z "$(SWALLOW_EXTRA_GOAL)" ]; then \
+		echo "Unknown target: $@" >&2; \
+		$(MAKE) --no-print-directory help; \
+	fi
 
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
@@ -260,5 +272,7 @@ clean-repo: ## Delete local (and matching origin) branches already merged into d
 # Lists targets with their one-line "## " descriptions above, so the summary
 # stays next to the code it describes instead of drifting out of sync with a
 # separately maintained list. Sorted alphabetically; run with `make help`.
-help: ## Show available targets and what they do
+# Deliberately left un-tagged itself - "help: shows this help" adds nothing
+# in the one place it would be displayed, so it's excluded from its own list.
+help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
