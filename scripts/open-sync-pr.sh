@@ -3,12 +3,15 @@
 # Opens (or refreshes) the development->main sync PR, with a body generated
 # from the PRs that have landed on development since main's last sync.
 #
-# development only ever advances via PR merges (feature branches merge into
-# it with a real merge commit, not a squash), so its first-parent history
-# since main's tip is exactly its "Merge pull request #N ..." commits. main
-# itself is squash-merge-only (see AGENTS.md), and sync-main-to-development.yml
-# merges main back into development after every squash so the shared
-# ancestor resets and this range never re-lists already-synced PRs.
+# development advances via real PR merge commits (first-parent history).
+# main advances only via squash-merge (see AGENTS.md), so those development
+# merge SHAs are never ancestors of main. After each squash,
+# sync-main-to-development.yml merges main back into development; from that
+# merge forward, origin/main is an ancestor of every first-parent commit.
+# Pre-sync development merges do not have origin/main as an ancestor, so
+# walking development's first-parent while that relation holds is the correct
+# "since last sync" boundary. `origin/main..origin/development` is not safe:
+# exclusivity is commit-SHA reachability and re-lists already-synced PRs.
 set -euo pipefail
 
 dry_run=false
@@ -25,13 +28,27 @@ HEAD_BRANCH="development"
 echo "Fetching origin/$BASE_BRANCH and origin/$HEAD_BRANCH..."
 git fetch origin "$BASE_BRANCH" "$HEAD_BRANCH" --quiet
 
-ahead_count="$(git rev-list "origin/$BASE_BRANCH..origin/$HEAD_BRANCH" --count)"
-if [ "$ahead_count" -eq 0 ]; then
-	echo "origin/$BASE_BRANCH already contains origin/$HEAD_BRANCH; nothing to sync."
+if git diff --quiet "origin/$BASE_BRANCH" "origin/$HEAD_BRANCH"; then
+	echo "origin/$BASE_BRANCH and origin/$HEAD_BRANCH have identical trees; nothing to sync."
 	exit 0
 fi
 
-mapfile -t merge_subjects < <(git log "origin/$BASE_BRANCH..origin/$HEAD_BRANCH" --first-parent --format='%s')
+# First-parent subjects from origin/development back through the last
+# main→development merge (while origin/main remains an ancestor). Falls back
+# to main..development when main is not yet an ancestor of development tip
+# (no merge-back in history yet).
+mapfile -t merge_subjects < <(
+	if git merge-base --is-ancestor "origin/$BASE_BRANCH" "origin/$HEAD_BRANCH"; then
+		while IFS= read -r hash; do
+			if ! git merge-base --is-ancestor "origin/$BASE_BRANCH" "$hash"; then
+				break
+			fi
+			git log -1 --format='%s' "$hash"
+		done < <(git rev-list --first-parent "origin/$HEAD_BRANCH")
+	else
+		git log "origin/$BASE_BRANCH..origin/$HEAD_BRANCH" --first-parent --format='%s'
+	fi
+)
 
 pr_numbers=()
 for subject in "${merge_subjects[@]}"; do
@@ -41,9 +58,9 @@ for subject in "${merge_subjects[@]}"; do
 done
 
 if [ "${#pr_numbers[@]}" -eq 0 ]; then
-	echo "No PR merges found between origin/$BASE_BRANCH and origin/$HEAD_BRANCH (only non-PR commits)." >&2
-	echo "Refusing to open a PR with an empty summary; inspect the range manually:" >&2
-	echo "  git log origin/$BASE_BRANCH..origin/$HEAD_BRANCH --first-parent" >&2
+	echo "No PR merges found on origin/$HEAD_BRANCH since the last origin/$BASE_BRANCH sync (only non-PR commits)." >&2
+	echo "Refusing to open a PR with an empty summary; inspect first-parent history manually:" >&2
+	echo "  git log origin/$HEAD_BRANCH --first-parent" >&2
 	exit 1
 fi
 
