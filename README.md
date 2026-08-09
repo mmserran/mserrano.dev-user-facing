@@ -111,4 +111,5 @@ match what `src/lib/content.ts` expects.
 | --------------------------------------- | -------------------------------------------------------------------------------- |
 | `make restore-media`                   | Restore content/media locally; validates shape and updates `CONTENT_VERSION`   |
 | `make sync`                             | Trigger a `development` staging deploy, watch the Actions run until it finishes, and print failed-step logs on error |
+| `make deploy-prod`                      | Open or refresh the development→main sync PR with an auto-generated summary of PRs merged into development since the last sync; does not merge (squash-merge into `main` stays manual) |
 | `make promote-content "description"`   | Dispatch `promote-content.yml` to open a PR bumping `CONTENT_VERSION`, watch the Actions run until it finishes, print failed-step logs on error, and print the PR URL (or note that main already pinned the tag) |

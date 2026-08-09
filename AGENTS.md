@@ -216,9 +216,10 @@ re-list the same already-merged commits and files, growing without bound.
 `.github/workflows/sync-main-to-development.yml` prevents that: on every push
 to `main` it merges `main` back into `development` (a real merge commit, not a
 rewrite) and pushes. That merge is expected to be a no-op diff—it exists only
-to reset the shared ancestor—so future sync PRs start clean. PR creation and
-the squash-merge into `main` itself stay manual; only this merge-back step is
-automated.
+to reset the shared ancestor—so future sync PRs start clean. Open or refresh
+the development→main sync PR with `make deploy-prod` (local
+`scripts/open-sync-pr.sh`, not a GitHub Actions workflow); the squash-merge
+into `main` stays manual. Only this merge-back step is automated by workflow.
 
 ---
 
