@@ -90,6 +90,7 @@ endif
 	@if [ -z "$(SWALLOW_EXTRA_GOAL)" ]; then \
 		echo "Unknown target: $@" >&2; \
 		$(MAKE) --no-print-directory help; \
+		exit 1; \
 	fi
 
 # Fetches the latest Content export release from the backend repo and
