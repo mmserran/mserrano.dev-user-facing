@@ -71,8 +71,16 @@ const SITE_LINKS: { href: string; label: string; Icon: IconType }[] = [
 
 // Visual open/closed cascade mirrored for pointer-events and visibility so the
 // drawer stays first-paint-safe for hit-testing and AT even when JS attrs lag.
+// `visibility` rides the same transition as the slide (rather than flipping
+// instantly) so closing slides the drawer out before hiding it - CSS gives
+// visibility special-cased timing (hidden only applies at the end of the
+// transition, visible applies immediately) which is exactly the slide-then-
+// hide/show-then-slide behavior a drawer needs. The other properties here
+// mirror what Tailwind's `transition-transform` utility covers - `translate-x-*`
+// animates the standalone `translate` property, not `transform`, so it has to
+// be listed explicitly alongside `visibility`.
 const DRAWER_VISUAL_CLASS =
-  "shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 motion-reduce:transition-none " +
+  "shadow-nav-drawer bg-nav-sidebar fixed top-16 left-0 z-40 h-[calc(100dvh-6.25rem)] w-64 -translate-x-full overflow-y-auto overscroll-y-contain pb-[max(1rem,env(safe-area-inset-bottom))] transition-[transform,translate,scale,rotate,visibility] duration-200 motion-reduce:transition-none " +
   "pointer-events-none invisible " +
   "min-[1264px]:translate-x-0 min-[1264px]:shadow-none min-[1264px]:pointer-events-auto min-[1264px]:visible " +
   "data-[forced=closed]:!-translate-x-full data-[forced=closed]:!pointer-events-none data-[forced=closed]:!invisible " +
