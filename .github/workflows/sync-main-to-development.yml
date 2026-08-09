@@ -31,10 +31,12 @@ jobs:
             exit 0
           fi
 
-          # main is squash-merged only (see AGENTS.md), so main and development
-          # share no recent common ancestor. This merge is expected to apply
-          # cleanly with an empty diff—it exists to record main's tip as a
-          # parent of development, resetting the shared ancestor so future
-          # development->main compares don't replay already-merged commits.
+          # Brings back commits that reached main without going through
+          # development, namely make promote-content (see AGENTS.md), which
+          # opens its PR directly against main. After a development->main
+          # sync PR, this resolves as a fast-forward (development's prior tip
+          # is already a parent of main's new tip). After a promote-content
+          # merge, it's a real two-parent merge carrying that commit's actual
+          # diff, since it never came from development.
           git merge --no-edit origin/main
           git push origin development

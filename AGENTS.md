@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # Project
@@ -205,16 +209,24 @@ inside the same code PR so the matching code and content tag land in `main`
 together. `make sync` manually triggers a staging deploy when a new content
 release should reach `stage.mserrano.dev` without a code push.
 
-All PRs into `main` are squash-merged. Squashing never records `development`'s
-tip as a parent of `main`, so `main` and `development` keep sharing only their
-original common ancestor—every later `development`→`main` PR would otherwise
-re-list the same already-merged commits and files, growing without bound.
-`.github/workflows/sync-main-to-development.yml` prevents that: on every push
-to `main` it merges `main` back into `development` (a real merge commit, not a
-rewrite) and pushes. That merge is expected to be a no-op diff—it exists only
-to reset the shared ancestor—so future sync PRs start clean. PR creation and
-the squash-merge into `main` itself stay manual; only this merge-back step is
-automated.
+The `development`→`main` sync PR is merged with a real merge commit, not
+squash. Squashing was tried and dropped: it never records `development`'s tip
+as a parent of `main`, so every later sync PR would re-list the same
+already-merged commits in its Commits tab forever, growing without bound and
+with no way to reset it short of rewriting history. A real merge commit
+preserves ancestry, so a synced commit is never re-listed. Open or refresh the
+sync PR with `make deploy-prod` (local `scripts/open-sync-pr.sh`, not a GitHub
+Actions workflow); merging it into `main` stays manual.
+
+`make promote-content` still opens its PR directly against `main`, bypassing
+`development`, so a content-only release isn't blocked on whatever code is
+mid-review on `development`. `.github/workflows/sync-main-to-development.yml`
+merges `main` back into `development` on every push to `main`, which is what
+carries those promote-content (and any other direct-to-`main`) commits back
+into `development`. After a sync-PR merge this resolves as a fast-forward
+(`development`'s prior tip is already a parent of `main`'s new tip); after a
+promote-content merge it's a real two-parent merge, since that commit didn't
+come from `development`.
 
 ---
 

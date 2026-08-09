@@ -165,34 +165,22 @@ function ImageLayer({
 export default function ProjectTileImage({
   staticFilename,
   hoverFilename,
+  active = false,
 }: {
   staticFilename: string;
   hoverFilename: string;
+  active?: boolean;
 }) {
-  const [hover, setHover] = useState(false);
-  const [touch, setTouch] = useState(false);
-  const active = hover || touch;
-
   const staticFormat = getFormat(staticFilename);
   const hoverFormat = getFormat(hoverFilename);
   const showStatic = staticFormat !== "";
   const showHover = hoverFormat !== "";
-
-  const wrapperProps = {
-    onMouseEnter: () => setHover(true),
-    onMouseLeave: () => setHover(false),
-    onTouchStart: () => setTouch(true),
-    onTouchMove: () => setTouch(true),
-    onTouchEnd: () => setTouch(false),
-    onTouchCancel: () => setTouch(false),
-  };
 
   if (!showStatic && !showHover) {
     return (
       <div
         className="h-[200px] w-full shrink-0 border-b border-black/20 bg-black/10"
         aria-hidden="true"
-        {...wrapperProps}
       />
     );
   }
@@ -212,7 +200,7 @@ export default function ProjectTileImage({
   }`;
 
   return (
-    <div className="relative h-[200px] w-full shrink-0 overflow-hidden isolate border-b border-black/20" {...wrapperProps}>
+    <div className="relative h-[200px] w-full shrink-0 overflow-hidden isolate border-b border-black/20">
       {showHover &&
         (hoverFormat === "video" ? (
           <VideoLayer filename={hoverFilename} playWhenActive={active} />

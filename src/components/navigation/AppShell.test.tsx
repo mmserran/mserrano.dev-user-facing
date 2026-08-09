@@ -102,7 +102,12 @@ describe("AppShell", () => {
     // No manual override yet: the drawer's default open/closed state is
     // purely CSS-driven (min-[1264px]:translate-x-0), not gated by JS.
     expect(navDrawer).not.toHaveAttribute("data-forced");
-    expect(navDrawer).toHaveClass("min-[1264px]:translate-x-0", "transition-transform");
+    expect(navDrawer).toHaveClass(
+      "min-[1264px]:translate-x-0",
+      "transition-[transform,translate,scale,rotate]",
+      "data-[forced=closed]:transition-[transform,translate,scale,rotate,visibility]",
+      "motion-reduce:!transition-none"
+    );
 
     // Interaction/a11y follows the same cascade: open on desktop, not inert.
     expect(toggleButton).toHaveAttribute("aria-expanded", "true");

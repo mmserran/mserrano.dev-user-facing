@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Project } from "@/lib/content";
 import ProjectTile from "./ProjectTile";
@@ -18,7 +18,7 @@ const project: Project = {
     workplace: [],
     supported_browsers: [],
   },
-  thumbnail: { static: "WordPress.png", on_hover: "" },
+  thumbnail: { static: "WordPress.png", on_hover: "Vue.png" },
   technology: { language: [], framework: [], deployment: [], software: [] },
   screenshot: { desktop: [], desktop_cutoff: null, mobile: [] },
   pagebuilder: "[]",
@@ -40,5 +40,38 @@ describe("ProjectTile", () => {
     expect(screen.getByText("Mid 2020")).toBeInTheDocument();
     expect(screen.getByText(`${"A".repeat(117)}...`)).toBeInTheDocument();
     expect(screen.getByText("Learn More")).toBeInTheDocument();
+  });
+
+  it("swaps the thumbnail to its hover image when the cursor enters anywhere on the card, not just the image", () => {
+    render(<ProjectTile project={project} />);
+
+    const images = screen.getAllByRole("presentation", { hidden: true });
+    const staticImg = images.find((img) => img.getAttribute("src")?.includes("WordPress")) as HTMLElement;
+    expect(staticImg.className).toContain("opacity-100");
+
+    const card = screen.getByRole("link");
+    fireEvent.mouseEnter(card);
+    expect(staticImg.className).toContain("opacity-0");
+
+    fireEvent.mouseLeave(card);
+    expect(staticImg.className).toContain("opacity-100");
+  });
+
+  it("keeps the hover swap after a touch ends while the cursor is still over the card", () => {
+    render(<ProjectTile project={project} />);
+
+    const images = screen.getAllByRole("presentation", { hidden: true });
+    const staticImg = images.find((img) => img.getAttribute("src")?.includes("WordPress")) as HTMLElement;
+    const card = screen.getByRole("link");
+
+    fireEvent.mouseEnter(card);
+    expect(staticImg.className).toContain("opacity-0");
+
+    fireEvent.touchStart(card);
+    fireEvent.touchEnd(card);
+    expect(staticImg.className).toContain("opacity-0");
+
+    fireEvent.mouseLeave(card);
+    expect(staticImg.className).toContain("opacity-100");
   });
 });

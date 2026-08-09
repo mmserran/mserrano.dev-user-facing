@@ -1,4 +1,4 @@
-.PHONY: restore-media promote-content sync
+.PHONY: restore-media promote-content sync deploy-prod
 
 SHELL := /usr/bin/env bash
 
@@ -71,6 +71,15 @@ ifeq (promote-content,$(firstword $(MAKECMDGOALS)))
 	@:
 endif
 
+# Same trick as above, for `make deploy-prod "title text"`. TITLE is
+# optional here (unlike DESCRIPTION): scripts/open-sync-pr.sh falls back to
+# an LLM-generated, then mechanical, title when none is given.
+ifeq (deploy-prod,$(firstword $(MAKECMDGOALS)))
+  TITLE := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  .DEFAULT:
+	@:
+endif
+
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
 # before so removed/renamed assets don't linger.
@@ -102,6 +111,13 @@ restore-media:
 # Finds the newest versioned content export release (the backend tags them
 # content-YYYYMMDD-HHMM, distinct from the content-latest alias) and kicks
 # off promote-content.yml to open a PR pinning production to it.
+#
+# Mirrors sync's reporting: `gh workflow run` only fires the event and
+# returns immediately, so we resolve the dispatched run's ID, stream its
+# progress with `gh run watch`, and on failure dump the failed step's logs
+# inline. On success we look up the PR the workflow opens (or its no-op
+# close, if main already pinned the tag) so the target's own output states
+# the outcome instead of leaving that to a follow-up `gh pr list`.
 promote-content:
 	@set -euo pipefail; \
 	if [ -z "$(DESCRIPTION)" ]; then \
@@ -110,7 +126,37 @@ promote-content:
 	fi; \
 	tag="$$($(RESOLVE_LATEST_TAG))"; \
 	echo "Promoting $$tag to production..."; \
-	gh workflow run promote-content.yml -f tag="$$tag" -f description="$(DESCRIPTION)"
+	baseline_id="$$(gh run list --workflow=promote-content.yml -L 20 --json databaseId,headBranch \
+		--jq '[.[] | select(.headBranch == "development")] | map(.databaseId) | max // 0')"; \
+	gh workflow run promote-content.yml -f tag="$$tag" -f description="$(DESCRIPTION)"; \
+	echo "Waiting for the run to register on GitHub..."; \
+	run_id=""; \
+	for attempt in $$(seq 1 10); do \
+		sleep 2; \
+		run_id="$$(gh run list --workflow=promote-content.yml -L 20 --json databaseId,event,headBranch \
+			--jq "[.[] | select(.event == \"workflow_dispatch\" and .headBranch == \"development\" and .databaseId > $$baseline_id)] | first | .databaseId // empty")"; \
+		if [ -n "$$run_id" ]; then break; fi; \
+	done; \
+	if [ -z "$$run_id" ]; then \
+		echo "Could not find the dispatched run after 20s; check manually: gh run list --workflow=promote-content.yml" >&2; \
+		exit 1; \
+	fi; \
+	url="https://github.com/$$(gh repo view --json nameWithOwner --jq .nameWithOwner)/actions/runs/$$run_id"; \
+	echo "Watching run $$run_id: $$url"; \
+	if ! gh run watch "$$run_id" --exit-status; then \
+		echo "Promotion failed - logs for the failed step(s):" >&2; \
+		gh run view "$$run_id" --log-failed || true; \
+		echo "Full run: $$url" >&2; \
+		exit 1; \
+	fi; \
+	branch="promote-content/$$tag"; \
+	pr_number="$$(gh pr list --head "$$branch" --base main --state open --json number --jq '.[0].number // empty')"; \
+	if [ -n "$$pr_number" ]; then \
+		pr_url="$$(gh pr view "$$pr_number" --json url --jq .url)"; \
+		echo "Promotion PR: $$pr_url"; \
+	else \
+		echo "Run succeeded; main already pinned $$tag (no PR opened or needed)."; \
+	fi
 
 # Manually triggers a staging deploy so a new content release (with no code
 # change involved) shows up on stage.mserrano.dev without waiting for the
@@ -149,3 +195,16 @@ sync:
 		exit 1; \
 	fi; \
 	echo "Staging deploy succeeded: $$url"
+
+# Opens (or refreshes) the development->main sync PR with a body summarizing
+# the PRs merged into development since main's last sync. Does not merge the
+# PR: per AGENTS.md, PR creation is automatable but merging into main (a real
+# merge commit, not squash) stays a manual, reviewed step. `make deploy-prod
+# "title text"` (or `TITLE=...`) overrides the auto-generated title; see
+# scripts/open-sync-pr.sh.
+deploy-prod:
+	@if [ -n "$(TITLE)" ]; then \
+		./scripts/open-sync-pr.sh --title "$(TITLE)"; \
+	else \
+		./scripts/open-sync-pr.sh; \
+	fi
