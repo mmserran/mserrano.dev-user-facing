@@ -159,7 +159,7 @@ llm_title() {
 $(printf '%s\n' "${body_items[@]}")"
 
 	local result
-	result="$(timeout 45 claude -p --model haiku --output-format text "$prompt" </dev/null 2>/dev/null)" || return 1
+	result="$(timeout -k 5 45 claude -p --model haiku --output-format text "$prompt" </dev/null 2>/dev/null)" || return 1
 
 	# Collapse to a single line, then trim surrounding whitespace and, in case
 	# the model wraps its answer, one layer of straight quotes.
