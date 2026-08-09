@@ -92,9 +92,20 @@ done
 
 pr_count="${#pr_list[@]}"
 
+# Full "title (#N)" form: used for the terminal report and the LLM title
+# prompt below, both of which need the actual title text to be useful.
 body_items=()
 for num in "${pr_list[@]}"; do
 	body_items+=("- ${pr_titles[$num]} (#${num})")
+done
+
+# Bare "#N" form for the PR body itself: GitHub auto-links a bare #N
+# reference with its own hover-card preview showing that PR's title, so
+# writing the title out again there just repeats what the link already
+# shows.
+pr_links=()
+for num in "${pr_list[@]}"; do
+	pr_links+=("- #${num}")
 done
 
 plural=""
@@ -117,7 +128,7 @@ fi
 body="## Summary
 Syncs \`main\` with everything currently on \`development\` (${pr_count} PR${plural} merged since the last sync):
 
-$(printf '%s\n' "${body_items[@]}")${content_note}
+$(printf '%s\n' "${pr_links[@]}")${content_note}
 
 ## Test plan
 - [ ] CI checks pass
