@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import ProjectTileImage from "./ProjectTileImage";
 
@@ -45,7 +45,9 @@ describe("ProjectTileImage", () => {
 
   it("a static video keeps autoplaying, but still crossfades away on hover to reveal the hover layer underneath", () => {
     const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() => Promise.resolve());
-    const { container } = render(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="WordPress.png" />);
+    const { container, rerender } = render(
+      <ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="WordPress.png" />,
+    );
 
     const video = container.querySelector("video");
     const img = container.querySelector("img");
@@ -64,8 +66,7 @@ describe("ProjectTileImage", () => {
     expect(video?.getAttribute("src")).toContain("devops_video");
     expect(video?.className).toContain("opacity-100");
 
-    const wrapper = container.firstElementChild as HTMLElement;
-    fireEvent.mouseEnter(wrapper);
+    rerender(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="WordPress.png" active />);
     expect(video?.className).toContain("opacity-0");
   });
 
@@ -105,7 +106,7 @@ describe("ProjectTileImage", () => {
   });
 
   it("swaps between two videos on hover when both the static and hover slots are video (e.g. Swisher Sweets)", () => {
-    const { container } = render(
+    const { container, rerender } = render(
       <ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="pulsemobile_video.mp4" />,
     );
 
@@ -121,8 +122,7 @@ describe("ProjectTileImage", () => {
     expect(hoverVideo.getAttribute("src")).toContain("pulsemobile_video");
     expect(staticVideo.className).toContain("opacity-100");
 
-    const wrapper = container.firstElementChild as HTMLElement;
-    fireEvent.mouseEnter(wrapper);
+    rerender(<ProjectTileImage staticFilename="devops_video.mp4" hoverFilename="pulsemobile_video.mp4" active />);
     expect(staticVideo.className).toContain("opacity-0");
   });
 
@@ -159,31 +159,29 @@ describe("ProjectTileImage", () => {
   });
 
   it("pans the hover image on activation and reverts on release when there is no static layer", () => {
-    const { container } = render(<ProjectTileImage staticFilename="" hoverFilename="WordPress.png" />);
+    const { container, rerender } = render(<ProjectTileImage staticFilename="" hoverFilename="WordPress.png" />);
 
     const img = container.querySelector("img");
     expect(img).not.toBeNull();
     expect(img?.className).toContain("duration-[750ms]");
     expect(img?.className).not.toContain("duration-[3000ms]");
 
-    const wrapper = container.firstElementChild as HTMLElement;
-    fireEvent.mouseEnter(wrapper);
+    rerender(<ProjectTileImage staticFilename="" hoverFilename="WordPress.png" active />);
     expect(img?.className).toContain("duration-[3000ms]");
 
-    fireEvent.mouseLeave(wrapper);
+    rerender(<ProjectTileImage staticFilename="" hoverFilename="WordPress.png" active={false} />);
     expect(img?.className).toContain("duration-[750ms]");
   });
 
   it("crossfades the static layer away on hover when both a static image and hover media exist", () => {
-    const { container } = render(<ProjectTileImage staticFilename="WordPress.png" hoverFilename="Vue.png" />);
+    const { container, rerender } = render(<ProjectTileImage staticFilename="WordPress.png" hoverFilename="Vue.png" />);
 
     const images = container.querySelectorAll("img");
     expect(images).toHaveLength(2);
     const staticImg = images[1];
     expect(staticImg.className).toContain("opacity-100");
 
-    const wrapper = container.firstElementChild as HTMLElement;
-    fireEvent.mouseEnter(wrapper);
+    rerender(<ProjectTileImage staticFilename="WordPress.png" hoverFilename="Vue.png" active />);
     expect(staticImg.className).toContain("opacity-0");
   });
 });

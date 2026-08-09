@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { formatRoundedDate, truncate, type Project } from "@/lib/content";
 import ProjectTileImage from "./ProjectTileImage";
@@ -6,13 +9,31 @@ import ProjectTileImage from "./ProjectTileImage";
 // point to the same destination) rather than the Gridsome frontend's three
 // separate same-target <a> tags - one tab stop per project instead of three
 // identical ones, per WCAG 2.1 AA link-purpose guidance.
+//
+// Hover/touch state lives here rather than inside ProjectTileImage so the
+// thumbnail's hover swap activates from anywhere on the card (title,
+// description, "Learn More"), not just while the cursor is over the ~200px
+// image itself.
 export default function ProjectTile({ project, className = "" }: { project: Project; className?: string }) {
+  const [hover, setHover] = useState(false);
+  const [touch, setTouch] = useState(false);
+
   return (
     <Link
       href={`/projects/${project.slug}/`}
       className={`group flex h-full flex-col overflow-hidden rounded-lg bg-white text-black shadow-lg transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue motion-reduce:transform-none ${className}`}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onTouchStart={() => setTouch(true)}
+      onTouchMove={() => setTouch(true)}
+      onTouchEnd={() => setTouch(false)}
+      onTouchCancel={() => setTouch(false)}
     >
-      <ProjectTileImage staticFilename={project.thumbnail.static} hoverFilename={project.thumbnail.on_hover} />
+      <ProjectTileImage
+        staticFilename={project.thumbnail.static}
+        hoverFilename={project.thumbnail.on_hover}
+        active={hover || touch}
+      />
 
       <div className="flex flex-1 flex-col p-5">
         <h3 className="text-lg font-semibold text-brand-blue group-hover:underline">{project.general.title}</h3>
