@@ -97,17 +97,21 @@ for num in "${pr_list[@]}"; do
 	body_items+=("- ${pr_titles[$num]} (#${num})")
 done
 
+plural=""
+if [ "$pr_count" -ne 1 ]; then
+	plural="s"
+fi
+
+echo "Found ${pr_count} PR${plural} merged into development since main's last sync:"
+printf '  %s\n' "${body_items[@]}"
+
 content_main="$(git show "origin/$BASE_BRANCH:CONTENT_VERSION" 2>/dev/null || true)"
 content_dev="$(git show "origin/$HEAD_BRANCH:CONTENT_VERSION" 2>/dev/null || true)"
 
 content_note=""
 if [ "$content_main" != "$content_dev" ]; then
 	content_note=$'\n\n**Note:** `CONTENT_VERSION` differs between branches — main pins `'"$content_main"'`, development pins `'"$content_dev"'`. Confirm this is intentional before merging (see `make promote-content`).'
-fi
-
-plural=""
-if [ "$pr_count" -ne 1 ]; then
-	plural="s"
+	echo "Note: CONTENT_VERSION differs (main=$content_main, development=$content_dev)."
 fi
 
 body="## Summary
@@ -134,12 +138,12 @@ fallback_title() {
 			IFS=', '
 			echo "${titles[*]}"
 		)"
-		title="Sync main: ${joined}"
+		title="${joined}"
 	else
-		title="Sync main: ${pr_titles[${pr_list[0]}]} and $((pr_count - 1)) more"
+		title="${pr_titles[${pr_list[0]}]} and $((pr_count - 1)) more"
 	fi
 	if [ "${#title}" -gt 72 ]; then
-		title="Sync main: ${pr_count} PRs from development"
+		title="${pr_count} PRs from development"
 	fi
 	printf '%s' "$title"
 }
@@ -154,7 +158,7 @@ fallback_title() {
 llm_title() {
 	command -v claude >/dev/null 2>&1 || return 1
 
-	local prompt="You write concise, descriptive git PR titles for a 'sync development into main' PR. Given the list of PR titles below (already merged into development), write ONE line, <=72 characters, starting with 'Sync main: ', naming the concrete themes (not just listing PR titles verbatim, not generic like 'various updates'). Output only the title, nothing else.
+	local prompt="You write concise, descriptive git PR titles for a 'sync development into main' PR. Given the list of PR titles below (already merged into development), write ONE line, <=72 characters, naming the concrete themes (not just listing PR titles verbatim, not generic like 'various updates'). Output only the title, nothing else.
 
 $(printf '%s\n' "${body_items[@]}")"
 
@@ -179,15 +183,18 @@ $(printf '%s\n' "${body_items[@]}")"
 
 if [ -n "$title_override" ]; then
 	title="$title_override"
+	title_source="override"
 elif generated="$(llm_title)"; then
 	title="$generated"
+	title_source="LLM"
 else
 	title="$(fallback_title)"
+	title_source="mechanical fallback"
 fi
 
+echo "Title (${title_source}): $title"
+
 if [ "$dry_run" = true ]; then
-	echo "--- title ---"
-	echo "$title"
 	echo "--- body ---"
 	echo "$body"
 	exit 0
@@ -206,10 +213,12 @@ repo_slug="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 
 if [ -n "$existing_pr" ]; then
 	url="$(gh api "repos/$repo_slug/pulls/$existing_pr" -X PATCH -f title="$title" -f body="$body" --jq .html_url)"
-	echo "Updated PR #$existing_pr: $title"
-	echo "$url"
+	pr_number="$existing_pr"
+	action="Updated"
 else
-	url="$(gh api "repos/$repo_slug/pulls" -X POST -f title="$title" -f body="$body" -f head="$HEAD_BRANCH" -f base="$BASE_BRANCH" --jq .html_url)"
-	echo "Opened PR: $title"
-	echo "$url"
+	IFS=$'\t' read -r pr_number url < <(gh api "repos/$repo_slug/pulls" -X POST -f title="$title" -f body="$body" -f head="$HEAD_BRANCH" -f base="$BASE_BRANCH" --jq '[.number, .html_url] | @tsv')
+	action="Opened"
 fi
+
+echo "${action} PR #${pr_number}: $title"
+echo "$url"

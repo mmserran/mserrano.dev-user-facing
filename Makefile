@@ -71,6 +71,15 @@ ifeq (promote-content,$(firstword $(MAKECMDGOALS)))
 	@:
 endif
 
+# Same trick as above, for `make deploy-prod "title text"`. TITLE is
+# optional here (unlike DESCRIPTION): scripts/open-sync-pr.sh falls back to
+# an LLM-generated, then mechanical, title when none is given.
+ifeq (deploy-prod,$(firstword $(MAKECMDGOALS)))
+  TITLE := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  .DEFAULT:
+	@:
+endif
+
 # Fetches the latest Content export release from the backend repo and
 # unpacks it into content/ and public/media/, wiping whatever was there
 # before so removed/renamed assets don't linger.
@@ -190,6 +199,11 @@ sync:
 # Opens (or refreshes) the development->main sync PR with a body summarizing
 # the PRs merged into development since main's last sync. Does not merge the
 # PR: per AGENTS.md, PR creation is automatable but the squash-merge into
-# main stays a manual, reviewed step.
+# main stays a manual, reviewed step. `make deploy-prod "title text"` (or
+# `TITLE=...`) overrides the auto-generated title; see scripts/open-sync-pr.sh.
 deploy-prod:
-	@./scripts/open-sync-pr.sh
+	@if [ -n "$(TITLE)" ]; then \
+		./scripts/open-sync-pr.sh --title "$(TITLE)"; \
+	else \
+		./scripts/open-sync-pr.sh; \
+	fi
