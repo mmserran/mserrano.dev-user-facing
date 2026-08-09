@@ -1,4 +1,4 @@
-.PHONY: restore-media promote-content sync
+.PHONY: restore-media promote-content sync deploy-prod
 
 SHELL := /usr/bin/env bash
 
@@ -186,3 +186,10 @@ sync:
 		exit 1; \
 	fi; \
 	echo "Staging deploy succeeded: $$url"
+
+# Opens (or refreshes) the development->main sync PR with a body summarizing
+# the PRs merged into development since main's last sync. Does not merge the
+# PR: per AGENTS.md, PR creation is automatable but the squash-merge into
+# main stays a manual, reviewed step.
+deploy-prod:
+	@./scripts/open-sync-pr.sh
