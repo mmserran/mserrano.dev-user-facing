@@ -1,4 +1,4 @@
-.PHONY: restore-media promote-content sync deploy-prod
+.PHONY: restore-media promote-content sync deploy-prod clean-repo
 
 SHELL := /usr/bin/env bash
 
@@ -208,3 +208,46 @@ deploy-prod:
 	else \
 		./scripts/open-sync-pr.sh; \
 	fi
+
+# Deletes local branches already merged into origin/development or
+# origin/main, and the matching origin branch if one still exists (this
+# repo's delete_branch_on_merge setting is off, so nothing else cleans those
+# up). Feature PRs real-merge into development, and since the PR that
+# dropped squash-merge on the development->main sync, ancestry alone is
+# enough to detect "merged" - no gh pr lookup needed. Skips main,
+# development, the branch checked out in this worktree, and any branch git
+# refuses to delete because another worktree has it checked out (printed as
+# a skip, not a failure - never force-deletes with -D).
+clean-repo:
+	@set -uo pipefail; \
+	tmp_err="$$(mktemp)"; \
+	trap 'rm -f "$$tmp_err"' EXIT; \
+	echo "Fetching and pruning..."; \
+	git fetch --prune origin; \
+	current="$$(git symbolic-ref --quiet --short HEAD || true)"; \
+	for branch in $$(git for-each-ref --format='%(refname:short)' refs/heads/); do \
+		case "$$branch" in \
+			main|development) continue ;; \
+		esac; \
+		if [ "$$branch" = "$$current" ]; then \
+			echo "$$branch - currently checked out here, skipping"; \
+			continue; \
+		fi; \
+		if ! git merge-base --is-ancestor "$$branch" origin/development 2>/dev/null \
+			&& ! git merge-base --is-ancestor "$$branch" origin/main 2>/dev/null; then \
+			echo "$$branch - not merged, skipping"; \
+			continue; \
+		fi; \
+		if ! git branch -d "$$branch" 2>"$$tmp_err"; then \
+			echo "$$branch - skipped ($$(tr '\n' ' ' <"$$tmp_err" | sed 's/ *$$//'))"; \
+			continue; \
+		fi; \
+		echo "$$branch - deleted (merged)"; \
+		if git ls-remote --exit-code --heads origin "$$branch" >/dev/null 2>&1; then \
+			if git push origin --delete "$$branch"; then \
+				echo "$$branch - deleted on origin"; \
+			else \
+				echo "$$branch - local delete OK, origin delete failed" >&2; \
+			fi; \
+		fi; \
+	done
