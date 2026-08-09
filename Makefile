@@ -217,7 +217,12 @@ deploy-prod:
 # enough to detect "merged" - no gh pr lookup needed. Skips main,
 # development, the branch checked out in this worktree, and any branch git
 # refuses to delete because another worktree has it checked out (printed as
-# a skip, not a failure - never force-deletes with -D).
+# a skip, not a failure). After the ancestry gate, local delete uses -D so
+# git's separate "fully merged into HEAD/upstream" check cannot block a
+# tip already proven ancestor of origin/development|main; both -d and -D
+# still refuse worktree-checked-out branches. Remote cleanup uses post-
+# fetch origin/* tracking refs (no live ls-remote) so a missing remote
+# simply skips, while real push failures still report.
 clean-repo:
 	@set -uo pipefail; \
 	tmp_err="$$(mktemp)"; \
@@ -238,12 +243,12 @@ clean-repo:
 			echo "$$branch - not merged, skipping"; \
 			continue; \
 		fi; \
-		if ! git branch -d "$$branch" 2>"$$tmp_err"; then \
+		if ! git branch -D "$$branch" 2>"$$tmp_err"; then \
 			echo "$$branch - skipped ($$(tr '\n' ' ' <"$$tmp_err" | sed 's/ *$$//'))"; \
 			continue; \
 		fi; \
 		echo "$$branch - deleted (merged)"; \
-		if git ls-remote --exit-code --heads origin "$$branch" >/dev/null 2>&1; then \
+		if git show-ref --verify --quiet "refs/remotes/origin/$$branch"; then \
 			if git push origin --delete "$$branch"; then \
 				echo "$$branch - deleted on origin"; \
 			else \
