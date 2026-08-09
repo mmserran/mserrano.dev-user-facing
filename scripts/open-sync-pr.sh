@@ -3,15 +3,12 @@
 # Opens (or refreshes) the development->main sync PR, with a body generated
 # from the PRs that have landed on development since main's last sync.
 #
-# development advances via real PR merge commits (first-parent history).
-# main advances only via squash-merge (see AGENTS.md), so those development
-# merge SHAs are never ancestors of main. After each squash,
-# sync-main-to-development.yml merges main back into development; from that
-# merge forward, origin/main is an ancestor of every first-parent commit.
-# Pre-sync development merges do not have origin/main as an ancestor, so
-# walking development's first-parent while that relation holds is the correct
-# "since last sync" boundary. `origin/main..origin/development` is not safe:
-# exclusivity is commit-SHA reachability and re-lists already-synced PRs.
+# development and main both advance via real merge commits (see AGENTS.md;
+# sync PRs into main are no longer squashed), so origin/main..origin/development
+# is a safe, accurate "since last sync" range on its own merits. The
+# first-parent walk below predates that policy — it was needed to work around
+# squash-merge breaking ancestry — and is kept as-is because it still produces
+# the same correct boundary; it doesn't need squash to function.
 set -euo pipefail
 
 dry_run=false
@@ -128,11 +125,7 @@ fi
 body="## Summary
 Syncs \`main\` with everything currently on \`development\` (${pr_count} PR${plural} merged since the last sync):
 
-$(printf '%s\n' "${pr_links[@]}")${content_note}
-
-## Test plan
-- [ ] CI checks pass
-- [ ] Squash-merge into \`main\` (per AGENTS.md); \`sync-main-to-development.yml\` will then merge main back into development automatically"
+$(printf '%s\n' "${pr_links[@]}")${content_note}"
 
 # Mechanical fallback: name the PRs directly when there are few enough to
 # stay readable, otherwise name the first and count the rest. Used when no
