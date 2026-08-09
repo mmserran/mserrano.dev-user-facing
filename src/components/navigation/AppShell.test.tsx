@@ -104,7 +104,8 @@ describe("AppShell", () => {
     expect(navDrawer).not.toHaveAttribute("data-forced");
     expect(navDrawer).toHaveClass(
       "min-[1264px]:translate-x-0",
-      "transition-[transform,translate,scale,rotate,visibility]"
+      "transition-[transform,translate,scale,rotate]",
+      "data-[forced=closed]:!transition-[transform,translate,scale,rotate,visibility]"
     );
 
     // Interaction/a11y follows the same cascade: open on desktop, not inert.
