@@ -195,11 +195,21 @@ fi
 
 existing_pr="$(gh pr list --head "$HEAD_BRANCH" --base "$BASE_BRANCH" --state open --json number --jq '.[0].number // empty')"
 
+# `gh pr edit`/`gh pr create` perform the mutation fine on old gh CLI
+# versions (e.g. 2.4.0, still in local use here), but then crash trying to
+# print a human-readable confirmation via a GraphQL query that includes the
+# now-dead `projectCards` field, which GitHub's API hard-rejects post
+# Projects-classic sunset. `gh pr view/list --json <fields>` are unaffected
+# (they request only the fields asked for), so use the REST API directly for
+# the mutation itself, sidestepping that broken query entirely.
+repo_slug="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+
 if [ -n "$existing_pr" ]; then
-	gh pr edit "$existing_pr" --title "$title" --body "$body"
-	url="$(gh pr view "$existing_pr" --json url --jq .url)"
+	url="$(gh api "repos/$repo_slug/pulls/$existing_pr" -X PATCH -f title="$title" -f body="$body" --jq .html_url)"
 	echo "Updated PR #$existing_pr: $title"
 	echo "$url"
 else
-	gh pr create --base "$BASE_BRANCH" --head "$HEAD_BRANCH" --title "$title" --body "$body"
+	url="$(gh api "repos/$repo_slug/pulls" -X POST -f title="$title" -f body="$body" -f head="$HEAD_BRANCH" -f base="$BASE_BRANCH" --jq .html_url)"
+	echo "Opened PR: $title"
+	echo "$url"
 fi
