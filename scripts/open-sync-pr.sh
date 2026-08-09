@@ -4,11 +4,13 @@
 # from the PRs that have landed on development since main's last sync.
 #
 # development and main both advance via real merge commits (see AGENTS.md;
-# sync PRs into main are no longer squashed), so origin/main..origin/development
-# is a safe, accurate "since last sync" range on its own merits. The
-# first-parent walk below predates that policy — it was needed to work around
-# squash-merge breaking ancestry — and is kept as-is because it still produces
-# the same correct boundary; it doesn't need squash to function.
+# sync PRs into main are no longer squashed). Once that is enforced on GitHub,
+# origin/main..origin/development --first-parent is the correct "since last
+# sync" range. The is-ancestor first-parent walk below is the squash-era
+# workaround and is kept until the branch-protection merge-method switch
+# lands: under real merges + main→development fast-forward it also yields
+# origin/main's tip, so a "Merge pull request #N" sync commit is re-listed
+# once; switch the walk to that range form when squash is fully off.
 set -euo pipefail
 
 dry_run=false
