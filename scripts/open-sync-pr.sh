@@ -7,10 +7,9 @@
 # sync PRs into main are no longer squashed). Once that is enforced on GitHub,
 # origin/main..origin/development --first-parent is the correct "since last
 # sync" range. The is-ancestor first-parent walk below is the squash-era
-# workaround and is kept until the branch-protection merge-method switch
-# lands: under real merges + main→development fast-forward it also yields
-# origin/main's tip, so a "Merge pull request #N" sync commit is re-listed
-# once; switch the walk to that range form when squash is fully off.
+# workaround, kept until the branch-protection merge-method switch lands so
+# development-only commits from the old squash era still get walked past
+# correctly.
 set -euo pipefail
 
 dry_run=false
@@ -53,7 +52,12 @@ fi
 mapfile -t merge_subjects < <(
 	if git merge-base --is-ancestor "origin/$BASE_BRANCH" "origin/$HEAD_BRANCH"; then
 		while IFS= read -r hash; do
-			if ! git merge-base --is-ancestor "origin/$BASE_BRANCH" "$hash"; then
+			# Stop (excluding) at the first commit already reachable from
+			# main — that's the last sync's own merge commit once
+			# main→development has fast-forwarded past it. main is
+			# trivially "reachable from" its own tip, so this correctly
+			# excludes that commit instead of re-listing it.
+			if git merge-base --is-ancestor "$hash" "origin/$BASE_BRANCH"; then
 				break
 			fi
 			git log -1 --format='%s' "$hash"
