@@ -109,7 +109,9 @@ match what `src/lib/content.ts` expects.
 
 | Command                                | Action                                                                          |
 | --------------------------------------- | -------------------------------------------------------------------------------- |
+| `make help`                             | List all Makefile targets with their one-line descriptions                     |
 | `make restore-media`                   | Restore content/media locally; validates shape and updates `CONTENT_VERSION`   |
 | `make sync`                             | Trigger a `development` staging deploy, watch the Actions run until it finishes, and print failed-step logs on error |
 | `make deploy-prod ["title"]`            | Open or refresh the development→main sync PR summarizing PRs merged into development since the last sync; optional quoted title overrides auto-generation; does not merge (merging into `main` with a real merge commit, not squash, stays manual) |
 | `make promote-content "description"`   | Dispatch `promote-content.yml` to open a PR bumping `CONTENT_VERSION`, watch the Actions run until it finishes, print failed-step logs on error, and print the PR URL (or note that main already pinned the tag) |
+| `make clean-repo`                       | Delete local branches already merged into `origin/development` or `origin/main`, and the matching `origin` branch if it still exists; skips the branch checked out here and branches checked out in other worktrees |
